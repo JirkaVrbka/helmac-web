@@ -315,7 +315,9 @@ export async function updateOrderTotalPrice(
 // ---- Order row shape for admin tables ----
 
 export interface OrderPersonRow {
+    id: string;
     personIndex: number;
+    isAttending: boolean;
     values: Record<string, string>;
 }
 
@@ -365,7 +367,9 @@ export async function getOrdersForYear(
             people: {
                 orderBy: { personIndex: "asc" },
                 select: {
+                    id: true,
                     personIndex: true,
+                    isAttending: true,
                     lineItems: {
                         select: {
                             value: true,
@@ -413,7 +417,12 @@ export async function getOrdersForYear(
                     values[name] = val;
                 }
             }
-            return { personIndex: p.personIndex, values };
+            return {
+                id: p.id,
+                personIndex: p.personIndex,
+                isAttending: p.isAttending,
+                values,
+            };
         }),
     }));
 }
@@ -627,6 +636,7 @@ export interface OrderDetailLineItem {
 export interface OrderDetailPerson {
     id: string;
     personIndex: number;
+    isAttending: boolean;
     lineItems: OrderDetailLineItem[];
 }
 
@@ -717,6 +727,7 @@ export const getOrderByLegacyId = cache(async function getOrderByLegacyId(
                 select: {
                     id: true,
                     personIndex: true,
+                    isAttending: true,
                     lineItems: {
                         orderBy: {
                             field: { sortOrder: "asc" },
@@ -786,6 +797,7 @@ export const getOrderByLegacyId = cache(async function getOrderByLegacyId(
         people: order.people.map((p) => ({
             id: p.id,
             personIndex: p.personIndex,
+            isAttending: p.isAttending,
             lineItems: p.lineItems.map((li) => ({
                 fieldId: li.field.id,
                 fieldName: li.field.name,

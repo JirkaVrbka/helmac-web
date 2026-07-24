@@ -1,9 +1,10 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmissionsCount } from "@/components/admin/submissions-count-context";
 import {
+    Box,
     Table,
     TableBody,
     TableCell,
@@ -19,17 +20,22 @@ import {
     InputAdornment,
     TableSortLabel,
 } from "@mui/material";
-import { toggleSubmissionPayment } from "@/lib/actions/registration-submissions";
 import {
+    toggleSubmissionPayment,
+    togglePersonIsAttending,
+} from "@/lib/actions/registration-submissions";
+import {
+    Search,
+    HowToReg,
+    PersonOutline,
     CheckCircle,
     Cancel,
     Email,
-    Search,
+    StickyNote2,
+    Group,
 } from "@mui/icons-material";
-import { AdminNoteButton } from "@/components/admin/admin-note-button";
+import { useSnackbar } from "notistack";
 import { isMinor } from "@/lib/utils/minor-detection";
-import { formatPrice } from "@/lib/utils/pricing";
-import { formatDate } from "@/lib/utils/date";
 import type { OrderRow } from "@/lib/services/v2";
 
 interface FieldInfo {
@@ -77,6 +83,32 @@ export function SubmissionsTable({
     readOnly = false,
 }: SubmissionsTableProps) {
     const router = useRouter();
+    const { enqueueSnackbar } = useSnackbar();
+    const [pendingIds, setPendingIds] = useState<
+        Set<string>
+    >(new Set());
+
+    const handleToggleAttendance = useCallback(
+        async (personId: string, isAttending: boolean) => {
+            setPendingIds((prev) =>
+                new Set(prev).add(personId),
+            );
+            const res = await togglePersonIsAttending(
+                personId,
+                isAttending,
+            );
+            setPendingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(personId);
+                return next;
+            });
+            if (res.error)
+                enqueueSnackbar(res.error, {
+                    variant: "error",
+                });
+        },
+        [enqueueSnackbar],
+    );
     const { setDisplayedCount } = useSubmissionsCount();
     const [search, setSearch] = useState("");
     const [sortKey, setSortKey] =
@@ -201,42 +233,6 @@ export function SubmissionsTable({
             return dir * aVal.localeCompare(bVal, "cs");
         }
         switch (sortKey) {
-            case "peopleCount":
-                return (
-                    dir *
-                    (a.people.length - b.people.length)
-                );
-            case "isPaid":
-                return (
-                    dir *
-                    (Number(a.isPaid) - Number(b.isPaid))
-                );
-            case "totalPrice":
-                return (
-                    dir *
-                    ((a.totalPrice ?? -Infinity) -
-                        (b.totalPrice ?? -Infinity))
-                );
-            case "variableSymbol":
-                return (
-                    dir *
-                    (a.variableSymbol ?? "").localeCompare(
-                        b.variableSymbol ?? "",
-                        "cs",
-                    )
-                );
-            case "emailSent":
-                return (
-                    dir *
-                    (Number(a.emailSent) -
-                        Number(b.emailSent))
-                );
-            case "adminNote":
-                return (
-                    dir *
-                    (Number(!!a.adminNote) -
-                        Number(!!b.adminNote))
-                );
             case "createdAt":
                 return (
                     dir *
@@ -330,67 +326,7 @@ export function SubmissionsTable({
                                         );
                                     },
                                 )}
-                                {(
-                                    [
-                                        [
-                                            "peopleCount",
-                                            "Osoby",
-                                        ],
-                                        [
-                                            "isPaid",
-                                            "Zaplaceno",
-                                        ],
-                                        [
-                                            "totalPrice",
-                                            "Cena",
-                                        ],
-                                        [
-                                            "variableSymbol",
-                                            "VS",
-                                        ],
-                                        [
-                                            "emailSent",
-                                            "Email",
-                                        ],
-                                        [
-                                            "adminNote",
-                                            "Poznámka",
-                                        ],
-                                        [
-                                            "createdAt",
-                                            "Datum",
-                                        ],
-                                    ] as const
-                                ).map(([key, label]) => (
-                                    <TableCell
-                                        key={key}
-                                        sortDirection={
-                                            sortKey === key
-                                                ? sortDir
-                                                : false
-                                        }
-                                    >
-                                        <TableSortLabel
-                                            active={
-                                                sortKey ===
-                                                key
-                                            }
-                                            direction={
-                                                sortKey ===
-                                                key
-                                                    ? sortDir
-                                                    : "asc"
-                                            }
-                                            onClick={() =>
-                                                handleSort(
-                                                    key,
-                                                )
-                                            }
-                                        >
-                                            {label}
-                                        </TableSortLabel>
-                                    </TableCell>
-                                ))}
+                                <TableCell>Stav</TableCell>
                                 <TableCell></TableCell>
                             </TableRow>
                         </TableHead>
@@ -517,142 +453,97 @@ export function SubmissionsTable({
                                                 ),
                                             )}
                                             <TableCell>
-                                                <Typography variant="body2">
-                                                    {(() => {
-                                                        let minorCount = 0;
-                                                        for (const bf of birthDateFields) {
-                                                            if (
-                                                                values[
-                                                                    bf
-                                                                        .name
-                                                                ] &&
-                                                                isMinor(
-                                                                    values[
-                                                                        bf
-                                                                            .name
-                                                                    ],
-                                                                    refDate,
-                                                                )
-                                                            )
-                                                                minorCount++;
-                                                        }
-                                                        for (const p of ap) {
-                                                            for (const bf of apBirthDateFields) {
-                                                                if (
-                                                                    p
-                                                                        .values[
-                                                                        bf
-                                                                            .name
-                                                                    ] &&
-                                                                    isMinor(
-                                                                        p
-                                                                            .values[
-                                                                            bf
-                                                                                .name
-                                                                        ],
-                                                                        refDate,
-                                                                    )
-                                                                )
-                                                                    minorCount++;
-                                                            }
-                                                        }
-                                                        const base =
-                                                            ap.length >
-                                                            0
-                                                                ? `1 + ${ap.length}`
-                                                                : "1";
-                                                        return minorCount >
-                                                            0
-                                                            ? `${base} (${minorCount} nezl.)`
-                                                            : base;
-                                                    })()}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                {order.isPaid ? (
-                                                    <CheckCircle
-                                                        fontSize="small"
-                                                        color="success"
-                                                    />
-                                                ) : (
-                                                    <Cancel
-                                                        fontSize="small"
-                                                        color="disabled"
-                                                    />
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography
-                                                    variant="body2"
-                                                    noWrap
-                                                >
-                                                    {order.totalPrice !=
-                                                    null
-                                                        ? formatPrice(
-                                                              order.totalPrice,
-                                                          )
-                                                        : "—"}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography
-                                                    variant="body2"
-                                                    noWrap
+                                                <Box
                                                     sx={{
-                                                        fontFamily:
-                                                            "monospace",
+                                                        display:
+                                                            "flex",
+                                                        alignItems:
+                                                            "center",
+                                                        gap: 0.75,
                                                     }}
                                                 >
-                                                    {order.variableSymbol ??
-                                                        "—"}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Tooltip
-                                                    title={
-                                                        order.emailSent
-                                                            ? "Email odeslán"
-                                                            : "Email neodeslán"
-                                                    }
-                                                >
-                                                    <Email
-                                                        fontSize="small"
-                                                        color={
-                                                            order.emailSent
-                                                                ? "success"
-                                                                : "disabled"
+                                                    {ap.length >
+                                                        0 && (
+                                                        <Tooltip
+                                                            title={`${1 + ap.length} osob`}
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    display:
+                                                                        "inline-flex",
+                                                                    alignItems:
+                                                                        "center",
+                                                                    gap: 0.25,
+                                                                }}
+                                                            >
+                                                                <Group
+                                                                    sx={{
+                                                                        fontSize: 16,
+                                                                    }}
+                                                                    color="action"
+                                                                />
+                                                                <Typography
+                                                                    variant="caption"
+                                                                    color="text.secondary"
+                                                                >
+                                                                    {1 +
+                                                                        ap.length}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Tooltip>
+                                                    )}
+                                                    <Tooltip
+                                                        title={
+                                                            order.isPaid
+                                                                ? "Zaplaceno"
+                                                                : "Nezaplaceno"
                                                         }
-                                                    />
-                                                </Tooltip>
-                                            </TableCell>
-                                            <TableCell
-                                                onClick={(
-                                                    e,
-                                                ) =>
-                                                    e.stopPropagation()
-                                                }
-                                            >
-                                                {!readOnly &&
-                                                    order.legacySubmissionId && (
-                                                        <AdminNoteButton
-                                                            submissionId={
-                                                                order.legacySubmissionId
-                                                            }
-                                                            adminNote={
-                                                                order.adminNote
+                                                    >
+                                                        {order.isPaid ? (
+                                                            <CheckCircle
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                }}
+                                                                color="success"
+                                                            />
+                                                        ) : (
+                                                            <Cancel
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                }}
+                                                                color="disabled"
+                                                            />
+                                                        )}
+                                                    </Tooltip>
+                                                    <Tooltip
+                                                        title={
+                                                            order.emailSent
+                                                                ? "Email odeslán"
+                                                                : "Email neodeslán"
+                                                        }
+                                                    >
+                                                        <Email
+                                                            sx={{
+                                                                fontSize: 16,
+                                                            }}
+                                                            color={
+                                                                order.emailSent
+                                                                    ? "success"
+                                                                    : "disabled"
                                                             }
                                                         />
+                                                    </Tooltip>
+                                                    {order.adminNote && (
+                                                        <Tooltip title="Má poznámku">
+                                                            <StickyNote2
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                }}
+                                                                color="primary"
+                                                            />
+                                                        </Tooltip>
                                                     )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography
-                                                    variant="body2"
-                                                    noWrap
-                                                >
-                                                    {formatDate(
-                                                        order.createdAt,
-                                                    )}
-                                                </Typography>
+                                                </Box>
                                             </TableCell>
                                             <TableCell
                                                 onClick={(
@@ -661,22 +552,82 @@ export function SubmissionsTable({
                                                     e.stopPropagation()
                                                 }
                                             >
-                                                {!readOnly &&
-                                                    !order.isPaid &&
-                                                    order.legacySubmissionId && (
+                                                <Box
+                                                    sx={{
+                                                        display:
+                                                            "flex",
+                                                        alignItems:
+                                                            "center",
+                                                        gap: 0.5,
+                                                    }}
+                                                >
+                                                    {!readOnly && (
                                                         <Button
-                                                            variant="outlined"
+                                                            variant={
+                                                                order
+                                                                    .people[0]
+                                                                    ?.isAttending
+                                                                    ? "contained"
+                                                                    : "outlined"
+                                                            }
                                                             size="small"
-                                                            onClick={async () => {
-                                                                await toggleSubmissionPayment(
-                                                                    order.legacySubmissionId!,
-                                                                    true,
+                                                            color={
+                                                                order
+                                                                    .people[0]
+                                                                    ?.isAttending
+                                                                    ? "success"
+                                                                    : "inherit"
+                                                            }
+                                                            startIcon={
+                                                                order
+                                                                    .people[0]
+                                                                    ?.isAttending ? (
+                                                                    <HowToReg fontSize="small" />
+                                                                ) : (
+                                                                    <PersonOutline fontSize="small" />
+                                                                )
+                                                            }
+                                                            disabled={pendingIds.has(
+                                                                order
+                                                                    .people[0]
+                                                                    ?.id ??
+                                                                    "",
+                                                            )}
+                                                            onClick={() => {
+                                                                const p =
+                                                                    order
+                                                                        .people[0];
+                                                                if (!p) return;
+                                                                handleToggleAttendance(
+                                                                    p.id,
+                                                                    !p.isAttending,
                                                                 );
                                                             }}
                                                         >
-                                                            Zaplatit
+                                                            {order
+                                                                .people[0]
+                                                                ?.isAttending
+                                                                ? "Označit: nepřijel"
+                                                                : "Označit: přijel"}
                                                         </Button>
                                                     )}
+                                                    {!readOnly &&
+                                                        !order.isPaid &&
+                                                        order.legacySubmissionId && (
+                                                            <Button
+                                                                variant="outlined"
+                                                                size="small"
+                                                                onClick={async () => {
+                                                                    await toggleSubmissionPayment(
+                                                                        order.legacySubmissionId!,
+                                                                        true,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                Zaplatit
+                                                            </Button>
+                                                        )}
+                                                </Box>
                                             </TableCell>
                                         </TableRow>
                                         {ap.map(
@@ -798,13 +749,49 @@ export function SubmissionsTable({
                                                             ),
                                                         )}
                                                         <TableCell />
-                                                        <TableCell />
-                                                        <TableCell />
-                                                        <TableCell />
-                                                        <TableCell />
-                                                        <TableCell />
-                                                        <TableCell />
-                                                        <TableCell />
+                                                        <TableCell
+                                                            onClick={(
+                                                                e,
+                                                            ) =>
+                                                                e.stopPropagation()
+                                                            }
+                                                        >
+                                                            {!readOnly && (
+                                                                <Button
+                                                                    variant={
+                                                                        person.isAttending
+                                                                            ? "contained"
+                                                                            : "outlined"
+                                                                    }
+                                                                    size="small"
+                                                                    color={
+                                                                        person.isAttending
+                                                                            ? "success"
+                                                                            : "inherit"
+                                                                    }
+                                                                    startIcon={
+                                                                        person.isAttending ? (
+                                                                            <HowToReg fontSize="small" />
+                                                                        ) : (
+                                                                            <PersonOutline fontSize="small" />
+                                                                        )
+                                                                    }
+                                                                    disabled={pendingIds.has(
+                                                                        person.id,
+                                                                    )}
+                                                                    onClick={() =>
+                                                                        handleToggleAttendance(
+                                                                            person.id,
+                                                                            !person.isAttending,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {person.isAttending
+                                                                        ? "Označit: nepřijel"
+                                                                        : "Označit: přijel"}
+                                                                </Button>
+                                                            )}
+                                                        </TableCell>
                                                     </TableRow>
                                                 );
                                             },

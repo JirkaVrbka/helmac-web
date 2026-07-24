@@ -27,7 +27,7 @@ import {
     DialogContentText,
     DialogActions,
 } from "@mui/material";
-import { Save, Delete, Person, AccountBalance } from "@mui/icons-material";
+import { Save, Delete, Person, AccountBalance, HowToReg, PersonOutline } from "@mui/icons-material";
 import type { RegistrationStatus } from "@prisma/client";
 import type { PricingSummaryData } from "@/lib/types/registration-form";
 import type {
@@ -46,6 +46,7 @@ import {
     toggleSubmissionPayment,
     deleteSubmission,
     resendConfirmationEmail,
+    togglePersonIsAttending,
 } from "@/lib/actions/registration-submissions";
 import { SubmissionPricingSummary } from "@/components/admin/submission-pricing-summary";
 import { AdminNoteDetail } from "@/components/admin/admin-note-detail";
@@ -100,6 +101,16 @@ export function SubmissionDetail({
     const [personStates, setPersonStates] = useState<
         PersonState[]
     >(() => order.people.map(buildPersonState));
+    const [attendance, setAttendance] = useState<
+        Record<string, boolean>
+    >(() =>
+        Object.fromEntries(
+            order.people.map((p) => [
+                p.id,
+                p.isAttending,
+            ]),
+        ),
+    );
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(
         null,
@@ -405,10 +416,46 @@ export function SubmissionDetail({
 
         if (result.error) {
             setError(result.error);
-        } else {
-            setSuccess(true);
-            setTimeout(() => setSuccess(false), 3000);
+            setSaving(false);
+            return;
         }
+
+        const survivingPeople = personStates
+            .map((s) =>
+                order.people.find(
+                    (p) =>
+                        p.personIndex ===
+                        s.personIndex,
+                ),
+            )
+            .filter(
+                (p): p is NonNullable<typeof p> =>
+                    !!p,
+            );
+        const attendanceUpdates = survivingPeople
+            .filter(
+                (p) =>
+                    attendance[p.id] !== p.isAttending,
+            )
+            .map((p) =>
+                togglePersonIsAttending(
+                    p.id,
+                    attendance[p.id],
+                ),
+            );
+        if (attendanceUpdates.length > 0) {
+            const results =
+                await Promise.all(attendanceUpdates);
+            const failed = results.find((r) => r.error);
+            if (failed) {
+                setError(failed.error!);
+                setSaving(false);
+                return;
+            }
+        }
+
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
         setSaving(false);
     };
 
@@ -639,7 +686,19 @@ export function SubmissionDetail({
                             )}
                         </Tabs>
 
-                    {personStates.map((state, idx) => (
+                    {personStates.map((state, idx) => {
+                        const person =
+                            order.people.find(
+                                (p) =>
+                                    p.personIndex ===
+                                    state.personIndex,
+                            );
+                        const personAttending =
+                            person
+                                ? attendance[person.id] ??
+                                  false
+                                : false;
+                        return (
                         <Paper
                             key={idx}
                             role="tabpanel"
@@ -648,6 +707,50 @@ export function SubmissionDetail({
                             }
                             sx={{ p: 3 }}
                         >
+                            {person && !readOnly && (
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems:
+                                            "center",
+                                        mb: 2,
+                                    }}
+                                >
+                                    <Button
+                                        variant={
+                                            personAttending
+                                                ? "contained"
+                                                : "outlined"
+                                        }
+                                        size="small"
+                                        color={
+                                            personAttending
+                                                ? "success"
+                                                : "inherit"
+                                        }
+                                        startIcon={
+                                            personAttending ? (
+                                                <HowToReg fontSize="small" />
+                                            ) : (
+                                                <PersonOutline fontSize="small" />
+                                            )
+                                        }
+                                        onClick={() =>
+                                            setAttendance(
+                                                (prev) => ({
+                                                    ...prev,
+                                                    [person.id]:
+                                                        !personAttending,
+                                                }),
+                                            )
+                                        }
+                                    >
+                                        {personAttending
+                                            ? "Označit: nepřijel"
+                                            : "Označit: přijel"}
+                                    </Button>
+                                </Box>
+                            )}
                             <Box
                                 component="fieldset"
                                 disabled={readOnly}
@@ -797,7 +900,8 @@ export function SubmissionDetail({
                                 )}
                             </Box>
                         </Paper>
-                    ))}
+                        );
+                    })}
                 </Grid>
 
                 <Grid item xs={12} md={4}>

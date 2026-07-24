@@ -296,3 +296,33 @@ export async function deleteSubmission(submissionId: string): Promise<ActionResu
         return { error: "Nepodařilo se smazat registraci" };
     }
 }
+
+export async function togglePersonIsAttending(
+    personId: string,
+    isAttending: boolean,
+): Promise<ActionResult> {
+    await requireAdmin();
+
+    try {
+        const person = await db.v2OrderPerson.update({
+            where: { id: personId },
+            data: { isAttending },
+            select: {
+                order: { select: { yearId: true } },
+            },
+        });
+
+        revalidatePath(
+            `/admin/rocniky/${person.order.yearId}/registrace`,
+        );
+        return { success: true };
+    } catch (error) {
+        console.error(
+            "Failed to toggle isAttending:",
+            error,
+        );
+        return {
+            error: "Nepodařilo se změnit účast",
+        };
+    }
+}
