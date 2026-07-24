@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState, useTransition } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmissionsCount } from "@/components/admin/submissions-count-context";
 import {
@@ -84,7 +84,31 @@ export function SubmissionsTable({
 }: SubmissionsTableProps) {
     const router = useRouter();
     const { enqueueSnackbar } = useSnackbar();
-    const [isPending, startTransition] = useTransition();
+    const [pendingIds, setPendingIds] = useState<
+        Set<string>
+    >(new Set());
+
+    const handleToggleAttendance = useCallback(
+        async (personId: string, isAttending: boolean) => {
+            setPendingIds((prev) =>
+                new Set(prev).add(personId),
+            );
+            const res = await togglePersonIsAttending(
+                personId,
+                isAttending,
+            );
+            setPendingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(personId);
+                return next;
+            });
+            if (res.error)
+                enqueueSnackbar(res.error, {
+                    variant: "error",
+                });
+        },
+        [enqueueSnackbar],
+    );
     const { setDisplayedCount } = useSubmissionsCount();
     const [search, setSearch] = useState("");
     const [sortKey, setSortKey] =
@@ -563,27 +587,20 @@ export function SubmissionsTable({
                                                                     <PersonOutline fontSize="small" />
                                                                 )
                                                             }
-                                                            disabled={
-                                                                isPending
-                                                            }
+                                                            disabled={pendingIds.has(
+                                                                order
+                                                                    .people[0]
+                                                                    ?.id ??
+                                                                    "",
+                                                            )}
                                                             onClick={() => {
                                                                 const p =
                                                                     order
                                                                         .people[0];
                                                                 if (!p) return;
-                                                                startTransition(
-                                                                    async () => {
-                                                                        const res =
-                                                                            await togglePersonIsAttending(
-                                                                                p.id,
-                                                                                !p.isAttending,
-                                                                            );
-                                                                        if (res.error)
-                                                                            enqueueSnackbar(
-                                                                                res.error,
-                                                                                { variant: "error" },
-                                                                            );
-                                                                    },
+                                                                handleToggleAttendance(
+                                                                    p.id,
+                                                                    !p.isAttending,
                                                                 );
                                                             }}
                                                         >
@@ -759,25 +776,15 @@ export function SubmissionsTable({
                                                                             <PersonOutline fontSize="small" />
                                                                         )
                                                                     }
-                                                                    disabled={
-                                                                        isPending
+                                                                    disabled={pendingIds.has(
+                                                                        person.id,
+                                                                    )}
+                                                                    onClick={() =>
+                                                                        handleToggleAttendance(
+                                                                            person.id,
+                                                                            !person.isAttending,
+                                                                        )
                                                                     }
-                                                                    onClick={() => {
-                                                                        startTransition(
-                                                                            async () => {
-                                                                                const res =
-                                                                                    await togglePersonIsAttending(
-                                                                                        person.id,
-                                                                                        !person.isAttending,
-                                                                                    );
-                                                                                if (res.error)
-                                                                                    enqueueSnackbar(
-                                                                                        res.error,
-                                                                                        { variant: "error" },
-                                                                                    );
-                                                                            },
-                                                                        );
-                                                                    }}
                                                                 >
                                                                     {person.isAttending
                                                                         ? "Označit: nepřijel"
