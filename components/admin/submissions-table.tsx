@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmissionsCount } from "@/components/admin/submissions-count-context";
 import {
@@ -34,6 +34,7 @@ import {
     StickyNote2,
     Group,
 } from "@mui/icons-material";
+import { useSnackbar } from "notistack";
 import { isMinor } from "@/lib/utils/minor-detection";
 import type { OrderRow } from "@/lib/services/v2";
 
@@ -82,6 +83,8 @@ export function SubmissionsTable({
     readOnly = false,
 }: SubmissionsTableProps) {
     const router = useRouter();
+    const { enqueueSnackbar } = useSnackbar();
+    const [isPending, startTransition] = useTransition();
     const { setDisplayedCount } = useSubmissionsCount();
     const [search, setSearch] = useState("");
     const [sortKey, setSortKey] =
@@ -560,17 +563,28 @@ export function SubmissionsTable({
                                                                     <PersonOutline fontSize="small" />
                                                                 )
                                                             }
-                                                            onClick={async () => {
+                                                            disabled={
+                                                                isPending
+                                                            }
+                                                            onClick={() => {
                                                                 const p =
                                                                     order
                                                                         .people[0];
-                                                                if (
-                                                                    p
-                                                                )
-                                                                    await togglePersonIsAttending(
-                                                                        p.id,
-                                                                        !p.isAttending,
-                                                                    );
+                                                                if (!p) return;
+                                                                startTransition(
+                                                                    async () => {
+                                                                        const res =
+                                                                            await togglePersonIsAttending(
+                                                                                p.id,
+                                                                                !p.isAttending,
+                                                                            );
+                                                                        if (res.error)
+                                                                            enqueueSnackbar(
+                                                                                res.error,
+                                                                                { variant: "error" },
+                                                                            );
+                                                                    },
+                                                                );
                                                             }}
                                                         >
                                                             {order
@@ -745,10 +759,23 @@ export function SubmissionsTable({
                                                                             <PersonOutline fontSize="small" />
                                                                         )
                                                                     }
-                                                                    onClick={async () => {
-                                                                        await togglePersonIsAttending(
-                                                                            person.id,
-                                                                            !person.isAttending,
+                                                                    disabled={
+                                                                        isPending
+                                                                    }
+                                                                    onClick={() => {
+                                                                        startTransition(
+                                                                            async () => {
+                                                                                const res =
+                                                                                    await togglePersonIsAttending(
+                                                                                        person.id,
+                                                                                        !person.isAttending,
+                                                                                    );
+                                                                                if (res.error)
+                                                                                    enqueueSnackbar(
+                                                                                        res.error,
+                                                                                        { variant: "error" },
+                                                                                    );
+                                                                            },
                                                                         );
                                                                     }}
                                                                 >

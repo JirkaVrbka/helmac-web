@@ -420,7 +420,19 @@ export function SubmissionDetail({
             return;
         }
 
-        const attendanceUpdates = order.people
+        const survivingPeople = personStates
+            .map((s) =>
+                order.people.find(
+                    (p) =>
+                        p.personIndex ===
+                        s.personIndex,
+                ),
+            )
+            .filter(
+                (p): p is NonNullable<typeof p> =>
+                    !!p,
+            );
+        const attendanceUpdates = survivingPeople
             .filter(
                 (p) =>
                     attendance[p.id] !== p.isAttending,
