@@ -132,6 +132,7 @@ export async function getOptionCounts(
     fieldNames?: string[] | null,
     statuses?: string[] | null,
     isPaid?: boolean | null,
+    isAttending?: boolean | null,
 ): Promise<V2OptionCountsResult> {
     const rows = await db.$queryRaw<
         { v2_get_option_counts: V2OptionCountsResult }[]
@@ -140,7 +141,8 @@ export async function getOptionCounts(
             ${yearId},
             ${fieldNames ?? Prisma.sql`NULL`}::text[],
             ${statuses ?? Prisma.sql`NULL`}::text[],
-            ${isPaid ?? Prisma.sql`NULL`}::boolean
+            ${isPaid ?? Prisma.sql`NULL`}::boolean,
+            ${isAttending ?? Prisma.sql`NULL`}::boolean
         ) AS v2_get_option_counts`,
     );
     return rows[0]?.v2_get_option_counts ?? {};
