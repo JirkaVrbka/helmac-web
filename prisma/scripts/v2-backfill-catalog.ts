@@ -408,7 +408,8 @@ function remapPrices(
     usePriceTiers: boolean,
 ): number[] {
     if (!usePriceTiers) {
-        return [prices[0] ?? 0];
+        const p = prices[0] ?? 0;
+        return new Array(mergedTiers.length + 1).fill(p);
     }
     const result = new Array(mergedTiers.length + 1).fill(0);
     for (let i = 0; i < sourceTiers.length; i++) {
