@@ -1499,23 +1499,108 @@ export async function syncOrderLineItemsToV2(
         formData.fields,
     );
 
-    // Helper: delete existing line items for a field, then create new ones
     async function syncFieldLineItems(
         personId: string,
         fieldId: string,
         items: LineItemData[],
     ): Promise<void> {
-        await tx.v2OrderLineItem.deleteMany({
-            where: { personId, fieldId },
-        });
+        const hasPricingItems = items.some(
+            (li) => li.pricingOptionId,
+        );
+
+        if (!hasPricingItems) {
+            await tx.v2OrderLineItem.deleteMany({
+                where: { personId, fieldId },
+            });
+            for (const li of items) {
+                await tx.v2OrderLineItem.create({
+                    data: {
+                        personId,
+                        orderId: order.id,
+                        yearId: order.yearId,
+                        fieldId,
+                        ...li,
+                    },
+                });
+            }
+            return;
+        }
+
+        const existing =
+            await tx.v2OrderLineItem.findMany({
+                where: { personId, fieldId },
+                select: {
+                    id: true,
+                    pricingOptionId: true,
+                },
+            });
+
+        const existingByOpt = new Map<
+            string,
+            string
+        >(
+            existing
+                .filter(
+                    (e: {
+                        pricingOptionId:
+                            | string
+                            | null;
+                    }) => e.pricingOptionId,
+                )
+                .map(
+                    (e: {
+                        id: string;
+                        pricingOptionId:
+                            | string
+                            | null;
+                    }) => [
+                        e.pricingOptionId!,
+                        e.id,
+                    ],
+                ),
+        );
+        const matched = new Set<string>();
+
         for (const li of items) {
-            await tx.v2OrderLineItem.create({
-                data: {
-                    personId,
-                    orderId: order.id,
-                    yearId: order.yearId,
-                    fieldId,
-                    ...li,
+            const key = li.pricingOptionId;
+            const existingId = key
+                ? existingByOpt.get(key)
+                : undefined;
+            if (existingId) {
+                matched.add(existingId);
+                await tx.v2OrderLineItem.update({
+                    where: { id: existingId },
+                    data: {
+                        value: li.value,
+                        quantity: li.quantity,
+                    },
+                });
+            } else {
+                await tx.v2OrderLineItem.create({
+                    data: {
+                        personId,
+                        orderId: order.id,
+                        yearId: order.yearId,
+                        fieldId,
+                        ...li,
+                    },
+                });
+            }
+        }
+
+        const toDelete = existing.filter(
+            (e: { id: string }) =>
+                !matched.has(e.id),
+        );
+        if (toDelete.length > 0) {
+            await tx.v2OrderLineItem.deleteMany({
+                where: {
+                    id: {
+                        in: toDelete.map(
+                            (e: { id: string }) =>
+                                e.id,
+                        ),
+                    },
                 },
             });
         }
@@ -1531,7 +1616,15 @@ export async function syncOrderLineItemsToV2(
             if (!v2Field) continue;
 
             const rawValue = newData[field.name];
-            if (rawValue === undefined) continue;
+            if (rawValue === undefined) {
+                await tx.v2OrderLineItem.deleteMany({
+                    where: {
+                        personId: mainPerson.id,
+                        fieldId: v2Field.id,
+                    },
+                });
+                continue;
+            }
 
             const items = resolveLineItems(
                 field,
@@ -1586,7 +1679,15 @@ export async function syncOrderLineItemsToV2(
                 if (!v2Field) continue;
 
                 const rawValue = personData[field.name];
-                if (rawValue === undefined) continue;
+                if (rawValue === undefined) {
+                    await tx.v2OrderLineItem.deleteMany({
+                        where: {
+                            personId: apPerson.id,
+                            fieldId: v2Field.id,
+                        },
+                    });
+                    continue;
+                }
 
                 const items = resolveLineItems(
                     field,

@@ -94,10 +94,21 @@ export function SubmissionDetail({
             ),
         [order.pricingDefinitions],
     );
+    const v2OptionIdByDefAndName = useMemo(() => {
+        const map = new Map<
+            string,
+            Map<string, string>
+        >();
+        for (const def of order.pricingDefinitions) {
+            const optMap = new Map<string, string>();
+            for (const opt of def.options) {
+                optMap.set(opt.name, opt.id);
+            }
+            map.set(def.name, optMap);
+        }
+        return map;
+    }, [order.pricingDefinitions]);
 
-    const [initialStates] = useState<PersonState[]>(() =>
-        order.people.map(buildPersonState),
-    );
     const [personStates, setPersonStates] = useState<
         PersonState[]
     >(() => order.people.map(buildPersonState));
@@ -155,6 +166,67 @@ export function SubmissionDetail({
         [order.formLayout],
     );
 
+    const formDataForConditions = useMemo(
+        (): RegistrationFormData | null => {
+            if (!formData) return null;
+            const v2Defs =
+                order.pricingDefinitions;
+            const mergedDefs =
+                formData.pricingDefinitions.map(
+                    (legacyDef, di) => {
+                        let v2OptMap =
+                            v2OptionIdByDefAndName.get(
+                                legacyDef.name,
+                            );
+                        if (
+                            !v2OptMap &&
+                            di < v2Defs.length
+                        ) {
+                            const fallback =
+                                v2Defs[di];
+                            v2OptMap = new Map(
+                                fallback.options.map(
+                                    (o) => [
+                                        o.name,
+                                        o.id,
+                                    ],
+                                ),
+                            );
+                        }
+                        if (!v2OptMap)
+                            return legacyDef;
+                        return {
+                            ...legacyDef,
+                            options:
+                                legacyDef.options.map(
+                                    (opt) => {
+                                        const v2Id =
+                                            v2OptMap!.get(
+                                                opt.name,
+                                            );
+                                        return v2Id
+                                            ? {
+                                                  ...opt,
+                                                  id: v2Id,
+                                              }
+                                            : opt;
+                                    },
+                                ),
+                        };
+                    },
+                );
+            return {
+                ...formData,
+                pricingDefinitions: mergedDefs,
+            };
+        },
+        [
+            formData,
+            v2OptionIdByDefAndName,
+            order.pricingDefinitions,
+        ],
+    );
+
     const mainValues = useMemo(() => {
         const state = personStates[0];
         if (!state)
@@ -169,7 +241,7 @@ export function SubmissionDetail({
     }, [personStates, fields]);
 
     const { visibleFields } = useConditionalFields(
-        formData ?? {
+        formDataForConditions ?? {
             fields: [],
             conditions: [],
             pricingDefinitions: [],
@@ -225,7 +297,7 @@ export function SubmissionDetail({
     );
 
     const apVisibleFieldNames = useMemo(() => {
-        if (!formData) return personStates.map(() => apFieldNames);
+        if (!formDataForConditions) return personStates.map(() => apFieldNames);
         return personStates.slice(1).map((state) => {
             const apData = personStateToLegacyData(
                 state,
@@ -236,13 +308,13 @@ export function SubmissionDetail({
                 ...apData,
             } as Record<string, string | number | boolean>;
             const ids = evaluateAPVisibleFields(
-                formData,
+                formDataForConditions,
                 merged,
             );
             return idsToNames(ids);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [formData, personStates, mainValues, apFields, idToName, apFieldNames]);
+    }, [formDataForConditions, personStates, mainValues, apFields, idToName, allFieldNames, apFieldNames]);
 
     const allVisibleFields = useMemo(
         () => [
@@ -250,41 +322,6 @@ export function SubmissionDetail({
             ...apVisibleFieldNames,
         ],
         [visibleFieldNames, apVisibleFieldNames],
-    );
-
-    const computedPrice = useMemo(
-        () =>
-            computeTotal(
-                personStates,
-                fields,
-                pricingDefById,
-                currentTierId,
-                allVisibleFields,
-            ),
-        [
-            personStates,
-            fields,
-            pricingDefById,
-            currentTierId,
-            allVisibleFields,
-        ],
-    );
-    const originalPrice = useMemo(
-        () =>
-            computeTotal(
-                initialStates,
-                fields,
-                pricingDefById,
-                currentTierId,
-                allVisibleFields,
-            ),
-        [
-            initialStates,
-            fields,
-            pricingDefById,
-            currentTierId,
-            allVisibleFields,
-        ],
     );
 
     const mainSections = extractSections(
@@ -295,9 +332,81 @@ export function SubmissionDetail({
         order.formLayout,
         apFieldNames,
     );
-    const layoutFieldNames = new Set(
-        mainSections.flatMap((s) => s.fieldNames),
+    const layoutFieldNames = useMemo(
+        () =>
+            new Set(
+                mainSections.flatMap(
+                    (s) => s.fieldNames,
+                ),
+            ),
+        [mainSections],
     );
+
+    const computedPrice = useMemo(
+        () =>
+            computeTotal(
+                personStates,
+                fields,
+                pricingDefById,
+                currentTierId,
+                allVisibleFields,
+                layoutFieldNames,
+            ),
+        [
+            personStates,
+            fields,
+            pricingDefById,
+            currentTierId,
+            allVisibleFields,
+            layoutFieldNames,
+        ],
+    );
+    const dynamicPricingSummary = useMemo(
+        (): PricingSummaryData | null => {
+            if (order.priceTiers.length === 0)
+                return null;
+            const tiers = order.priceTiers.map(
+                (tier) => ({
+                    tierDate: tier.deadline,
+                    totalPrice: computeTotal(
+                        personStates,
+                        fields,
+                        pricingDefById,
+                        tier.id,
+                        allVisibleFields,
+                        layoutFieldNames,
+                    ),
+                }),
+            );
+            const tierIdx =
+                currentTierId
+                    ? order.priceTiers.findIndex(
+                          (t) =>
+                              t.id ===
+                              currentTierId,
+                      )
+                    : tiers.length - 1;
+            return {
+                tiers,
+                applicableTierIndex:
+                    tierIdx >= 0
+                        ? tierIdx
+                        : tiers.length - 1,
+                totalPrice: computedPrice,
+            };
+        },
+        [
+            order.priceTiers,
+            personStates,
+            fields,
+            pricingDefById,
+            currentTierId,
+            allVisibleFields,
+            layoutFieldNames,
+            computedPrice,
+        ],
+    );
+
     const archivedFields = fields.filter(
         (f) =>
             !f.isActive ||
@@ -398,15 +507,110 @@ export function SubmissionDetail({
             ? personStateToLegacyData(mainState, fields)
             : {};
 
+        const visibleMain = allVisibleFields[0];
+        if (visibleMain) {
+            for (const field of fields) {
+                if (
+                    layoutFieldNames.has(
+                        field.name,
+                    ) &&
+                    !visibleMain.has(field.name)
+                ) {
+                    delete mainData[field.name];
+                }
+            }
+        }
+
+        const apLayoutFieldNames = new Set(
+            apSections.flatMap(
+                (s) => s.fieldNames,
+            ),
+        );
         const apStates = personStates.slice(1);
         if (apStates.length > 0) {
             mainData.additionalPeople = apStates.map(
-                (s) =>
-                    personStateToLegacyData(
-                        s,
-                        apFields,
-                    ),
+                (s, i) => {
+                    const apData =
+                        personStateToLegacyData(
+                            s,
+                            apFields,
+                        );
+                    const visibleAP =
+                        allVisibleFields[i + 1];
+                    if (visibleAP) {
+                        for (const field of apFields) {
+                            if (
+                                apLayoutFieldNames.has(
+                                    field.name,
+                                ) &&
+                                !visibleAP.has(
+                                    field.name,
+                                )
+                            ) {
+                                delete apData[
+                                    field.name
+                                ];
+                            }
+                        }
+                    }
+                    return apData;
+                },
             );
+        }
+
+        // Resolve V2 option IDs to option names so
+        // the saved JSON is compatible with email
+        // templates that use legacy pricing defs.
+        function resolveV2IdsToNames(
+            data: Record<string, unknown>,
+            fieldList: typeof fields,
+        ) {
+            for (const field of fieldList) {
+                if (!field.pricingDefinitionId)
+                    continue;
+                const def = pricingDefById.get(
+                    field.pricingDefinitionId,
+                );
+                if (!def) continue;
+                const val = data[field.name];
+                if (
+                    val === undefined ||
+                    val === null ||
+                    val === ""
+                )
+                    continue;
+                if (
+                    field.type === "pricing_select"
+                ) {
+                    const key = String(val);
+                    let opt = def.options.find(
+                        (o) => o.id === key,
+                    );
+                    if (!opt) {
+                        for (const d of order.pricingDefinitions) {
+                            opt = d.options.find(
+                                (o) =>
+                                    o.id === key,
+                            );
+                            if (opt) break;
+                        }
+                    }
+                    if (opt)
+                        data[field.name] = opt.name;
+                }
+            }
+        }
+        resolveV2IdsToNames(mainData, fields);
+        if (Array.isArray(mainData.additionalPeople)) {
+            for (const apData of mainData.additionalPeople as Record<
+                string,
+                unknown
+            >[]) {
+                resolveV2IdsToNames(
+                    apData,
+                    apFields,
+                );
+            }
         }
 
         const result = await updateSubmissionData(
@@ -457,6 +661,7 @@ export function SubmissionDetail({
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
         setSaving(false);
+        router.refresh();
     };
 
     const handleStatusChange = async (
@@ -991,80 +1196,28 @@ export function SubmissionDetail({
                                     order.createdAt,
                                 )}
                             </Typography>
-                            {computedPrice !==
-                                (order.totalPrice ??
-                                    0) && (
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent:
-                                            "space-between",
-                                        alignItems:
-                                            "baseline",
-                                        mt: 1,
-                                    }}
-                                >
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                    >
-                                        Aktuální cena
-                                    </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        sx={{
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        {computedPrice.toLocaleString(
-                                            "cs-CZ",
-                                        )}{" "}
-                                        Kč
-                                        <Typography
-                                            component="span"
-                                            variant="caption"
-                                            color={
-                                                computedPrice >
-                                                (order.totalPrice ??
-                                                    0)
-                                                    ? "warning.main"
-                                                    : "success.main"
-                                            }
-                                            sx={{
-                                                ml: 0.5,
-                                            }}
-                                        >
-                                            (
-                                            {computedPrice -
-                                                (order.totalPrice ??
-                                                    0) >
-                                            0
-                                                ? "+"
-                                                : ""}
-                                            {(
-                                                computedPrice -
-                                                (order.totalPrice ??
-                                                    0)
-                                            ).toLocaleString(
-                                                "cs-CZ",
-                                            )}
-                                            )
-                                        </Typography>
-                                    </Typography>
-                                </Box>
-                            )}
                         </Box>
                         <SubmissionPricingSummary
                             pricingSummary={
-                                order.pricingSummary as PricingSummaryData | null
+                                currentPaid
+                                    ? null
+                                    : dynamicPricingSummary
                             }
                             variableSymbol={
                                 order.variableSymbol
                             }
-                            totalPrice={computedPrice}
+                            totalPrice={
+                                currentPaid
+                                    ? (order.totalPrice ??
+                                          0)
+                                    : computedPrice
+                            }
                             priceDiff={
-                                computedPrice -
-                                originalPrice
+                                currentPaid
+                                    ? 0
+                                    : computedPrice -
+                                      (order.totalPrice ??
+                                          0)
                             }
                         />
                         {order.bankTransactions.length >

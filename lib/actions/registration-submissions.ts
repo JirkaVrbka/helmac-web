@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth";
 import type { RegistrationStatus } from "@prisma/client";
 import { sendConfirmationEmail, replacePlaceholders, buildPlaceholders, generateQRPaymentImage, appendConditionalSections, collectMatchingSectionAttachments } from "@/lib/utils/email";
@@ -88,6 +88,28 @@ export async function updateSubmissionData(
                 select: { yearId: true, formId: true },
             });
             await syncOrderLineItemsToV2(tx, submissionId, data, sub.formId);
+
+            const order = await tx.v2Order.findFirst({
+                where: { legacySubmissionId: submissionId },
+                select: { id: true, isPaid: true },
+            });
+            if (order && !order.isPaid) {
+                const rows = await tx.$queryRaw<
+                    { total: number }[]
+                >(
+                    Prisma.sql`SELECT v2_compute_current_total(${order.id}) AS total`,
+                );
+                const newTotal = rows[0]?.total ?? 0;
+                await tx.v2Order.update({
+                    where: { id: order.id },
+                    data: { totalPrice: newTotal },
+                });
+                await tx.registrationSubmission.update({
+                    where: { id: submissionId },
+                    data: { totalPrice: newTotal },
+                });
+            }
+
             return sub;
         });
 

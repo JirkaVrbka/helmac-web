@@ -204,6 +204,7 @@ export function computeTotal(
     pricingDefById: Map<string, V2PricingDef>,
     currentTierId: string | null,
     perPersonVisibleFields?: Set<string>[],
+    layoutFieldNames?: Set<string>,
 ): number {
     let total = 0;
     for (let pi = 0; pi < personStates.length; pi++) {
@@ -211,7 +212,11 @@ export function computeTotal(
         const visibleFields = perPersonVisibleFields?.[pi];
         for (const field of fields) {
             if (!field.pricingDefinitionId) continue;
+            const inLayout =
+                !layoutFieldNames ||
+                layoutFieldNames.has(field.name);
             if (
+                inLayout &&
                 visibleFields &&
                 !visibleFields.has(field.name)
             )
@@ -233,10 +238,7 @@ export function computeTotal(
                     );
                     if (tierPrice) return tierPrice.price;
                 }
-                return (
-                    opt.prices[opt.prices.length - 1]
-                        ?.price ?? 0
-                );
+                return opt.prices[0]?.price ?? 0;
             };
 
             switch (field.type) {
