@@ -22,10 +22,7 @@ export const getAllPublishedAlbums = cache(async () => {
 
     const albums = await db.album.findMany({
         where: { isPublished: true },
-        orderBy: [
-            { year: { year: "desc" } },
-            { sortOrder: "asc" },
-        ],
+        orderBy: { createdAt: "desc" },
         select: {
             ...albumPreviewSelect,
             yearId: true,
