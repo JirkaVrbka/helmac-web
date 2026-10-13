@@ -52,5 +52,7 @@ public/icons/
 # Claude and automated worflows
 .claude/plans/
 .claude/worktrees/
+.claude/tech-level.local.md
+.claude/assignments.local/
 screenshots/
 .playwright-mcp
