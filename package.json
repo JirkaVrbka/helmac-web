@@ -20,7 +20,8 @@
         "icons:build": "node lib/icons/build-registry.mjs",
         "db:v2-backfill-catalog": "tsx prisma/scripts/v2-backfill-catalog.ts",
         "db:v2-backfill-orders": "tsx prisma/scripts/v2-backfill-orders.ts",
-        "docs:overview": "node scripts/build-overview.mjs"
+        "docs:overview": "node scripts/build-overview.mjs",
+        "test:e2e": "playwright test"
     },
     "prisma": {
         "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

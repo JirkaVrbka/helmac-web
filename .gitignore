@@ -56,3 +56,9 @@ public/icons/
 .claude/assignments.local/
 screenshots/
 .playwright-mcp
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -1,6 +1,6 @@
 ---
 paths:
-  - "lib/actions/**"
+    - "lib/actions/**"
 ---
 
 # Server Actions
@@ -37,7 +37,9 @@ export async function createEntity(
     }
 
     // 2. Parse and validate
-    const rawData = { /* extract from formData */ };
+    const rawData = {
+        /* extract from formData */
+    };
     const validated = createEntitySchema.safeParse(rawData);
 
     if (!validated.success) {
@@ -66,3 +68,11 @@ export async function createEntity(
 - Use `revalidatePath()` after mutations
 - Use `redirect()` outside try-catch for post-mutation redirects
 - Never expose internal errors to users
+
+## Transaction-scoped multi-step actions
+
+For an action that copies/creates many related rows atomically (see `createYearWithReuse` in
+`lib/actions/years.ts`), wrap the work in `db.$transaction(async (tx) => { ... }, { timeout: ... })` and pass
+`tx` down into any shared helper that also needs to run standalone — e.g. `createDefaultPages(yearId, client =
+db)` accepts an optional `PrismaClient | Prisma.TransactionClient` so it works both inside and outside a
+transaction.
