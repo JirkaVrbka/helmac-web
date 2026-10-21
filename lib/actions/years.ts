@@ -2,13 +2,31 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin, requireEditor } from "@/lib/auth";
-import { createYearSchema, updateYearSchema, updateEmailTemplateSchema } from "@/lib/validators/year";
+import {
+    createYearSchema,
+    updateYearSchema,
+    updateEmailTemplateSchema,
+    createYearWithReuseSchema,
+} from "@/lib/validators/year";
 import { parseEmailConditionalSectionsJson } from "@/lib/validators/email-section";
 import { parseEmailAttachmentsJson } from "@/lib/validators/email-attachment";
 import { contentBlocksSchema } from "@/lib/validators/content-blocks";
-import { syncYearEmailToV2, toggleYearEmailInV2 } from "@/lib/utils/v2-dual-write";
+import {
+    syncYearEmailToV2,
+    toggleYearEmailInV2,
+} from "@/lib/utils/v2-dual-write";
+import {
+    computeDeltaMs,
+    shiftDate,
+    copyYearContent,
+} from "@/lib/utils/year-copy";
+import {
+    getYearCopyInventory,
+    type YearCopyInventory,
+} from "@/lib/services/year-copy-inventory";
 
 export type YearActionState = {
     error?: {
@@ -19,10 +37,23 @@ export type YearActionState = {
         endDate?: string[];
         headerPhoto?: string[];
         heroPhoto?: string[];
+        anchorStartDate?: string[];
+        sourceYearId?: string[];
         _form?: string[];
     };
     success?: boolean;
 } | null;
+
+export async function loadYearCopyInventory(
+    sourceYearId: string
+): Promise<YearCopyInventory | null> {
+    try {
+        await requireAdmin();
+        return await getYearCopyInventory(sourceYearId);
+    } catch {
+        return null;
+    }
+}
 
 export async function createYear(
     prevState: YearActionState,
@@ -32,6 +63,13 @@ export async function createYear(
         await requireAdmin();
     } catch {
         return { error: { _form: ["Nemáte oprávnění"] } };
+    }
+
+    // Unified entry: when a source year is picked, branch into the
+    // content-reuse path; otherwise create a blank year.
+    const sourceYearId = formData.get("sourceYearId") as string | null;
+    if (sourceYearId) {
+        return createYearWithReuse(prevState, formData);
     }
 
     const rawData = {
@@ -82,6 +120,143 @@ export async function createYear(
     }
 
     redirect("/admin/rocniky");
+}
+
+async function createYearWithReuse(
+    prevState: YearActionState,
+    formData: FormData
+): Promise<YearActionState> {
+    try {
+        await requireAdmin();
+    } catch {
+        return { error: { _form: ["Nemáte oprávnění"] } };
+    }
+
+    let selectionRaw: unknown;
+    try {
+        selectionRaw = JSON.parse(
+            (formData.get("selection") as string | null) ?? "{}"
+        );
+    } catch {
+        return { error: { _form: ["Neplatný výběr obsahu"] } };
+    }
+
+    const rawData = {
+        year: formData.get("year"),
+        title: formData.get("title"),
+        subtitle: formData.get("subtitle") || undefined,
+        startDate: formData.get("startDate") || undefined,
+        endDate: formData.get("endDate") || undefined,
+        anchorStartDate: formData.get("anchorStartDate") || undefined,
+        sourceYearId: formData.get("sourceYearId"),
+        headerPhoto: formData.get("headerPhoto") || undefined,
+        heroPhoto: formData.get("heroPhoto") || undefined,
+        selection: selectionRaw,
+    };
+
+    const validated = createYearWithReuseSchema.safeParse(rawData);
+
+    if (!validated.success) {
+        return { error: validated.error.flatten().fieldErrors };
+    }
+
+    const {
+        year,
+        title,
+        subtitle,
+        startDate,
+        endDate,
+        anchorStartDate,
+        sourceYearId,
+        selection,
+    } = validated.data;
+
+    const source = await db.year.findUnique({
+        where: { id: sourceYearId },
+        select: {
+            startDate: true,
+            registrationSuccessContent: true,
+            registrationStartDate: true,
+        },
+    });
+
+    if (!source) {
+        return { error: { _form: ["Zdrojový ročník nenalezen"] } };
+    }
+
+    // Program days and the registration form (price tiers, deadlines) carry
+    // real dates, so a shift (deltaMs) only needs to be computed when at
+    // least one of them is actually being copied.
+    const copiesDatedContent =
+        selection.programDayIds.length > 0 || selection.copyRegistrationForm;
+
+    let deltaMs = 0;
+    if (copiesDatedContent) {
+        const anchor = source.startDate ?? anchorStartDate ?? null;
+        if (!anchor) {
+            return {
+                error: {
+                    anchorStartDate: ["Zadejte začátek zdrojového ročníku"],
+                },
+            };
+        }
+        deltaMs = computeDeltaMs(anchor, startDate);
+    }
+
+    const existing = await db.year.findUnique({ where: { year } });
+    if (existing) {
+        return { error: { year: ["Tento ročník již existuje"] } };
+    }
+
+    let newYearId: string;
+    try {
+        newYearId = await db.$transaction(
+            async (tx) => {
+                const newYear = await tx.year.create({
+                    data: {
+                        year,
+                        title,
+                        subtitle,
+                        startDate,
+                        endDate,
+                        headerPhoto: validated.data.headerPhoto,
+                        heroPhoto: validated.data.heroPhoto,
+                        registrationSuccessContent: selection.copySuccessContent
+                            ? (source.registrationSuccessContent as Prisma.InputJsonValue)
+                            : undefined,
+                        registrationStartDate:
+                            selection.copyRegistrationForm &&
+                            source.registrationStartDate
+                                ? shiftDate(
+                                      source.registrationStartDate,
+                                      deltaMs
+                                  )
+                                : undefined,
+                    },
+                });
+
+                await copyYearContent(tx, {
+                    sourceYearId,
+                    newYearId: newYear.id,
+                    selection,
+                    deltaMs,
+                });
+
+                // Pages are no longer part of the copy selection, so every
+                // reused year gets the default pages, same as a blank year.
+                await createDefaultPages(newYear.id, tx);
+
+                return newYear.id;
+            },
+            { timeout: 30000 }
+        );
+    } catch (error) {
+        console.error("Failed to create year with reuse:", error);
+        return { error: { _form: ["Nepodařilo se vytvořit ročník"] } };
+    }
+
+    revalidatePath("/admin/rocniky");
+    redirect(`/admin/rocniky/${newYearId}`);
 }
 
 export async function updateYear(
@@ -267,7 +442,9 @@ export async function toggleRegistration(yearId: string, open: boolean) {
         if (open) {
             const [mainEmail, bankAccount] = await Promise.all([
                 db.emailAccount.findFirst({ where: { isMain: true } }),
-                db.bankAccount.findFirst({ where: { bankAccountNumber: { not: null } } }),
+                db.bankAccount.findFirst({
+                    where: { bankAccountNumber: { not: null } },
+                }),
             ]);
 
             const missing: string[] = [];
@@ -275,7 +452,9 @@ export async function toggleRegistration(yearId: string, open: boolean) {
             if (!bankAccount) missing.push("bankovní účet");
 
             if (missing.length > 0) {
-                return { error: `Nelze otevřít registraci. Chybí: ${missing.join(", ")}` };
+                return {
+                    error: `Nelze otevřít registraci. Chybí: ${missing.join(", ")}`,
+                };
             }
         }
 
@@ -295,7 +474,10 @@ export async function toggleRegistration(yearId: string, open: boolean) {
     }
 }
 
-export async function updateRegistrationStartDate(yearId: string, date: string | null) {
+export async function updateRegistrationStartDate(
+    yearId: string,
+    date: string | null
+) {
     try {
         await requireAdmin();
     } catch {
@@ -329,7 +511,8 @@ export async function updateEmailTemplate(yearId: string, formData: FormData) {
     }
 
     const rawData = {
-        confirmationEmailSubject: formData.get("confirmationEmailSubject") || "",
+        confirmationEmailSubject:
+            formData.get("confirmationEmailSubject") || "",
         confirmationEmailBody: formData.get("confirmationEmailBody") || "",
         confirmationEmailBcc: formData.get("confirmationEmailBcc") || null,
         emailAccountId: formData.get("emailAccountId") || null,
@@ -342,16 +525,34 @@ export async function updateEmailTemplate(yearId: string, formData: FormData) {
 
     let sections;
     try {
-        sections = parseEmailConditionalSectionsJson(formData.get("sectionsJson"));
+        sections = parseEmailConditionalSectionsJson(
+            formData.get("sectionsJson")
+        );
     } catch (err) {
-        return { error: { _form: [err instanceof Error ? err.message : "Neplatné podmíněné sekce"] } };
+        return {
+            error: {
+                _form: [
+                    err instanceof Error
+                        ? err.message
+                        : "Neplatné podmíněné sekce",
+                ],
+            },
+        };
     }
 
     let attachments;
     try {
-        attachments = parseEmailAttachmentsJson(formData.get("attachmentsJson"));
+        attachments = parseEmailAttachmentsJson(
+            formData.get("attachmentsJson")
+        );
     } catch (err) {
-        return { error: { _form: [err instanceof Error ? err.message : "Neplatné přílohy"] } };
+        return {
+            error: {
+                _form: [
+                    err instanceof Error ? err.message : "Neplatné přílohy",
+                ],
+            },
+        };
     }
 
     try {
@@ -359,7 +560,8 @@ export async function updateEmailTemplate(yearId: string, formData: FormData) {
             await tx.year.update({
                 where: { id: yearId },
                 data: {
-                    confirmationEmailSubject: validated.data.confirmationEmailSubject,
+                    confirmationEmailSubject:
+                        validated.data.confirmationEmailSubject,
                     confirmationEmailBody: validated.data.confirmationEmailBody,
                     confirmationEmailBcc: validated.data.confirmationEmailBcc,
                     confirmationEmailAccountId: validated.data.emailAccountId,
@@ -387,7 +589,7 @@ export async function updateEmailTemplate(yearId: string, formData: FormData) {
 
 export async function updateRegistrationSuccessContent(
     yearId: string,
-    formData: FormData,
+    formData: FormData
 ) {
     try {
         await requireEditor();
@@ -425,7 +627,10 @@ export async function updateRegistrationSuccessContent(
     }
 }
 
-export async function toggleConfirmationEmail(yearId: string, enabled: boolean) {
+export async function toggleConfirmationEmail(
+    yearId: string,
+    enabled: boolean
+) {
     try {
         await requireEditor();
     } catch {
@@ -442,7 +647,10 @@ export async function toggleConfirmationEmail(yearId: string, enabled: boolean) 
                 },
             });
 
-            if (!year?.confirmationEmailSubject || !year?.confirmationEmailBody) {
+            if (
+                !year?.confirmationEmailSubject ||
+                !year?.confirmationEmailBody
+            ) {
                 return { error: "Nejdříve nastavte předmět a text emailu" };
             }
         }
@@ -463,7 +671,10 @@ export async function toggleConfirmationEmail(yearId: string, enabled: boolean) 
     }
 }
 
-export async function updatePriceChangeEmailTemplate(yearId: string, formData: FormData) {
+export async function updatePriceChangeEmailTemplate(
+    yearId: string,
+    formData: FormData
+) {
     try {
         await requireEditor();
     } catch {
@@ -471,7 +682,8 @@ export async function updatePriceChangeEmailTemplate(yearId: string, formData: F
     }
 
     const rawData = {
-        confirmationEmailSubject: formData.get("confirmationEmailSubject") || "",
+        confirmationEmailSubject:
+            formData.get("confirmationEmailSubject") || "",
         confirmationEmailBody: formData.get("confirmationEmailBody") || "",
         confirmationEmailBcc: formData.get("confirmationEmailBcc") || null,
         emailAccountId: formData.get("emailAccountId") || null,
@@ -484,16 +696,34 @@ export async function updatePriceChangeEmailTemplate(yearId: string, formData: F
 
     let sections;
     try {
-        sections = parseEmailConditionalSectionsJson(formData.get("sectionsJson"));
+        sections = parseEmailConditionalSectionsJson(
+            formData.get("sectionsJson")
+        );
     } catch (err) {
-        return { error: { _form: [err instanceof Error ? err.message : "Neplatné podmíněné sekce"] } };
+        return {
+            error: {
+                _form: [
+                    err instanceof Error
+                        ? err.message
+                        : "Neplatné podmíněné sekce",
+                ],
+            },
+        };
     }
 
     let attachments;
     try {
-        attachments = parseEmailAttachmentsJson(formData.get("attachmentsJson"));
+        attachments = parseEmailAttachmentsJson(
+            formData.get("attachmentsJson")
+        );
     } catch (err) {
-        return { error: { _form: [err instanceof Error ? err.message : "Neplatné přílohy"] } };
+        return {
+            error: {
+                _form: [
+                    err instanceof Error ? err.message : "Neplatné přílohy",
+                ],
+            },
+        };
     }
 
     try {
@@ -501,7 +731,8 @@ export async function updatePriceChangeEmailTemplate(yearId: string, formData: F
             await tx.year.update({
                 where: { id: yearId },
                 data: {
-                    priceChangeEmailSubject: validated.data.confirmationEmailSubject,
+                    priceChangeEmailSubject:
+                        validated.data.confirmationEmailSubject,
                     priceChangeEmailBody: validated.data.confirmationEmailBody,
                     priceChangeEmailBcc: validated.data.confirmationEmailBcc,
                     priceChangeEmailAccountId: validated.data.emailAccountId,
@@ -565,7 +796,10 @@ export async function togglePriceChangeEmail(yearId: string, enabled: boolean) {
     }
 }
 
-async function createDefaultPages(yearId: string) {
+async function createDefaultPages(
+    yearId: string,
+    client: PrismaClient | Prisma.TransactionClient = db
+) {
     const defaultPages = [
         { slug: "uvod", title: "Úvod", sortOrder: 0 },
         { slug: "program", title: "Program", sortOrder: 1 },
@@ -576,7 +810,7 @@ async function createDefaultPages(yearId: string) {
         { slug: "na-pamatku", title: "Na památku", sortOrder: 6 },
     ];
 
-    await db.page.createMany({
+    await client.page.createMany({
         data: defaultPages.map((page) => ({
             ...page,
             yearId,

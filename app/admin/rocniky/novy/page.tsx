@@ -1,8 +1,18 @@
 import { Container } from "@mui/material";
-import { YearForm } from "@/components/forms/year-form";
+import { db } from "@/lib/db";
+import { YearNewForm } from "@/components/forms/year-new-form";
 import { PageHeader } from "@/components/admin/page-header";
 
-export default function NewYearPage() {
+async function getYears() {
+    return db.year.findMany({
+        orderBy: { year: "desc" },
+        select: { id: true, year: true, title: true },
+    });
+}
+
+export default async function NewYearPage() {
+    const years = await getYears();
+
     return (
         <Container maxWidth="md">
             <PageHeader
@@ -13,7 +23,7 @@ export default function NewYearPage() {
                 title="Novy rocnik"
             />
 
-            <YearForm mode="create" />
+            <YearNewForm years={years} />
         </Container>
     );
 }

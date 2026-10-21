@@ -11,27 +11,27 @@
 
 ## Tech Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Next.js | 16.x | App Router, Server Components, Server Actions, Turbopack |
-| React | 19.x | UI library (useActionState, useFormStatus) |
-| TypeScript | 5.x | Type safety (strict mode) |
-| MUI | 5.x | UI components (with Emotion styling) |
-| MUI X Date Pickers | 8.x | Date inputs |
-| Tiptap | 3.x | Rich text editor (Markdown output via tiptap-markdown) |
-| react-markdown | 10.x | Markdown rendering on public pages |
-| dnd-kit | 6.x/10.x | Drag-and-drop sorting |
-| PostgreSQL | - | Database |
-| Prisma | 5.x | ORM, migrations |
-| Auth.js | 5.x (beta) | Admin authentication (Credentials provider) |
-| jose | 6.x | Public user JWT authentication |
-| Zod | 4.x | Validation |
-| Argon2 | - | Password hashing |
-| dayjs | - | Date manipulation |
-| Nodemailer | 8.x | Email sending |
-| notistack | 3.x | Toast notifications |
-| Cloudflare R2 | - | File storage (production, S3-compatible) |
-| Tailwind CSS | 3.x | Utility CSS (limited use, MUI primary) |
+| Technology         | Version    | Purpose                                                  |
+| ------------------ | ---------- | -------------------------------------------------------- |
+| Next.js            | 16.x       | App Router, Server Components, Server Actions, Turbopack |
+| React              | 19.x       | UI library (useActionState, useFormStatus)               |
+| TypeScript         | 5.x        | Type safety (strict mode)                                |
+| MUI                | 5.x        | UI components (with Emotion styling)                     |
+| MUI X Date Pickers | 8.x        | Date inputs                                              |
+| Tiptap             | 3.x        | Rich text editor (Markdown output via tiptap-markdown)   |
+| react-markdown     | 10.x       | Markdown rendering on public pages                       |
+| dnd-kit            | 6.x/10.x   | Drag-and-drop sorting                                    |
+| PostgreSQL         | -          | Database                                                 |
+| Prisma             | 5.x        | ORM, migrations                                          |
+| Auth.js            | 5.x (beta) | Admin authentication (Credentials provider)              |
+| jose               | 6.x        | Public user JWT authentication                           |
+| Zod                | 4.x        | Validation                                               |
+| Argon2             | -          | Password hashing                                         |
+| dayjs              | -          | Date manipulation                                        |
+| Nodemailer         | 8.x        | Email sending                                            |
+| notistack          | 3.x        | Toast notifications                                      |
+| Cloudflare R2      | -          | File storage (production, S3-compatible)                 |
+| Tailwind CSS       | 3.x        | Utility CSS (limited use, MUI primary)                   |
 
 ## Code Style
 
@@ -52,9 +52,9 @@ const config = {
 
 // Bad
 const config = {
-    name: 'Helmac',
-    year: 2025
-}
+    name: "Helmac",
+    year: 2025,
+};
 ```
 
 ### Naming Conventions
@@ -171,6 +171,9 @@ npm run migrate:html-to-md -- --dry-run  # Preview without writing
 
 # Testing
 npx playwright test        # Run E2E tests
+
+# Documentation
+npm run docs:overview      # Generate docs/overview.html (interactive project guide)
 ```
 
 ## Reference Files
@@ -181,3 +184,27 @@ npx playwright test        # Run E2E tests
 - **Themes:** `styles/theme/adminTheme.ts`, `styles/theme/publicTheme.ts`
 - **Prettier Config:** `prettier.config.js`
 - **ESLint Config:** `eslint.config.mjs`
+
+## Guidelines
+
+Pattern-specific guidance lives in `.claude/rules/` (loads automatically when matching files are touched).
+Cross-cutting guidelines:
+
+- **Hard rules:** `docs/guidelines/hard-rules.md` — non-negotiable safety / dependency / scope rules (destructive ones hook-enforced).
+- **Development workflow:** `.claude/rules/development-workflow.md` — per-assignment workflow (plan → delegate via sub-agents → verify → validate → iterate ≤5 → escalate).
+- **Reusable components:** `docs/components.md` — advisory index; confirm against the source before reusing.
+- **Development records:** `docs/development/records/` — point-in-time history, one record per substantial assignment.
+- **Technical levels:** `docs/guidelines/technical-levels.md` — the six levels; your active level is in `.claude/tech-level.local.md`.
+
+## Technical Level & Decision Policy
+
+Your personal technical level is stored per-user in `.claude/tech-level.local.md` (git-ignored, not shared).
+It governs how much to explain and when to ask you to decide. Change it only via `/project-architect-tech-level`
+(menu + confirm) — never from ordinary chat. Definitions: `docs/guidelines/technical-levels.md`.
+
+**How to work with this project:**
+
+- **Autonomy:** Balanced — edits/writes and safe commands run freely; destructive or irreversible actions prompt first (see `.claude/settings.local.json` allow-list).
+- **Commits:** Agents **never** commit — only the user runs `git commit`. Simple descriptive messages. Branch as `feat/<area>-<what>` or `fix/<area>-<what>` (see `.claude/rules/parallel-instances.md`).
+- **Definition of done:** `npm run lint` + `npm run build` + `npx playwright test` all green before work is called complete.
+- **Hooks:** `.claude/settings.json` wires cross-platform Node guards in `.claude/hooks/` (validate-bash, protect-files, scan-secrets, auto-format, session-check). `build-check.mjs` is a standalone lint+build+test gate.
