@@ -20,29 +20,34 @@ import {
 } from "@mui/material";
 import { Add, Close, FilterList, Search } from "@mui/icons-material";
 import { GameIcon, GAME_ICONS, ICON_TAGS } from "@/lib/icons";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 const BATCH_SIZE = 60;
 
 interface IconPickerProps {
     value: string | null;
     onChange: (icon: string | null) => void;
-    renderTrigger?: (onClick: () => void, currentValue: string | null) => React.ReactNode;
+    renderTrigger?: (
+        onClick: () => void,
+        currentValue: string | null
+    ) => React.ReactNode;
 }
 
-export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) {
+export function IconPicker({
+    value,
+    onChange,
+    renderTrigger,
+}: IconPickerProps) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [tags, setTags] = useState<string[]>([]);
     const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
-    const [filterAnchor, setFilterAnchor] =
-        useState<HTMLElement | null>(null);
+    const [filterAnchor, setFilterAnchor] = useState<HTMLElement | null>(null);
 
     const filtered = useMemo(() => {
         return GAME_ICONS.filter((icon) => {
-            if (
-                tags.length > 0 &&
-                !tags.some((t) => icon.tags.includes(t))
-            )
+            if (tags.length > 0 && !tags.some((t) => icon.tags.includes(t)))
                 return false;
             if (search) {
                 const q = search.toLowerCase();
@@ -57,9 +62,7 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
 
     const toggleTag = (t: string) => {
         setTags((prev) =>
-            prev.includes(t)
-                ? prev.filter((x) => x !== t)
-                : [...prev, t]
+            prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
         );
     };
 
@@ -93,26 +96,26 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            border: "2px dashed",
-                            borderColor: value ? "primary.main" : "divider",
-                            borderStyle: value ? "solid" : "dashed",
-                            borderRadius: 2,
+                            border: value
+                                ? `1px solid ${p.indigo}`
+                                : `1px dashed ${p.line}`,
+                            borderRadius: "10px",
                             cursor: "pointer",
-                            backgroundColor: value ? "action.selected" : "transparent",
-                            transition: "all 0.2s",
+                            backgroundColor: value ? p.indigoSoft : p.surface,
+                            transition: "all 140ms ease",
                             "&:hover": {
-                                borderColor: "primary.main",
-                                backgroundColor: "action.hover",
+                                borderColor: p.indigo,
+                                backgroundColor: p.indigoSoft,
                             },
                         }}
                     >
                         {value ? (
                             <GameIcon
                                 name={value}
-                                sx={{ fontSize: 36, color: "text.primary" }}
+                                sx={{ fontSize: 36, color: p.indigoInk }}
                             />
                         ) : (
-                            <Add sx={{ fontSize: 24, color: "text.disabled" }} />
+                            <Add sx={{ fontSize: 24, color: p.ink3 }} />
                         )}
                     </Button>
                     <input type="hidden" name="icon" value={value || ""} />
@@ -124,16 +127,29 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
                 onClose={() => setOpen(false)}
                 maxWidth="sm"
                 fullWidth
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
                 <DialogTitle
                     sx={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
+                        fontWeight: 700,
                     }}
                 >
                     Vybrat ikonu
-                    <IconButton onClick={() => setOpen(false)} size="small">
+                    <IconButton
+                        onClick={() => setOpen(false)}
+                        size="small"
+                        sx={{
+                            color: p.ink3,
+                            borderRadius: "8px",
+                            "&:hover": {
+                                color: p.indigo,
+                                backgroundColor: p.indigoSoft,
+                            },
+                        }}
+                    >
                         <Close />
                     </IconButton>
                 </DialogTitle>
@@ -152,23 +168,25 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
                             placeholder="Hledat..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
+                            sx={builderFieldSx}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <Search />
+                                        <Search sx={{ color: p.ink3 }} />
                                     </InputAdornment>
                                 ),
                             }}
                         />
                         <IconButton
-                            onClick={(e) =>
-                                setFilterAnchor(e.currentTarget)
-                            }
-                            color={
-                                tags.length > 0
-                                    ? "primary"
-                                    : "default"
-                            }
+                            onClick={(e) => setFilterAnchor(e.currentTarget)}
+                            sx={{
+                                color: tags.length > 0 ? p.indigo : p.ink3,
+                                borderRadius: "8px",
+                                "&:hover": {
+                                    color: p.indigo,
+                                    backgroundColor: p.indigoSoft,
+                                },
+                            }}
                         >
                             <FilterList />
                         </IconButton>
@@ -214,6 +232,14 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
                                     label={t}
                                     size="small"
                                     onDelete={() => toggleTag(t)}
+                                    sx={{
+                                        borderRadius: "6px",
+                                        backgroundColor: p.indigoSoft,
+                                        color: p.indigoInk,
+                                        "& .MuiChip-deleteIcon": {
+                                            color: p.indigoInk,
+                                        },
+                                    }}
                                 />
                             ))}
                         </Box>
@@ -239,21 +265,25 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
                                     alignItems: "center",
                                     gap: 0.5,
                                     p: 1,
-                                    borderRadius: 1,
+                                    borderRadius: "10px",
                                     cursor: "pointer",
-                                    border: "2px solid",
-                                    borderColor:
+                                    border: `1px solid ${
+                                        value === icon.name ? p.indigo : p.line
+                                    }`,
+                                    backgroundColor:
                                         value === icon.name
-                                            ? "primary.main"
-                                            : "transparent",
+                                            ? p.indigoSoft
+                                            : p.surface,
+                                    transition: "all 140ms ease",
                                     "&:hover": {
-                                        backgroundColor: "action.hover",
+                                        borderColor: p.indigo,
+                                        backgroundColor: p.indigoSoft,
                                     },
                                 }}
                             >
                                 <GameIcon
                                     name={icon.name}
-                                    sx={{ fontSize: 32 }}
+                                    sx={{ fontSize: 32, color: p.ink2 }}
                                 />
                                 <Typography
                                     variant="caption"
@@ -261,6 +291,7 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
                                         textAlign: "center",
                                         lineHeight: 1.2,
                                         fontSize: "0.65rem",
+                                        color: p.ink2,
                                     }}
                                 >
                                     {icon.label}
@@ -283,6 +314,7 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
                                             (prev) => prev + BATCH_SIZE
                                         )
                                     }
+                                    sx={{ color: p.indigo }}
                                 >
                                     Načíst další{" "}
                                     {Math.min(
@@ -295,17 +327,35 @@ export function IconPicker({ value, onChange, renderTrigger }: IconPickerProps) 
                         )}
                     </Box>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
                     {value && (
                         <Button
                             onClick={handleClear}
-                            color="error"
                             size="small"
+                            disableElevation
+                            sx={{
+                                borderRadius: "10px",
+                                backgroundColor: p.neg,
+                                color: p.negInk,
+                                "&:hover": { backgroundColor: "#fecaca" },
+                            }}
                         >
                             Odebrat ikonu
                         </Button>
                     )}
-                    <Button onClick={() => setOpen(false)} size="small">
+                    <Button
+                        onClick={() => setOpen(false)}
+                        size="small"
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                 </DialogActions>

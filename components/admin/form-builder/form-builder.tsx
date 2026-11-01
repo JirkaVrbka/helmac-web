@@ -12,8 +12,14 @@ import {
 } from "@mui/material";
 import { Add, Delete } from "@mui/icons-material";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
-import type { ConditionalEmailInfo, FieldExternalUsage } from "@/lib/utils/condition-validation";
-import { getFieldExternalUsages, getFieldIdsUsedInConditions } from "@/lib/utils/condition-validation";
+import type {
+    ConditionalEmailInfo,
+    FieldExternalUsage,
+} from "@/lib/utils/condition-validation";
+import {
+    getFieldExternalUsages,
+    getFieldIdsUsedInConditions,
+} from "@/lib/utils/condition-validation";
 import {
     deleteRegistrationForm,
     saveRegistrationForm,
@@ -44,6 +50,7 @@ import { useFormBuilderState } from "./use-form-builder-state";
 import { useFormBuilderDnd } from "./use-form-builder-dnd";
 import { useFormValidation } from "./use-form-validation";
 import { makeBlankField } from "./form-builder-helpers";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface FormBuilderProps {
     yearId: string;
@@ -63,12 +70,14 @@ export function FormBuilder({
 }: FormBuilderProps) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-    const { state, dispatch, getFormData } = useFormBuilderState(initialFormData);
+    const { state, dispatch, getFormData } =
+        useFormBuilderState(initialFormData);
 
     const [editingField, setEditingField] = useState<FormField | null>(null);
     const [typeSelectorOpen, setTypeSelectorOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-    const [deletionBlock, setDeletionBlock] = useState<DeletionBlockInfo | null>(null);
+    const [deletionBlock, setDeletionBlock] =
+        useState<DeletionBlockInfo | null>(null);
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [previewSaving, setPreviewSaving] = useState(false);
@@ -155,11 +164,7 @@ export function FormBuilder({
 
     const dndCallbacks = useMemo(
         () => ({
-            moveElement: (
-                id: string,
-                parent: string | null,
-                idx: number
-            ) =>
+            moveElement: (id: string, parent: string | null, idx: number) =>
                 dispatch({
                     type: "moveElement",
                     id,
@@ -374,7 +379,26 @@ export function FormBuilder({
             <Tabs
                 value={tab}
                 onChange={(_e, v) => setTab(v)}
-                sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+                sx={{
+                    mb: 2,
+                    borderBottom: `1px solid ${p.line}`,
+                    minHeight: 0,
+                    "& .MuiTabs-indicator": {
+                        backgroundColor: p.indigo,
+                        height: 2,
+                        borderRadius: 2,
+                    },
+                    "& .MuiTab-root": {
+                        textTransform: "none",
+                        fontWeight: 600,
+                        fontSize: "0.9rem",
+                        color: p.ink2,
+                        minHeight: 0,
+                        py: 1.25,
+                        "&:hover": { color: p.ink },
+                    },
+                    "& .Mui-selected": { color: `${p.indigo} !important` },
+                }}
             >
                 <Tab label="Formulář" />
                 <Tab label="Podmínky" />
@@ -420,11 +444,23 @@ export function FormBuilder({
                                 >
                                     {isMobile && (
                                         <Button
-                                            variant="outlined"
                                             startIcon={<Add />}
                                             onClick={() =>
                                                 setTypeSelectorOpen(true)
                                             }
+                                            sx={{
+                                                textTransform: "none",
+                                                fontWeight: 600,
+                                                borderRadius: "10px",
+                                                backgroundColor: p.surface,
+                                                border: `1px dashed ${p.line}`,
+                                                color: p.indigo,
+                                                "&:hover": {
+                                                    borderColor: p.indigo,
+                                                    backgroundColor:
+                                                        p.indigoSoft,
+                                                },
+                                            }}
                                         >
                                             Přidat pole
                                         </Button>
@@ -432,13 +468,23 @@ export function FormBuilder({
                                     <Box sx={{ flex: 1 }} />
                                     {hasElements && (
                                         <Button
-                                            variant="outlined"
-                                            color="error"
+                                            variant="contained"
+                                            disableElevation
                                             startIcon={<Delete />}
                                             onClick={() =>
                                                 setDeleteConfirmOpen(true)
                                             }
                                             disabled={deleting}
+                                            sx={{
+                                                textTransform: "none",
+                                                fontWeight: 600,
+                                                borderRadius: "10px",
+                                                backgroundColor: p.neg,
+                                                color: p.negInk,
+                                                "&:hover": {
+                                                    backgroundColor: "#fecaca",
+                                                },
+                                            }}
                                         >
                                             Smazat formulář
                                         </Button>

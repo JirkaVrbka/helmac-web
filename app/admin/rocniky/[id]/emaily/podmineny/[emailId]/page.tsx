@@ -1,8 +1,9 @@
-import { Container, Typography, Chip, Box } from "@mui/material";
+import { Container, Typography, Box } from "@mui/material";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/admin/page-header";
 import { EmailTemplateEditor } from "@/components/admin/email-template-editor";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 import {
     getFormStructure,
     v2FieldsToFormFields,
@@ -12,11 +13,26 @@ import type { EmailConditionalSection } from "@/lib/types/email-sections";
 import type { EmailAttachment } from "@/lib/validators/email-attachment";
 import { updateConditionalEmailTemplate } from "@/lib/actions/conditional-emails";
 
+const monoPillSx = {
+    display: "inline-block",
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 11,
+    px: "7px",
+    py: "2px",
+    mx: 0.5,
+    borderRadius: "6px",
+    backgroundColor: p.surface3,
+    color: p.ink2,
+    verticalAlign: "middle",
+};
+
 interface ConditionalEmailPageProps {
     params: Promise<{ id: string; emailId: string }>;
 }
 
-export default async function ConditionalEmailPage({ params }: ConditionalEmailPageProps) {
+export default async function ConditionalEmailPage({
+    params,
+}: ConditionalEmailPageProps) {
     const { id, emailId } = await params;
 
     const [conditionalEmail, emailAccounts] = await Promise.all([
@@ -66,13 +82,17 @@ export default async function ConditionalEmailPage({ params }: ConditionalEmailP
         : [];
 
     const fieldNameToLabel = new Map(
-        (formStructure?.fields ?? []).map((f) => [f.name, f.label]),
+        (formStructure?.fields ?? []).map((f) => [f.name, f.label])
     );
     const conditionFieldLabel =
-        fieldNameToLabel.get(conditionalEmail.conditionFieldName) ?? conditionalEmail.conditionFieldName;
+        fieldNameToLabel.get(conditionalEmail.conditionFieldName) ??
+        conditionalEmail.conditionFieldName;
 
     const availablePlaceholders = [
-        ...(formStructure?.fields ?? []).map((f) => ({ key: f.name, label: f.label })),
+        ...(formStructure?.fields ?? []).map((f) => ({
+            key: f.name,
+            label: f.label,
+        })),
         { key: "variabilniSymbol", label: "Variabilní symbol" },
         { key: "celkovaCena", label: "Celková cena" },
         { key: "cisloUctu", label: "Číslo účtu" },
@@ -89,32 +109,53 @@ export default async function ConditionalEmailPage({ params }: ConditionalEmailP
             <PageHeader
                 breadcrumbs={[
                     { label: "Ročníky", href: "/admin/rocniky" },
-                    { label: `${year.year}`, href: `/admin/rocniky/${year.id}` },
-                    { label: "Emaily", href: `/admin/rocniky/${year.id}/emaily` },
+                    {
+                        label: `${year.year}`,
+                        href: `/admin/rocniky/${year.id}`,
+                    },
+                    {
+                        label: "Emaily",
+                        href: `/admin/rocniky/${year.id}/emaily`,
+                    },
                     { label: conditionalEmail.name },
                 ]}
                 title={conditionalEmail.name}
             />
 
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="body2" color="text.secondary" component="div">
-                    Podmínka: pole <Chip label={conditionFieldLabel} size="small" sx={{ mx: 0.5 }} />
-                    {conditionalEmail.conditionOperator === "is_set" && " – cokoli vybráno"}
-                    {conditionalEmail.conditionOperator === "is_not_set" && " – nic nevybráno"}
+            <Box sx={{ mb: 2 }}>
+                <Typography
+                    variant="body2"
+                    component="div"
+                    sx={{ color: p.ink3 }}
+                >
+                    Podmínka: pole{" "}
+                    <Box component="span" sx={monoPillSx}>
+                        {conditionFieldLabel}
+                    </Box>
+                    {conditionalEmail.conditionOperator === "is_set" &&
+                        " – cokoli vybráno"}
+                    {conditionalEmail.conditionOperator === "is_not_set" &&
+                        " – nic nevybráno"}
                     {conditionalEmail.conditionOperator === "equals" && (
                         <>
                             {" = "}
-                            <Chip label={conditionalEmail.conditionValue ?? ""} size="small" sx={{ mx: 0.5 }} />
+                            <Box component="span" sx={monoPillSx}>
+                                {conditionalEmail.conditionValue ?? ""}
+                            </Box>
                         </>
                     )}
-                    {conditionalEmail.conditionOperator === "quantity_gt_zero" && (
+                    {conditionalEmail.conditionOperator ===
+                        "quantity_gt_zero" && (
                         <>
                             {" – počet pro "}
-                            <Chip label={conditionalEmail.conditionValue ?? ""} size="small" sx={{ mx: 0.5 }} />
+                            <Box component="span" sx={monoPillSx}>
+                                {conditionalEmail.conditionValue ?? ""}
+                            </Box>
                             {" > 0"}
                         </>
                     )}
-                    {conditionalEmail.conditionOperator === "quantity_any_gt_zero" && " – jakákoli volba > 0"}
+                    {conditionalEmail.conditionOperator ===
+                        "quantity_any_gt_zero" && " – jakákoli volba > 0"}
                 </Typography>
             </Box>
 
@@ -127,8 +168,14 @@ export default async function ConditionalEmailPage({ params }: ConditionalEmailP
                 saveAction={updateConditionalEmailTemplate}
                 emailAccounts={emailAccounts}
                 selectedEmailAccountId={conditionalEmail.accountId}
-                initialSections={(conditionalEmail.sections as unknown as EmailConditionalSection[]) ?? []}
-                initialAttachments={(conditionalEmail.attachments as unknown as EmailAttachment[]) ?? []}
+                initialSections={
+                    (conditionalEmail.sections as unknown as EmailConditionalSection[]) ??
+                    []
+                }
+                initialAttachments={
+                    (conditionalEmail.attachments as unknown as EmailAttachment[]) ??
+                    []
+                }
                 availableFields={allFormFields}
                 pricingDefinitions={pricingDefinitions}
             />

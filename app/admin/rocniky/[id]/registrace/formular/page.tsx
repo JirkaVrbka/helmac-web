@@ -5,6 +5,7 @@ import { requireEditor } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/page-header";
 import { FormBuilder } from "@/components/admin/form-builder";
 import { migrateFormData } from "@/lib/utils/form-migration";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface FormularPageProps {
     params: Promise<{ id: string }>;
@@ -34,7 +35,10 @@ async function getYearWithForm(yearId: string) {
     });
 }
 
-function extractEmailFieldNames(subject: string | null, body: string | null): string[] {
+function extractEmailFieldNames(
+    subject: string | null,
+    body: string | null
+): string[] {
     const names = new Set<string>();
     const regex = /\{(\w+)\}/g;
     for (const text of [subject, body]) {
@@ -62,7 +66,7 @@ export default async function FormularPage({ params }: FormularPageProps) {
     // Extract field names used in confirmation email placeholders
     const emailFieldNames = extractEmailFieldNames(
         year.confirmationEmailSubject,
-        year.confirmationEmailBody,
+        year.confirmationEmailBody
     );
 
     // Also extract field names used in conditional email placeholders
@@ -89,14 +93,29 @@ export default async function FormularPage({ params }: FormularPageProps) {
             <PageHeader
                 breadcrumbs={[
                     { label: "Ročníky", href: "/admin/rocniky" },
-                    { label: `${year.year}`, href: `/admin/rocniky/${year.id}` },
-                    { label: "Registrace", href: `/admin/rocniky/${year.id}/registrace` },
+                    {
+                        label: `${year.year}`,
+                        href: `/admin/rocniky/${year.id}`,
+                    },
+                    {
+                        label: "Registrace",
+                        href: `/admin/rocniky/${year.id}/registrace`,
+                    },
                     { label: "Formulář" },
                 ]}
                 title="Registrační formulář"
             />
             {isEditor && (
-                <Alert severity="info" sx={{ mb: 2 }}>
+                <Alert
+                    icon={false}
+                    sx={{
+                        mb: 2,
+                        borderRadius: "12px",
+                        backgroundColor: p.field,
+                        color: p.fieldInk,
+                        "& .MuiAlert-message": { color: p.fieldInk },
+                    }}
+                >
                     Formulář je zobrazen pouze pro čtení.
                 </Alert>
             )}

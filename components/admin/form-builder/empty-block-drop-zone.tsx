@@ -2,6 +2,7 @@
 
 import { Box, Paper, Typography } from "@mui/material";
 import { useDroppable } from "@dnd-kit/core";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface Props {
     blockId: string;
@@ -14,19 +15,19 @@ export function EmptyBlockDropZone({ blockId }: Props) {
 
     return (
         <Paper
-            variant="outlined"
+            elevation={0}
             sx={{
                 display: "flex",
                 alignItems: "stretch",
                 mb: 1,
                 border: "none",
                 borderLeft: "4px solid",
-                borderLeftColor: "info.main",
-                backgroundColor: "action.hover",
+                borderLeftColor: p.fieldInk,
+                backgroundColor: p.surface2,
                 borderTopLeftRadius: 0,
                 borderTopRightRadius: 0,
-                borderBottomLeftRadius: 8,
-                borderBottomRightRadius: 8,
+                borderBottomLeftRadius: "12px",
+                borderBottomRightRadius: "12px",
                 pl: 3,
                 pr: 1,
                 pt: 0.5,
@@ -39,16 +40,13 @@ export function EmptyBlockDropZone({ blockId }: Props) {
                     flex: 1,
                     py: 2,
                     textAlign: "center",
-                    border: "2px dashed",
-                    borderColor: isOver ? "info.main" : "divider",
-                    borderRadius: 1,
-                    backgroundColor: isOver
-                        ? "action.selected"
-                        : "background.paper",
-                    transition: "all 0.2s ease",
+                    border: `2px dashed ${isOver ? p.indigo : p.line}`,
+                    borderRadius: "10px",
+                    backgroundColor: isOver ? p.indigoSoft : p.surface,
+                    transition: "all 140ms ease",
                 }}
             >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: p.ink3 }}>
                     Přetáhněte pole sem
                 </Typography>
             </Box>

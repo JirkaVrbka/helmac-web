@@ -13,13 +13,7 @@ import {
     DialogContentText,
     DialogTitle,
 } from "@mui/material";
-import {
-    Delete,
-    Pause,
-    PlayArrow,
-    Replay,
-    Send,
-} from "@mui/icons-material";
+import { Delete, Pause, PlayArrow, Replay, Send } from "@mui/icons-material";
 import {
     deleteCampaign,
     pauseCampaign,
@@ -29,6 +23,52 @@ import {
     startCampaign,
 } from "@/lib/actions/email-campaigns";
 import type { RecipientFilter } from "@/lib/validators/email-campaign";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+
+const ghostBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    backgroundColor: p.surface,
+    boxShadow: "none",
+    "&:hover": {
+        borderColor: p.ink3,
+        backgroundColor: p.surface2,
+        boxShadow: "none",
+    },
+};
+
+const indigoBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    backgroundColor: p.indigo,
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#4338ca", boxShadow: "none" },
+};
+
+const dangerBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    border: `1px solid ${p.line}`,
+    color: p.negInk,
+    backgroundColor: p.surface,
+    boxShadow: "none",
+    "&:hover": {
+        borderColor: p.negInk,
+        backgroundColor: p.neg,
+        boxShadow: "none",
+    },
+};
+
+const softDangerBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    backgroundColor: p.neg,
+    color: p.negInk,
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#fecaca", boxShadow: "none" },
+};
 
 interface CampaignDetailActionsProps {
     campaignId: string;
@@ -116,11 +156,10 @@ export function CampaignDetailActions({
                 </Alert>
             )}
 
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
                 {status === "DRAFT" && (
                     <Button
                         variant="contained"
-                        color="primary"
                         startIcon={
                             isPending ? (
                                 <CircularProgress size={18} />
@@ -130,6 +169,7 @@ export function CampaignDetailActions({
                         }
                         onClick={handleOpenConfirm}
                         disabled={isPending}
+                        sx={indigoBtnSx}
                     >
                         Odeslat hromadný email
                     </Button>
@@ -141,6 +181,7 @@ export function CampaignDetailActions({
                         startIcon={<Pause />}
                         onClick={() => run(() => pauseCampaign(campaignId))}
                         disabled={isPending}
+                        sx={ghostBtnSx}
                     >
                         Pozastavit
                     </Button>
@@ -152,6 +193,7 @@ export function CampaignDetailActions({
                         startIcon={<PlayArrow />}
                         onClick={() => run(() => resumeCampaign(campaignId))}
                         disabled={isPending}
+                        sx={indigoBtnSx}
                     >
                         Pokračovat
                     </Button>
@@ -163,6 +205,7 @@ export function CampaignDetailActions({
                         startIcon={<Replay />}
                         onClick={() => run(() => retryFailedItems(campaignId))}
                         disabled={isPending}
+                        sx={ghostBtnSx}
                     >
                         Opakovat neúspěšné ({failedCount})
                     </Button>
@@ -171,18 +214,24 @@ export function CampaignDetailActions({
                 {status === "DRAFT" && (
                     <Button
                         variant="outlined"
-                        color="error"
                         startIcon={<Delete />}
                         onClick={() => setDeleteOpen(true)}
                         disabled={isPending}
+                        sx={dangerBtnSx}
                     >
                         Smazat
                     </Button>
                 )}
             </Box>
 
-            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-                <DialogTitle>Odeslat hromadný email?</DialogTitle>
+            <Dialog
+                open={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Odeslat hromadný email?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         Hromadný email se začne odesílat všem příjemcům
@@ -193,34 +242,51 @@ export function CampaignDetailActions({
                             ` Počet příjemců: ${recipientCount}.`}
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setConfirmOpen(false)}>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button
+                        onClick={() => setConfirmOpen(false)}
+                        sx={ghostBtnSx}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         variant="contained"
+                        disableElevation
                         onClick={handleStart}
                         disabled={isPending}
+                        sx={indigoBtnSx}
                     >
                         Odeslat
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
-                <DialogTitle>Smazat hromadný email?</DialogTitle>
+            <Dialog
+                open={deleteOpen}
+                onClose={() => setDeleteOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Smazat hromadný email?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         Hromadný email a jeho fronta budou trvale odstraněny.
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteOpen(false)}>Zrušit</Button>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button
+                        onClick={() => setDeleteOpen(false)}
+                        sx={ghostBtnSx}
+                    >
+                        Zrušit
+                    </Button>
                     <Button
                         variant="contained"
-                        color="error"
+                        disableElevation
                         onClick={handleDelete}
                         disabled={isPending}
+                        sx={softDangerBtnSx}
                     >
                         Smazat
                     </Button>

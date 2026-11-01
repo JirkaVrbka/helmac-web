@@ -35,6 +35,7 @@ import {
 } from "@mui/icons-material";
 import { useSidebarContext } from "@/lib/contexts/sidebar-context";
 import { YearSidebar } from "./year-sidebar";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface MenuItem {
     text: string;
@@ -55,7 +56,12 @@ const staticMenuItems: MenuItemType[] = [
     { text: "Ročníky", href: "/admin/rocniky", icon: CalendarMonth },
     { text: "Novinky", href: "/admin/novinky", icon: Newspaper },
     { text: "Galerie", href: "/admin/galerie", icon: PhotoLibrary },
-    { text: "Účastníci", href: "/admin/ucastnici", icon: PersonOutline, roles: ["SUPER_ADMIN", "ADMIN"] },
+    {
+        text: "Účastníci",
+        href: "/admin/ucastnici",
+        icon: PersonOutline,
+        roles: ["SUPER_ADMIN", "ADMIN"],
+    },
     { divider: true },
     {
         text: "Uživatelé",
@@ -65,23 +71,73 @@ const staticMenuItems: MenuItemType[] = [
     },
     { divider: true },
     { text: "Nastavení", href: "/admin/nastaveni", icon: Settings },
-    { text: "GDPR", href: "/admin/nastaveni/gdpr", icon: PrivacyTip, indented: true },
-    { text: "Emailové účty", href: "/admin/nastaveni/emaily", icon: Email, indented: true, roles: ["SUPER_ADMIN", "ADMIN"] },
-    { text: "Banka", href: "/admin/nastaveni/banka", icon: AccountBalance, indented: true, roles: ["SUPER_ADMIN", "ADMIN"] },
+    {
+        text: "GDPR",
+        href: "/admin/nastaveni/gdpr",
+        icon: PrivacyTip,
+        indented: true,
+    },
+    {
+        text: "Emailové účty",
+        href: "/admin/nastaveni/emaily",
+        icon: Email,
+        indented: true,
+        roles: ["SUPER_ADMIN", "ADMIN"],
+    },
+    {
+        text: "Banka",
+        href: "/admin/nastaveni/banka",
+        icon: AccountBalance,
+        indented: true,
+        roles: ["SUPER_ADMIN", "ADMIN"],
+    },
 ];
 
-const selectedSx = {
+const drawerItemSx = {
+    position: "relative",
+    mx: 1,
+    my: "1px",
+    py: "9px",
+    pl: "12px",
+    pr: "12px",
+    borderRadius: "10px",
+    color: p.ink2,
+    transition: "all 140ms ease",
+    "& .MuiListItemIcon-root": {
+        minWidth: 36,
+        color: p.ink3,
+        transition: "color 140ms ease",
+    },
+    "& .MuiListItemText-primary": {
+        fontSize: "0.9rem",
+    },
+    "&:hover": {
+        backgroundColor: p.surface2,
+        color: p.ink,
+        "& .MuiListItemIcon-root": { color: p.ink2 },
+    },
     "&.Mui-selected": {
-        backgroundColor: "primary.main",
-        color: "primary.contrastText",
+        backgroundColor: p.indigoSoft,
+        color: p.indigoInk,
+        "& .MuiListItemText-primary": { fontWeight: 600 },
+        "& .MuiListItemIcon-root": { color: p.indigo },
         "&:hover": {
-            backgroundColor: "primary.dark",
+            backgroundColor: p.indigoSoft,
+            color: p.indigoInk,
+            "& .MuiListItemIcon-root": { color: p.indigo },
         },
-        "& .MuiListItemIcon-root": {
-            color: "inherit",
+        "&::before": {
+            content: '""',
+            position: "absolute",
+            left: 0,
+            top: 7,
+            bottom: 7,
+            width: 3,
+            borderRadius: "0 3px 3px 0",
+            backgroundColor: p.indigo,
         },
     },
-};
+} as const;
 
 const ROLE_LABELS: Record<string, string> = {
     SUPER_ADMIN: "Super Admin",
@@ -137,7 +193,7 @@ export function AdminDrawer({
 
     const userSection = (
         <Box>
-            <Divider />
+            <Divider sx={{ borderColor: p.line }} />
             <Box
                 sx={{
                     display: "flex",
@@ -149,16 +205,23 @@ export function AdminDrawer({
             >
                 <Avatar
                     sx={{
-                        width: 32,
-                        height: 32,
+                        width: 34,
+                        height: 34,
                         fontSize: "0.85rem",
-                        bgcolor: "primary.main",
+                        fontWeight: 700,
+                        borderRadius: "10px",
+                        bgcolor: p.indigo,
                     }}
                 >
                     {userName ? userName.charAt(0).toUpperCase() : "U"}
                 </Avatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={500} noWrap>
+                    <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        noWrap
+                        sx={{ color: p.ink }}
+                    >
                         {userName || "Uživatel"}
                     </Typography>
                     {userRole && (
@@ -166,12 +229,30 @@ export function AdminDrawer({
                             label={ROLE_LABELS[userRole] || userRole}
                             size="small"
                             variant="outlined"
-                            sx={{ height: 18, fontSize: "0.65rem", mt: 0.25 }}
+                            sx={{
+                                height: 18,
+                                fontSize: "0.65rem",
+                                mt: 0.25,
+                                borderColor: p.line,
+                                color: p.ink2,
+                            }}
                         />
                     )}
                 </Box>
                 <Tooltip title="Odhlásit">
-                    <IconButton size="small" onClick={handleLogout}>
+                    <IconButton
+                        size="small"
+                        onClick={handleLogout}
+                        sx={{
+                            borderRadius: "8px",
+                            color: p.ink3,
+                            transition: "all 140ms ease",
+                            "&:hover": {
+                                color: p.negInk,
+                                backgroundColor: p.neg,
+                            },
+                        }}
+                    >
                         <Logout fontSize="small" />
                     </IconButton>
                 </Tooltip>
@@ -181,16 +262,35 @@ export function AdminDrawer({
 
     const defaultDrawerContent = (
         <Box>
-            <Box sx={{ p: 2, textAlign: "center" }}>
-                <Typography variant="h6" fontWeight="bold">
+            <Box
+                sx={{
+                    px: 2,
+                    py: "18px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.25,
+                }}
+            >
+                <Typography
+                    sx={{
+                        fontSize: "1.15rem",
+                        fontWeight: 700,
+                        color: p.ink,
+                    }}
+                >
                     Helmac Admin
                 </Typography>
             </Box>
-            <Divider />
+            <Divider sx={{ borderColor: p.line }} />
             <List>
                 {filteredMenuItems.map((item, index) => {
                     if ("divider" in item) {
-                        return <Divider key={index} sx={{ my: 1 }} />;
+                        return (
+                            <Divider
+                                key={index}
+                                sx={{ my: 1, mx: 2, borderColor: p.lineSoft }}
+                            />
+                        );
                     }
 
                     const Icon = item.icon;
@@ -205,7 +305,10 @@ export function AdminDrawer({
                                 href={item.href}
                                 selected={isActive}
                                 onClick={onClose}
-                                sx={{ ...(item.indented && { pl: 4 }), ...selectedSx }}
+                                sx={{
+                                    ...drawerItemSx,
+                                    ...(item.indented && { pl: 4 }),
+                                }}
                             >
                                 <ListItemIcon>
                                     <Icon />
@@ -223,7 +326,7 @@ export function AdminDrawer({
                                         href={activeYearHref}
                                         selected={activeYearIsActive}
                                         onClick={onClose}
-                                        sx={{ pl: 4, ...selectedSx }}
+                                        sx={{ ...drawerItemSx, pl: 4 }}
                                     >
                                         <ListItemIcon>
                                             <Today />
@@ -233,7 +336,7 @@ export function AdminDrawer({
                                 ) : (
                                     <ListItemButton
                                         onClick={handleActiveYearClick}
-                                        sx={{ pl: 4, ...selectedSx }}
+                                        sx={{ ...drawerItemSx, pl: 4 }}
                                     >
                                         <ListItemIcon>
                                             <Today />
@@ -241,7 +344,7 @@ export function AdminDrawer({
                                         <ListItemText primary="Aktuální ročník" />
                                     </ListItemButton>
                                 )}
-                            </ListItem>,
+                            </ListItem>
                         );
                     }
 
@@ -251,15 +354,19 @@ export function AdminDrawer({
         </Box>
     );
 
-    const sidebarContent = sidebarYear
-        ? <YearSidebar yearData={sidebarYear} onClose={onClose} userRole={userRole} />
-        : defaultDrawerContent;
+    const sidebarContent = sidebarYear ? (
+        <YearSidebar
+            yearData={sidebarYear}
+            onClose={onClose}
+            userRole={userRole}
+        />
+    ) : (
+        defaultDrawerContent
+    );
 
     const drawerContent = (
         <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            <Box sx={{ flex: 1, overflow: "auto" }}>
-                {sidebarContent}
-            </Box>
+            <Box sx={{ flex: 1, overflow: "auto" }}>{sidebarContent}</Box>
             {userSection}
         </Box>
     );
@@ -277,7 +384,12 @@ export function AdminDrawer({
                 ModalProps={{ keepMounted: true }}
                 sx={{
                     display: { xs: "block", md: "none" },
-                    "& .MuiDrawer-paper": { width },
+                    "& .MuiDrawer-paper": {
+                        width,
+                        color: p.ink2,
+                        backgroundColor: p.surface,
+                        borderRight: `1px solid ${p.line}`,
+                    },
                 }}
             >
                 {drawerContent}
@@ -287,7 +399,13 @@ export function AdminDrawer({
                 variant="permanent"
                 sx={{
                     display: { xs: "none", md: "block" },
-                    "& .MuiDrawer-paper": { width, boxSizing: "border-box" },
+                    "& .MuiDrawer-paper": {
+                        width,
+                        boxSizing: "border-box",
+                        color: p.ink2,
+                        backgroundColor: p.surface,
+                        borderRight: `1px solid ${p.line}`,
+                    },
                 }}
                 open
             >

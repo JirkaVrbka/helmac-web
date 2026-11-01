@@ -4,8 +4,6 @@ import { useMemo, useState } from "react";
 import {
     Box,
     Button,
-    Card,
-    CardContent,
     FormControl,
     InputLabel,
     MenuItem,
@@ -18,6 +16,8 @@ import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import type { RecipientFilter } from "@/lib/validators/email-campaign";
 import { TestEmailDialog } from "@/components/admin/test-email-dialog";
 import { MassEmailSendConfirmDialog } from "./mass-email-send-confirm-dialog";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface EmailAccountOption {
     id: string;
@@ -39,6 +39,28 @@ const GROUP_OPTIONS: { value: RecipientGroup; label: string }[] = [
     { value: "paid", label: "Zaplacení" },
     { value: "unpaid", label: "Nezaplacení" },
 ];
+
+const ghostBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    backgroundColor: p.surface,
+    boxShadow: "none",
+    "&:hover": {
+        borderColor: p.ink3,
+        backgroundColor: p.surface2,
+        boxShadow: "none",
+    },
+};
+
+const indigoBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    backgroundColor: p.indigo,
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#4338ca", boxShadow: "none" },
+};
 
 export function MassEmailComposer({
     yearId,
@@ -63,7 +85,7 @@ export function MassEmailComposer({
             keys.add(match[1]);
         }
         const labelByKey = new Map(
-            availablePlaceholders.map((ph) => [ph.key, ph.label]),
+            availablePlaceholders.map((ph) => [ph.key, ph.label])
         );
         return Array.from(keys).map((k) => ({
             key: k,
@@ -79,99 +101,109 @@ export function MassEmailComposer({
         GROUP_OPTIONS.find((o) => o.value === group)?.label ?? "";
 
     return (
-        <Card variant="outlined" sx={{ mb: 4 }}>
-            <CardContent>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                    <Box
+        <Box
+            sx={{
+                backgroundColor: p.surface,
+                border: `1px solid ${p.line}`,
+                borderRadius: "14px",
+                p: 2.5,
+                mb: 3.5,
+            }}
+        >
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 1.5,
+                        flexWrap: "wrap",
+                    }}
+                >
+                    <Button
+                        variant="outlined"
+                        startIcon={<ForwardToInbox />}
+                        onClick={() => setTestOpen(true)}
+                        disabled={!canSend}
+                        sx={ghostBtnSx}
+                    >
+                        Testovací odeslání
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<Send />}
+                        onClick={() => setConfirmOpen(true)}
+                        disabled={!canSend}
+                        sx={indigoBtnSx}
+                    >
+                        Odeslat
+                    </Button>
+                </Box>
+
+                <FormControl fullWidth size="small" sx={builderFieldSx}>
+                    <InputLabel>Komu odeslat</InputLabel>
+                    <Select
+                        value={group}
+                        onChange={(e) =>
+                            setGroup(e.target.value as RecipientGroup)
+                        }
+                        label="Komu odeslat"
+                    >
+                        {GROUP_OPTIONS.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
+                <FormControl fullWidth size="small" sx={builderFieldSx}>
+                    <InputLabel shrink>Odesílatel</InputLabel>
+                    <Select
+                        value={accountId}
+                        onChange={(e) => setAccountId(e.target.value)}
+                        label="Odesílatel"
+                        displayEmpty
+                        notched
+                    >
+                        <MenuItem value="">Hlavní emailový účet</MenuItem>
+                        {emailAccounts.map((account) => (
+                            <MenuItem key={account.id} value={account.id}>
+                                {account.email}
+                                {account.label ? ` (${account.label})` : ""}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
+                <TextField
+                    label="Předmět"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    fullWidth
+                    size="small"
+                    sx={builderFieldSx}
+                />
+
+                <Box>
+                    <Typography
                         sx={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            gap: 2,
-                            flexWrap: "wrap",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: p.ink2,
+                            mb: 1,
                         }}
                     >
-                        <Button
-                            variant="outlined"
-                            startIcon={<ForwardToInbox />}
-                            onClick={() => setTestOpen(true)}
-                            disabled={!canSend}
-                        >
-                            Testovací odeslání
-                        </Button>
-                        <Button
-                            variant="contained"
-                            startIcon={<Send />}
-                            onClick={() => setConfirmOpen(true)}
-                            disabled={!canSend}
-                        >
-                            Odeslat
-                        </Button>
-                    </Box>
-
-                    <FormControl fullWidth>
-                        <InputLabel>Komu odeslat</InputLabel>
-                        <Select
-                            value={group}
-                            onChange={(e) =>
-                                setGroup(e.target.value as RecipientGroup)
-                            }
-                            label="Komu odeslat"
-                        >
-                            {GROUP_OPTIONS.map((option) => (
-                                <MenuItem
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-
-                    <FormControl fullWidth>
-                        <InputLabel shrink>Odesílatel</InputLabel>
-                        <Select
-                            value={accountId}
-                            onChange={(e) => setAccountId(e.target.value)}
-                            label="Odesílatel"
-                            displayEmpty
-                            notched
-                        >
-                            <MenuItem value="">Hlavní emailový účet</MenuItem>
-                            {emailAccounts.map((account) => (
-                                <MenuItem key={account.id} value={account.id}>
-                                    {account.email}
-                                    {account.label ? ` (${account.label})` : ""}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-
-                    <TextField
-                        label="Předmět"
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        fullWidth
+                        Text emailu
+                    </Typography>
+                    <RichTextEditor
+                        value={body}
+                        onChange={setBody}
+                        format="html"
+                        minHeight={300}
+                        yearId={yearId}
                     />
-
-                    <Box>
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 1 }}
-                        >
-                            Text emailu
-                        </Typography>
-                        <RichTextEditor
-                            value={body}
-                            onChange={setBody}
-                            format="html"
-                            minHeight={300}
-                            yearId={yearId}
-                        />
-                    </Box>
                 </Box>
-            </CardContent>
+            </Box>
 
             <TestEmailDialog
                 open={testOpen}
@@ -192,6 +224,6 @@ export function MassEmailComposer({
                 body={body}
                 accountId={accountId || null}
             />
-        </Card>
+        </Box>
     );
 }

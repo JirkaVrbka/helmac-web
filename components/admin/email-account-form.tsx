@@ -14,7 +14,13 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { createEmailAccount, updateEmailAccount, type EmailAccountActionState } from "@/lib/actions/email-accounts";
+import {
+    createEmailAccount,
+    updateEmailAccount,
+    type EmailAccountActionState,
+} from "@/lib/actions/email-accounts";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface EmailAccountFormProps {
     mode: "create" | "edit";
@@ -28,10 +34,17 @@ interface EmailAccountFormProps {
     };
 }
 
-export function EmailAccountForm({ mode, open, onClose, account }: EmailAccountFormProps) {
+export function EmailAccountForm({
+    mode,
+    open,
+    onClose,
+    account,
+}: EmailAccountFormProps) {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>(
+        {}
+    );
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -68,13 +81,28 @@ export function EmailAccountForm({ mode, open, onClose, account }: EmailAccountF
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: "14px" } }}
+        >
             <form onSubmit={handleSubmit}>
-                <DialogTitle>
-                    {mode === "create" ? "Přidat emailový účet" : "Upravit emailový účet"}
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    {mode === "create"
+                        ? "Přidat emailový účet"
+                        : "Upravit emailový účet"}
                 </DialogTitle>
                 <DialogContent>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                            mt: 1,
+                        }}
+                    >
                         {mode === "create" ? (
                             <TextField
                                 name="email"
@@ -84,25 +112,36 @@ export function EmailAccountForm({ mode, open, onClose, account }: EmailAccountF
                                 fullWidth
                                 placeholder="info@seznam.cz"
                                 error={!!fieldErrors.email}
-                                helperText={fieldErrors.email?.[0] ?? "Musí být @seznam.cz nebo @email.cz"}
+                                helperText={
+                                    fieldErrors.email?.[0] ??
+                                    "Musí být @seznam.cz nebo @email.cz"
+                                }
+                                sx={builderFieldSx}
                             />
                         ) : (
-                            <Typography variant="body1" color="text.secondary">
+                            <Typography variant="body1" sx={{ color: p.ink2 }}>
                                 {account?.email}
                             </Typography>
                         )}
 
                         <TextField
                             name="password"
-                            label={mode === "create" ? "Heslo (SMTP)" : "Nové heslo (SMTP)"}
+                            label={
+                                mode === "create"
+                                    ? "Heslo (SMTP)"
+                                    : "Nové heslo (SMTP)"
+                            }
                             type="password"
                             required={mode === "create"}
                             fullWidth
                             error={!!fieldErrors.password}
                             helperText={
                                 fieldErrors.password?.[0] ??
-                                (mode === "edit" ? "Vyplňte pouze pokud chcete změnit heslo" : "Heslo k SMTP serveru (Seznam.cz)")
+                                (mode === "edit"
+                                    ? "Vyplňte pouze pokud chcete změnit heslo"
+                                    : "Heslo k SMTP serveru (Seznam.cz)")
                             }
+                            sx={builderFieldSx}
                         />
 
                         <TextField
@@ -113,6 +152,7 @@ export function EmailAccountForm({ mode, open, onClose, account }: EmailAccountF
                             placeholder="např. Hlavní, Registrace, Info"
                             error={!!fieldErrors.label}
                             helperText={fieldErrors.label?.[0]}
+                            sx={builderFieldSx}
                         />
 
                         <FormControlLabel
@@ -121,28 +161,81 @@ export function EmailAccountForm({ mode, open, onClose, account }: EmailAccountF
                                     name="isMain"
                                     value="true"
                                     defaultChecked={account?.isMain ?? false}
+                                    sx={{
+                                        "&.Mui-checked": { color: p.indigo },
+                                    }}
                                 />
                             }
                             label="Hlavní účet (výchozí odesílatel)"
+                            sx={{
+                                "& .MuiFormControlLabel-label": {
+                                    color: p.ink2,
+                                },
+                            }}
                         />
 
-                        <Box sx={{ p: 1.5, bgcolor: "grey.50", borderRadius: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                SMTP Server: smtp.seznam.cz | Port: 465 | Šifrování: SSL/TLS
+                        <Box
+                            sx={{
+                                p: 1.5,
+                                backgroundColor: p.surface2,
+                                border: `1px solid ${p.line}`,
+                                borderRadius: "10px",
+                            }}
+                        >
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: p.ink2,
+                                    fontFamily: "'JetBrains Mono', monospace",
+                                }}
+                            >
+                                SMTP Server: smtp.seznam.cz | Port: 465 |
+                                Šifrování: SSL/TLS
                             </Typography>
                         </Box>
 
-                        {error && (
-                            <Alert severity="error">{error}</Alert>
-                        )}
+                        {error && <Alert severity="error">{error}</Alert>}
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose} disabled={saving}>
+                    <Button
+                        onClick={handleClose}
+                        disabled={saving}
+                        sx={{
+                            backgroundColor: p.surface,
+                            border: `1px solid ${p.line}`,
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            "&:hover": {
+                                borderColor: p.indigo,
+                                backgroundColor: p.indigoSoft,
+                                color: p.indigo,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
-                    <Button type="submit" variant="contained" disabled={saving}>
-                        {saving ? "Ukládání..." : (mode === "create" ? "Přidat" : "Uložit")}
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={saving}
+                        disableElevation
+                        sx={{
+                            backgroundColor: p.indigo,
+                            color: "#fff",
+                            borderRadius: "10px",
+                            boxShadow: "none",
+                            "&:hover": {
+                                backgroundColor: "#4338ca",
+                                boxShadow: "none",
+                            },
+                        }}
+                    >
+                        {saving
+                            ? "Ukládání..."
+                            : mode === "create"
+                              ? "Přidat"
+                              : "Uložit"}
                     </Button>
                 </DialogActions>
             </form>

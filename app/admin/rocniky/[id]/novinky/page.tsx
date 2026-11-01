@@ -1,17 +1,11 @@
-import {
-    Container,
-    Typography,
-    Card,
-    CardContent,
-    Box,
-} from "@mui/material";
-import { Add } from "@mui/icons-material";
+import { Container, Typography, Box } from "@mui/material";
 import { notFound } from "next/navigation";
-import { LinkButton } from "@/components/ui/link-button";
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/admin/page-header";
 import { ListFilters } from "@/components/admin/list-filters";
 import { NewsList } from "@/components/admin/news-list";
+import { DashedAddButton } from "@/components/admin/dashed-add-button";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 import { Prisma } from "@prisma/client";
 
 interface YearNewsPageProps {
@@ -50,7 +44,10 @@ async function getNews(yearId: string, filters: { q?: string }) {
     });
 }
 
-export default async function YearNewsPage({ params, searchParams }: YearNewsPageProps) {
+export default async function YearNewsPage({
+    params,
+    searchParams,
+}: YearNewsPageProps) {
     const { id } = await params;
     const search = await searchParams;
     const [year, news] = await Promise.all([getYear(id), getNews(id, search)]);
@@ -64,7 +61,10 @@ export default async function YearNewsPage({ params, searchParams }: YearNewsPag
             <PageHeader
                 breadcrumbs={[
                     { label: "Ročníky", href: "/admin/rocniky" },
-                    { label: `${year.year} - ${year.title}`, href: `/admin/rocniky/${year.id}` },
+                    {
+                        label: `${year.year} - ${year.title}`,
+                        href: `/admin/rocniky/${year.id}`,
+                    },
                     { label: "Novinky" },
                 ]}
                 title="Novinky"
@@ -77,27 +77,28 @@ export default async function YearNewsPage({ params, searchParams }: YearNewsPag
                     mb: 4,
                 }}
             >
-                <LinkButton
-                    href={`/admin/rocniky/${id}/novinky/nova`}
-                    variant="contained"
-                    startIcon={<Add />}
-                >
+                <DashedAddButton href={`/admin/rocniky/${id}/novinky/nova`}>
                     Nová novinka
-                </LinkButton>
+                </DashedAddButton>
             </Box>
 
             <ListFilters searchPlaceholder="Hledat novinky..." />
 
             {news.length === 0 ? (
-                <Card>
-                    <CardContent>
-                        <Typography color="text.secondary" textAlign="center">
-                            {search.q
-                                ? "Žádné novinky neodpovídají filtru."
-                                : "Zatím nebyly vytvořeny žádné novinky pro tento ročník."}
-                        </Typography>
-                    </CardContent>
-                </Card>
+                <Box
+                    sx={{
+                        border: `1px dashed ${p.line}`,
+                        borderRadius: "14px",
+                        p: 5,
+                        textAlign: "center",
+                    }}
+                >
+                    <Typography sx={{ color: p.ink3 }}>
+                        {search.q
+                            ? "Žádné novinky neodpovídají filtru."
+                            : "Zatím nebyly vytvořeny žádné novinky pro tento ročník."}
+                    </Typography>
+                </Box>
             ) : (
                 <NewsList
                     news={news}

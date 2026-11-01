@@ -20,6 +20,8 @@ import {
     HomepageStepActionState,
 } from "@/lib/actions/homepage-steps";
 import { useRouter } from "next/navigation";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface HomepageStepFormProps {
     mode: "create" | "edit";
@@ -46,9 +48,7 @@ export function HomepageStepForm({
     const [icon, setIcon] = useState<string | null>(
         defaultValues?.icon || null
     );
-    const [title, setTitle] = useState(
-        defaultValues?.title || ""
-    );
+    const [title, setTitle] = useState(defaultValues?.title || "");
     const [description, setDescription] = useState(
         defaultValues?.description || ""
     );
@@ -56,25 +56,19 @@ export function HomepageStepForm({
     const serverAction =
         mode === "create"
             ? createHomepageStep.bind(null, yearId)
-            : updateHomepageStep.bind(
-                  null,
-                  stepId as string
-              );
+            : updateHomepageStep.bind(null, stepId as string);
 
     const [state, formAction, isPending] = useActionState<
         HomepageStepActionState,
         FormData
-    >(
-        async (prev, formData) => {
-            const result = await serverAction(prev, formData);
-            if (result?.success) {
-                onClose();
-                router.refresh();
-            }
-            return result;
-        },
-        null,
-    );
+    >(async (prev, formData) => {
+        const result = await serverAction(prev, formData);
+        if (result?.success) {
+            onClose();
+            router.refresh();
+        }
+        return result;
+    }, null);
 
     return (
         <Dialog
@@ -82,28 +76,20 @@ export function HomepageStepForm({
             onClose={onClose}
             maxWidth="sm"
             fullWidth
+            PaperProps={{ sx: { borderRadius: "14px" } }}
         >
             <Box component="form" action={formAction}>
-                <DialogTitle>
-                    {mode === "create"
-                        ? "Nový krok"
-                        : "Upravit krok"}
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    {mode === "create" ? "Nový krok" : "Upravit krok"}
                 </DialogTitle>
                 <DialogContent>
                     {state?.error?._form && (
-                        <Alert
-                            severity="error"
-                            sx={{ mb: 2 }}
-                        >
+                        <Alert severity="error" sx={{ mb: 2 }}>
                             {state.error._form[0]}
                         </Alert>
                     )}
 
-                    <input
-                        type="hidden"
-                        name="icon"
-                        value={icon || ""}
-                    />
+                    <input type="hidden" name="icon" value={icon || ""} />
                     <Box
                         sx={{
                             display: "flex",
@@ -112,15 +98,16 @@ export function HomepageStepForm({
                         }}
                     >
                         <Box>
-                            <IconPicker
-                                value={icon}
-                                onChange={setIcon}
-                            />
+                            <IconPicker value={icon} onChange={setIcon} />
                             {state?.error?.icon && (
                                 <Typography
                                     variant="caption"
-                                    color="error"
-                                    sx={{ mt: 0.5, display: "block", textAlign: "center" }}
+                                    sx={{
+                                        mt: 0.5,
+                                        display: "block",
+                                        textAlign: "center",
+                                        color: p.negInk,
+                                    }}
                                 >
                                     {state.error.icon[0]}
                                 </Typography>
@@ -135,18 +122,10 @@ export function HomepageStepForm({
                                 name="title"
                                 label="Název"
                                 value={title}
-                                onChange={(e) =>
-                                    setTitle(
-                                        e.target.value
-                                    )
-                                }
-                                error={
-                                    !!state?.error?.title
-                                }
-                                helperText={
-                                    state?.error
-                                        ?.title?.[0]
-                                }
+                                onChange={(e) => setTitle(e.target.value)}
+                                error={!!state?.error?.title}
+                                helperText={state?.error?.title?.[0]}
+                                sx={builderFieldSx}
                             />
                         </Box>
                     </Box>
@@ -159,32 +138,40 @@ export function HomepageStepForm({
                         multiline
                         rows={3}
                         value={description}
-                        onChange={(e) =>
-                            setDescription(e.target.value)
-                        }
-                        error={
-                            !!state?.error?.description
-                        }
-                        helperText={
-                            state?.error
-                                ?.description?.[0]
-                        }
+                        onChange={(e) => setDescription(e.target.value)}
+                        error={!!state?.error?.description}
+                        helperText={state?.error?.description?.[0]}
+                        sx={builderFieldSx}
                     />
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
+                    <Button
+                        onClick={onClose}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         type="submit"
                         variant="contained"
                         disabled={isPending}
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                         startIcon={
                             isPending ? (
-                                <CircularProgress
-                                    size={20}
-                                    color="inherit"
-                                />
+                                <CircularProgress size={20} color="inherit" />
                             ) : null
                         }
                     >

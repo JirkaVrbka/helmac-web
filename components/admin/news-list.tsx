@@ -1,13 +1,8 @@
-import {
-    Card,
-    Box,
-    Typography,
-    Divider,
-    Tooltip,
-} from "@mui/material";
+import { Box, Typography, Tooltip } from "@mui/material";
 import { Edit } from "@mui/icons-material";
 import { IconLinkButton } from "@/components/ui/link-button";
 import { NewsActions } from "@/components/admin/news-actions";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 import { formatDate } from "@/lib/utils/date";
 
 interface News {
@@ -33,94 +28,121 @@ export function NewsList({
     showYear = true,
 }: NewsListProps) {
     return (
-        <Card>
+        <Box
+            sx={{
+                backgroundColor: p.surface,
+                border: `1px solid ${p.line}`,
+                borderRadius: "14px",
+                overflow: "hidden",
+            }}
+        >
+            {/* pane head */}
             <Box
                 sx={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 2,
-                    p: 1.5,
-                    backgroundColor: "grey.50",
-                    borderBottom: 1,
-                    borderColor: "divider",
+                    gap: 1.5,
+                    px: 2.5,
+                    py: 1.75,
+                    borderBottom: `1px solid ${p.line}`,
+                    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
                 }}
             >
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                    sx={{
+                        flex: 1,
+                        fontSize: "0.85rem",
+                        color: p.ink3,
+                    }}
+                >
                     Celkem {news.length} novinek
                 </Typography>
             </Box>
 
             {news.map((item, index) => (
-                <Box key={item.id}>
-                    {index > 0 && <Divider />}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 2,
-                            p: 2,
-                        }}
-                    >
-                        <Box sx={{ flex: 1 }}>
-                            <Typography fontWeight="medium">
-                                {item.title}
-                            </Typography>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    mt: 0.5,
-                                }}
-                            >
-                                {showYear && (
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                    >
-                                        {item.year.year} - {item.year.title}
-                                    </Typography>
-                                )}
-                                {item.publishedAt && (
-                                    <>
-                                        {showYear && (
-                                            <Typography
-                                                variant="body2"
-                                                color="text.secondary"
-                                            >
-                                                |
-                                            </Typography>
-                                        )}
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                        >
-                                            {formatDate(item.publishedAt)}
-                                        </Typography>
-                                    </>
-                                )}
-                            </Box>
-                        </Box>
+                <Box
+                    key={item.id}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        px: 2.5,
+                        py: 2,
+                        borderBottom:
+                            index < news.length - 1
+                                ? `1px solid ${p.lineSoft}`
+                                : "none",
+                    }}
+                >
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 600, color: p.ink }}>
+                            {item.title}
+                        </Typography>
                         <Box
                             sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 0.5,
+                                gap: 1,
+                                mt: 0.25,
                             }}
                         >
-                            <Tooltip title="Upravit novinku">
-                                <IconLinkButton
-                                    href={`${editBasePath}/${item.id}`}
-                                    size="small"
+                            {showYear && (
+                                <Typography
+                                    sx={{ fontSize: "0.85rem", color: p.ink3 }}
                                 >
-                                    <Edit />
-                                </IconLinkButton>
-                            </Tooltip>
-                            <NewsActions newsId={item.id} />
+                                    {item.year.year} - {item.year.title}
+                                </Typography>
+                            )}
+                            {item.publishedAt && (
+                                <>
+                                    {showYear && (
+                                        <Typography
+                                            sx={{
+                                                fontSize: "0.85rem",
+                                                color: p.ink3,
+                                                opacity: 0.6,
+                                            }}
+                                        >
+                                            |
+                                        </Typography>
+                                    )}
+                                    <Typography
+                                        sx={{
+                                            fontSize: "0.85rem",
+                                            color: p.ink3,
+                                        }}
+                                    >
+                                        {formatDate(item.publishedAt)}
+                                    </Typography>
+                                </>
+                            )}
                         </Box>
+                    </Box>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.25,
+                            flexShrink: 0,
+                        }}
+                    >
+                        <Tooltip title="Upravit novinku">
+                            <IconLinkButton
+                                href={`${editBasePath}/${item.id}`}
+                                size="small"
+                                sx={{
+                                    color: p.ink3,
+                                    borderRadius: "8px",
+                                    "&:hover": { color: p.indigo },
+                                }}
+                            >
+                                <Edit sx={{ fontSize: 16 }} />
+                            </IconLinkButton>
+                        </Tooltip>
+                        <NewsActions newsId={item.id} />
                     </Box>
                 </Box>
             ))}
-        </Card>
+        </Box>
     );
 }

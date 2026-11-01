@@ -20,6 +20,7 @@ import { BlockHeaderRow } from "./block-header-row";
 import { EmptyBlockDropZone } from "./empty-block-drop-zone";
 import { Fragment } from "react";
 import { flatElementId, type FlatElement } from "./form-data-adapter";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface Props {
     elements: FlatElement[];
@@ -159,19 +160,17 @@ function RootDropZone({
             ref={setNodeRef}
             sx={{
                 minHeight: 100,
-                border: "2px dashed",
-                borderColor: isOver ? "primary.main" : "transparent",
-                borderRadius: 1,
-                backgroundColor: isOver ? "action.hover" : "transparent",
-                transition: "all 0.2s ease",
-                p: isEmpty ? 0 : 0.5,
+                border: `1px ${isEmpty || isOver ? "dashed" : "solid"} ${
+                    isOver ? p.indigo : p.line
+                }`,
+                borderRadius: "14px",
+                backgroundColor: isOver ? p.indigoSoft : p.surface2,
+                transition: "all 140ms ease",
+                p: 1.5,
             }}
         >
             {isEmpty ? (
-                <Typography
-                    color="text.secondary"
-                    sx={{ textAlign: "center", py: 4 }}
-                >
+                <Typography sx={{ textAlign: "center", py: 4, color: p.ink3 }}>
                     Formulář je prázdný. Přetáhněte pole z palety nebo použijte
                     tlačítko.
                 </Typography>

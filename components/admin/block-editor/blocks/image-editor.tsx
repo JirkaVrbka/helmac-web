@@ -3,6 +3,7 @@
 import { Box, TextField } from "@mui/material";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import type { ImageBlock } from "@/lib/types/content-blocks";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface ImageBlockEditorProps {
     block: ImageBlock;
@@ -56,7 +57,7 @@ export function ImageBlockEditor({ block, onChange }: ImageBlockEditorProps) {
                     onChange={(e) =>
                         onChange({ ...block, alt: e.target.value })
                     }
-                    sx={{ flex: 1 }}
+                    sx={{ flex: 1, ...builderFieldSx }}
                 />
                 <TextField
                     size="small"
@@ -65,7 +66,7 @@ export function ImageBlockEditor({ block, onChange }: ImageBlockEditorProps) {
                     onChange={(e) =>
                         onChange({ ...block, caption: e.target.value })
                     }
-                    sx={{ flex: 1 }}
+                    sx={{ flex: 1, ...builderFieldSx }}
                 />
             </Box>
         </Box>

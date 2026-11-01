@@ -87,8 +87,88 @@ import {
     PlaceholderExtension,
     type PlaceholderOption,
 } from "@/components/admin/extensions/placeholder-extension";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
+// Builder-palette styling for dialog action buttons (ghost cancel, primary
+// indigo confirm, ghost-danger destructive). Mirrors the design-system
+// contract used by AlbumActions and the section dialogs.
+const dialogGhostBtnSx = {
+    color: p.ink2,
+    borderRadius: "10px",
+    border: `1px solid ${p.line}`,
+    "&:hover": {
+        borderColor: p.ink3,
+        backgroundColor: p.surface2,
+    },
+};
+
+const dialogPrimaryBtnSx = {
+    borderRadius: "10px",
+    backgroundColor: p.indigo,
+    color: "#fff",
+    "&:hover": { backgroundColor: "#4338ca" },
+    "&.Mui-disabled": {
+        backgroundColor: p.surface3,
+        color: p.ink3,
+    },
+};
+
+const dialogDangerTextBtnSx = {
+    color: p.negInk,
+    borderRadius: "10px",
+    "&:hover": { backgroundColor: p.neg },
+};
+
+// Builder-palette segmented control (matches the heading ToggleButtonGroup).
+const dialogToggleGroupSx = {
+    backgroundColor: p.surface2,
+    border: `1px solid ${p.line}`,
+    borderRadius: "10px",
+    p: "3px",
+    gap: "3px",
+    "& .MuiToggleButton-root": {
+        flex: 1,
+        border: 0,
+        borderRadius: "8px !important",
+        color: p.ink2,
+        textTransform: "none",
+        transition: "all 140ms ease",
+        "&:hover": {
+            backgroundColor: p.indigoSoft,
+            color: p.indigo,
+        },
+        "&.Mui-selected": {
+            backgroundColor: p.indigo,
+            color: "#fff",
+            "&:hover": { backgroundColor: p.indigo },
+        },
+    },
+};
+
+// Text-color value written into the document when "Barva textu" is toggled.
+// This is authored content (serialized into markdown/HTML), not chrome, so it
+// stays a fixed color and is intentionally not swapped for a palette token.
 const PRIMARY_COLOR = "#1976d2";
+
+// Builder-palette icon-button styling for toolbar controls (30px square,
+// radius 8, ink3 at rest, indigo + indigo-soft on hover and when active).
+const toolbarIconSx = (active: boolean) => ({
+    width: 30,
+    height: 30,
+    borderRadius: "8px",
+    color: active ? p.indigo : p.ink3,
+    backgroundColor: active ? p.indigoSoft : "transparent",
+    transition: "all 140ms ease",
+    "&:hover": {
+        color: p.indigo,
+        backgroundColor: p.indigoSoft,
+    },
+    "&.Mui-disabled": {
+        color: p.ink3,
+        opacity: 0.4,
+    },
+});
 
 export type { Editor } from "@tiptap/react";
 
@@ -328,7 +408,7 @@ const ButtonGroupNode = TiptapNode.create({
         return ({ node, editor: groupEd, getPos }) => {
             const dom = document.createElement("div");
             dom.style.padding = "4px 8px";
-            dom.style.border = "1px dashed #bdbdbd";
+            dom.style.border = `1px dashed ${p.line}`;
             dom.style.borderRadius = "4px";
             dom.style.margin = "4px 0";
 
@@ -350,8 +430,7 @@ const ButtonGroupNode = TiptapNode.create({
             addBtn.textContent = "+";
             addBtn.type = "button";
             addBtn.contentEditable = "false";
-            addBtn.style.cssText =
-                "width:28px;height:28px;border:1px dashed #9e9e9e;border-radius:4px;background:transparent;color:#757575;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;";
+            addBtn.style.cssText = `width:28px;height:28px;border:1px dashed ${p.line};border-radius:4px;background:transparent;color:${p.ink3};font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
             addBtn.addEventListener("mousedown", (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -392,11 +471,11 @@ const ButtonGroupNode = TiptapNode.create({
                     return true;
                 },
                 selectNode() {
-                    dom.style.borderColor = "#1976d2";
+                    dom.style.borderColor = p.indigo;
                     dom.style.borderStyle = "solid";
                 },
                 deselectNode() {
-                    dom.style.borderColor = "#bdbdbd";
+                    dom.style.borderColor = p.line;
                     dom.style.borderStyle = "dashed";
                 },
             };
@@ -487,16 +566,16 @@ const ButtonNode = TiptapNode.create({
 
             const v = node.attrs.variant || "contained";
             if (v === "contained") {
-                btn.style.backgroundColor = "#1976d2";
+                btn.style.backgroundColor = p.indigo;
                 btn.style.color = "#fff";
                 btn.style.border = "none";
             } else if (v === "outlined") {
                 btn.style.backgroundColor = "transparent";
-                btn.style.color = "#1976d2";
-                btn.style.border = "1px solid #1976d2";
+                btn.style.color = p.indigo;
+                btn.style.border = `1px solid ${p.indigo}`;
             } else {
                 btn.style.backgroundColor = "transparent";
-                btn.style.color = "#1976d2";
+                btn.style.color = p.indigo;
                 btn.style.border = "none";
             }
 
@@ -511,7 +590,7 @@ const ButtonNode = TiptapNode.create({
                 dom,
                 ignoreMutation: () => true,
                 selectNode() {
-                    dom.style.outline = "2px solid #1976d2";
+                    dom.style.outline = `2px solid ${p.indigo}`;
                     dom.style.outlineOffset = "2px";
                     dom.style.borderRadius = "4px";
                 },
@@ -525,16 +604,16 @@ const ButtonNode = TiptapNode.create({
                     btn.textContent = updatedNode.attrs.label || "Tlačítko";
                     const uv = updatedNode.attrs.variant || "contained";
                     if (uv === "contained") {
-                        btn.style.backgroundColor = "#1976d2";
+                        btn.style.backgroundColor = p.indigo;
                         btn.style.color = "#fff";
                         btn.style.border = "none";
                     } else if (uv === "outlined") {
                         btn.style.backgroundColor = "transparent";
-                        btn.style.color = "#1976d2";
-                        btn.style.border = "1px solid #1976d2";
+                        btn.style.color = p.indigo;
+                        btn.style.border = `1px solid ${p.indigo}`;
                     } else {
                         btn.style.backgroundColor = "transparent";
-                        btn.style.color = "#1976d2";
+                        btn.style.color = p.indigo;
                         btn.style.border = "none";
                     }
                     return true;
@@ -708,12 +787,14 @@ function MenuBar({
                 if (!data.url) throw new Error("Server nevrátil URL");
                 editor.chain().focus().setImage({ src: data.url }).run();
             } catch (err) {
-                window.alert(err instanceof Error ? err.message : "Nahrávání selhalo");
+                window.alert(
+                    err instanceof Error ? err.message : "Nahrávání selhalo"
+                );
             } finally {
                 setImageUploading(false);
             }
         },
-        [editor],
+        [editor]
     );
 
     const addYoutubeVideo = useCallback(() => {
@@ -878,9 +959,8 @@ function MenuBar({
         <Box
             sx={{
                 position: "relative",
-                borderBottom: 1,
-                borderColor: "divider",
-                backgroundColor: "grey.50",
+                borderBottom: `1px solid ${p.line}`,
+                backgroundColor: p.surface2,
             }}
         >
             {canScrollLeft && (
@@ -904,9 +984,8 @@ function MenuBar({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background:
-                            "linear-gradient(to right, rgba(250,250,250,0.95), transparent)",
-                        color: "text.secondary",
+                        background: `linear-gradient(to right, ${p.surface2}, transparent)`,
+                        color: p.ink2,
                         fontSize: 20,
                         p: 0,
                     }}
@@ -935,9 +1014,8 @@ function MenuBar({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background:
-                            "linear-gradient(to left, rgba(250,250,250,0.95), transparent)",
-                        color: "text.secondary",
+                        background: `linear-gradient(to left, ${p.surface2}, transparent)`,
+                        color: p.ink2,
                         fontSize: 20,
                         p: 0,
                     }}
@@ -969,11 +1047,7 @@ function MenuBar({
                                 onClick={() =>
                                     editor.chain().focus().toggleBold().run()
                                 }
-                                color={
-                                    editor.isActive("bold")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("bold"))}
                             >
                                 <FormatBold fontSize="small" />
                             </IconButton>
@@ -984,11 +1058,7 @@ function MenuBar({
                                 onClick={() =>
                                     editor.chain().focus().toggleItalic().run()
                                 }
-                                color={
-                                    editor.isActive("italic")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("italic"))}
                             >
                                 <FormatItalic fontSize="small" />
                             </IconButton>
@@ -1005,11 +1075,7 @@ function MenuBar({
                                 onClick={() =>
                                     editor.chain().focus().toggleBold().run()
                                 }
-                                color={
-                                    editor.isActive("bold")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("bold"))}
                             >
                                 <FormatBold fontSize="small" />
                             </IconButton>
@@ -1021,11 +1087,7 @@ function MenuBar({
                                 onClick={() =>
                                     editor.chain().focus().toggleItalic().run()
                                 }
-                                color={
-                                    editor.isActive("italic")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("italic"))}
                             >
                                 <FormatItalic fontSize="small" />
                             </IconButton>
@@ -1041,11 +1103,7 @@ function MenuBar({
                                         .toggleUnderline()
                                         .run()
                                 }
-                                color={
-                                    editor.isActive("underline")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("underline"))}
                             >
                                 <FormatUnderlined fontSize="small" />
                             </IconButton>
@@ -1057,11 +1115,7 @@ function MenuBar({
                                 onClick={() =>
                                     editor.chain().focus().toggleStrike().run()
                                 }
-                                color={
-                                    editor.isActive("strike")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("strike"))}
                             >
                                 <StrikethroughS fontSize="small" />
                             </IconButton>
@@ -1088,6 +1142,7 @@ function MenuBar({
                                             .run();
                                     }
                                 }}
+                                sx={toolbarIconSx(false)}
                             >
                                 <FormatColorText
                                     fontSize="small"
@@ -1106,11 +1161,7 @@ function MenuBar({
                                 onClick={() =>
                                     editor.chain().focus().toggleCode().run()
                                 }
-                                color={
-                                    editor.isActive("code")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("code"))}
                             >
                                 <Code fontSize="small" />
                             </IconButton>
@@ -1123,7 +1174,7 @@ function MenuBar({
                         <Divider
                             orientation="vertical"
                             flexItem
-                            sx={{ mx: 0.5 }}
+                            sx={{ mx: 0.5, borderColor: p.line }}
                         />
 
                         {/* Headings */}
@@ -1138,7 +1189,30 @@ function MenuBar({
                                       : null
                             }
                             sx={{
-                                "& .MuiToggleButton-root": { px: 1, py: 0.5 },
+                                backgroundColor: p.surface2,
+                                border: `1px solid ${p.line}`,
+                                borderRadius: "10px",
+                                p: "3px",
+                                gap: "3px",
+                                "& .MuiToggleButton-root": {
+                                    px: 1,
+                                    py: 0.5,
+                                    border: 0,
+                                    borderRadius: "8px !important",
+                                    color: p.ink2,
+                                    transition: "all 140ms ease",
+                                    "&:hover": {
+                                        backgroundColor: p.indigoSoft,
+                                        color: p.indigo,
+                                    },
+                                    "&.Mui-selected": {
+                                        backgroundColor: p.indigo,
+                                        color: "#fff",
+                                        "&:hover": {
+                                            backgroundColor: p.indigo,
+                                        },
+                                    },
+                                },
                             }}
                         >
                             {show("h2") && (
@@ -1238,13 +1312,11 @@ function MenuBar({
                                         .setTextAlign(align)
                                         .run();
                                 }}
-                                color={
+                                sx={toolbarIconSx(
                                     editor.isActive({
                                         textAlign: align,
                                     })
-                                        ? "primary"
-                                        : "default"
-                                }
+                                )}
                             >
                                 <Icon fontSize="small" />
                             </IconButton>
@@ -1256,7 +1328,7 @@ function MenuBar({
                         <Divider
                             orientation="vertical"
                             flexItem
-                            sx={{ mx: 0.5 }}
+                            sx={{ mx: 0.5, borderColor: p.line }}
                         />
 
                         {/* Lists */}
@@ -1270,11 +1342,9 @@ function MenuBar({
                                         .toggleBulletList()
                                         .run()
                                 }
-                                color={
+                                sx={toolbarIconSx(
                                     editor.isActive("bulletList")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                )}
                             >
                                 <FormatListBulleted fontSize="small" />
                             </IconButton>
@@ -1290,11 +1360,9 @@ function MenuBar({
                                         .toggleOrderedList()
                                         .run()
                                 }
-                                color={
+                                sx={toolbarIconSx(
                                     editor.isActive("orderedList")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                )}
                             >
                                 <FormatListNumbered fontSize="small" />
                             </IconButton>
@@ -1310,11 +1378,9 @@ function MenuBar({
                                         .toggleBlockquote()
                                         .run()
                                 }
-                                color={
+                                sx={toolbarIconSx(
                                     editor.isActive("blockquote")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                )}
                             >
                                 <FormatQuote fontSize="small" />
                             </IconButton>
@@ -1330,6 +1396,7 @@ function MenuBar({
                                         .setHorizontalRule()
                                         .run()
                                 }
+                                sx={toolbarIconSx(false)}
                             >
                                 <HorizontalRule fontSize="small" />
                             </IconButton>
@@ -1342,7 +1409,7 @@ function MenuBar({
                         <Divider
                             orientation="vertical"
                             flexItem
-                            sx={{ mx: 0.5 }}
+                            sx={{ mx: 0.5, borderColor: p.line }}
                         />
 
                         {/* Links & Images */}
@@ -1350,11 +1417,7 @@ function MenuBar({
                             <IconButton
                                 size="small"
                                 onClick={openLinkDialog}
-                                color={
-                                    editor.isActive("link")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("link"))}
                             >
                                 <LinkIcon fontSize="small" />
                             </IconButton>
@@ -1367,6 +1430,7 @@ function MenuBar({
                                     onClick={() =>
                                         editor.chain().focus().unsetLink().run()
                                     }
+                                    sx={toolbarIconSx(false)}
                                 >
                                     <LinkOff fontSize="small" />
                                 </IconButton>
@@ -1375,7 +1439,11 @@ function MenuBar({
 
                         {show("media") && (
                             <Tooltip title="Vložit obrázek">
-                                <IconButton size="small" onClick={addImage}>
+                                <IconButton
+                                    size="small"
+                                    onClick={addImage}
+                                    sx={toolbarIconSx(false)}
+                                >
                                     <ImageIcon fontSize="small" />
                                 </IconButton>
                             </Tooltip>
@@ -1388,6 +1456,7 @@ function MenuBar({
                                         size="small"
                                         onClick={openImageUpload}
                                         disabled={imageUploading}
+                                        sx={toolbarIconSx(false)}
                                     >
                                         <CloudUpload fontSize="small" />
                                     </IconButton>
@@ -1409,6 +1478,7 @@ function MenuBar({
                                         })
                                         .run()
                                 }
+                                sx={toolbarIconSx(false)}
                             >
                                 <TableChart fontSize="small" />
                             </IconButton>
@@ -1426,6 +1496,7 @@ function MenuBar({
                                                 .addColumnAfter()
                                                 .run()
                                         }
+                                        sx={toolbarIconSx(false)}
                                     >
                                         <Box
                                             component="span"
@@ -1449,6 +1520,7 @@ function MenuBar({
                                                 .deleteColumn()
                                                 .run()
                                         }
+                                        sx={toolbarIconSx(false)}
                                     >
                                         <Box
                                             component="span"
@@ -1472,6 +1544,7 @@ function MenuBar({
                                                 .addRowAfter()
                                                 .run()
                                         }
+                                        sx={toolbarIconSx(false)}
                                     >
                                         <Box
                                             component="span"
@@ -1495,6 +1568,7 @@ function MenuBar({
                                                 .deleteRow()
                                                 .run()
                                         }
+                                        sx={toolbarIconSx(false)}
                                     >
                                         <Box
                                             component="span"
@@ -1518,7 +1592,14 @@ function MenuBar({
                                                 .deleteTable()
                                                 .run()
                                         }
-                                        sx={{ color: "error.main" }}
+                                        sx={{
+                                            ...toolbarIconSx(false),
+                                            color: p.negInk,
+                                            "&:hover": {
+                                                color: p.negInk,
+                                                backgroundColor: p.neg,
+                                            },
+                                        }}
                                     >
                                         <Delete fontSize="small" />
                                     </IconButton>
@@ -1531,6 +1612,7 @@ function MenuBar({
                                 <IconButton
                                     size="small"
                                     onClick={addYoutubeVideo}
+                                    sx={toolbarIconSx(false)}
                                 >
                                     <OndemandVideo fontSize="small" />
                                 </IconButton>
@@ -1543,11 +1625,7 @@ function MenuBar({
                                 onClick={() =>
                                     editor.chain().focus().setDetails().run()
                                 }
-                                color={
-                                    editor.isActive("details")
-                                        ? "primary"
-                                        : "default"
-                                }
+                                sx={toolbarIconSx(editor.isActive("details"))}
                             >
                                 <UnfoldMore fontSize="small" />
                             </IconButton>
@@ -1598,6 +1676,7 @@ function MenuBar({
                                             .run();
                                     }
                                 }}
+                                sx={toolbarIconSx(false)}
                             >
                                 <SmartButton fontSize="small" />
                             </IconButton>
@@ -1648,11 +1727,9 @@ function MenuBar({
                                     })
                                     .run()
                             }
-                            color={
+                            sx={toolbarIconSx(
                                 editor.isActive("definitionList")
-                                    ? "primary"
-                                    : "default"
-                            }
+                            )}
                         >
                             <Subject fontSize="small" />
                         </IconButton>
@@ -1668,6 +1745,7 @@ function MenuBar({
                             size="small"
                             onClick={() => editor.chain().focus().undo().run()}
                             disabled={!editor.can().undo()}
+                            sx={toolbarIconSx(false)}
                         >
                             <Undo fontSize="small" />
                         </IconButton>
@@ -1680,6 +1758,7 @@ function MenuBar({
                             size="small"
                             onClick={() => editor.chain().focus().redo().run()}
                             disabled={!editor.can().redo()}
+                            sx={toolbarIconSx(false)}
                         >
                             <Redo fontSize="small" />
                         </IconButton>
@@ -1691,8 +1770,9 @@ function MenuBar({
                     onClose={closeLinkDialog}
                     maxWidth="sm"
                     fullWidth
+                    PaperProps={{ sx: { borderRadius: "14px" } }}
                 >
-                    <DialogTitle>
+                    <DialogTitle sx={{ fontWeight: 700 }}>
                         ©{linkEditing ? "Upravit odkaz" : "Přidat odkaz"}
                     </DialogTitle>
                     <DialogContent>
@@ -1712,6 +1792,7 @@ function MenuBar({
                             placeholder="https://example.com"
                             fullWidth
                             variant="outlined"
+                            sx={builderFieldSx}
                         />
                         {showLinkTextField && (
                             <TextField
@@ -1728,10 +1809,11 @@ function MenuBar({
                                 placeholder="Pokud nevyplnite, zobrazi se URL"
                                 fullWidth
                                 variant="outlined"
+                                sx={builderFieldSx}
                             />
                         )}
                         <Autocomplete<LinkTarget>
-                            sx={{ mt: 2 }}
+                            sx={{ mt: 2, ...builderFieldSx }}
                             options={linkTargets ?? []}
                             loading={linkTargetsLoading}
                             groupBy={(option) => option.group}
@@ -1752,18 +1834,25 @@ function MenuBar({
                             )}
                         />
                     </DialogContent>
-                    <DialogActions>
+                    <DialogActions sx={{ px: 2, pb: 2 }}>
                         {linkEditing && (
-                            <Button onClick={removeLink} color="error">
+                            <Button
+                                onClick={removeLink}
+                                sx={dialogDangerTextBtnSx}
+                            >
                                 Odebrat odkaz
                             </Button>
                         )}
                         <Box sx={{ flex: 1 }} />
-                        <Button onClick={closeLinkDialog}>Zrušit</Button>
+                        <Button onClick={closeLinkDialog} sx={dialogGhostBtnSx}>
+                            Zrušit
+                        </Button>
                         <Button
                             onClick={submitLink}
                             variant="contained"
+                            disableElevation
                             disabled={linkUrl.trim() === ""}
+                            sx={dialogPrimaryBtnSx}
                         >
                             {linkEditing ? "Uložit" : "Přidat"}
                         </Button>
@@ -1776,8 +1865,9 @@ function MenuBar({
                     onClose={() => setBtnDialogOpen(false)}
                     maxWidth="xs"
                     fullWidth
+                    PaperProps={{ sx: { borderRadius: "14px" } }}
                 >
-                    <DialogTitle>
+                    <DialogTitle sx={{ fontWeight: 700 }}>
                         {btnEditing ? "Upravit tlačítko" : "Vložit tlačítko"}
                     </DialogTitle>
                     <DialogContent
@@ -1795,6 +1885,7 @@ function MenuBar({
                             onChange={(e) => setBtnLabel(e.target.value)}
                             fullWidth
                             size="small"
+                            sx={builderFieldSx}
                         />
                         <TextField
                             label="Odkaz (URL)"
@@ -1802,6 +1893,7 @@ function MenuBar({
                             onChange={(e) => setBtnHref(e.target.value)}
                             fullWidth
                             size="small"
+                            sx={builderFieldSx}
                         />
                         <Autocomplete<LinkTarget>
                             options={linkTargets ?? []}
@@ -1825,6 +1917,7 @@ function MenuBar({
                             }}
                             blurOnSelect
                             size="small"
+                            sx={builderFieldSx}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
@@ -1842,6 +1935,7 @@ function MenuBar({
                             }}
                             size="small"
                             fullWidth
+                            sx={dialogToggleGroupSx}
                         >
                             <ToggleButton value="contained">
                                 Vyplněné
@@ -1852,14 +1946,19 @@ function MenuBar({
                             <ToggleButton value="text">Textové</ToggleButton>
                         </ToggleButtonGroup>
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setBtnDialogOpen(false)}>
+                    <DialogActions sx={{ px: 2, pb: 2 }}>
+                        <Button
+                            onClick={() => setBtnDialogOpen(false)}
+                            sx={dialogGhostBtnSx}
+                        >
                             Zrušit
                         </Button>
                         <Button
                             onClick={submitBtn}
                             variant="contained"
+                            disableElevation
                             disabled={!btnLabel.trim()}
+                            sx={dialogPrimaryBtnSx}
                         >
                             {btnEditing ? "Uložit" : "Vložit"}
                         </Button>
@@ -1908,8 +2007,8 @@ export function RichTextEditor({
 
     const placeholderMap = useMemo(() => {
         const map = new Map<string, string>();
-        for (const p of placeholders ?? []) {
-            map.set(p.key, p.label);
+        for (const ph of placeholders ?? []) {
+            map.set(ph.key, ph.label);
         }
         return map;
     }, [placeholders]);
@@ -2088,9 +2187,8 @@ export function RichTextEditor({
     return (
         <Box
             sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: 1,
+                border: `1px solid ${p.line}`,
+                borderRadius: "14px",
                 overflow: "hidden",
                 ...(editable && {
                     height: "100%",
@@ -2098,9 +2196,8 @@ export function RichTextEditor({
                     display: "flex",
                     flexDirection: "column",
                     "&:focus-within": {
-                        borderColor: "primary.main",
-                        boxShadow: (theme) =>
-                            `0 0 0 1px ${theme.palette.primary.main}`,
+                        borderColor: p.indigo,
+                        boxShadow: `0 0 0 3px ${p.indigoSoft}`,
                     },
                 }),
             }}
@@ -2114,21 +2211,16 @@ export function RichTextEditor({
             )}
             <Box
                 onClick={(e) => {
-                    if (
-                        !editable ||
-                        !editor ||
-                        e.target !== e.currentTarget
-                    )
+                    if (!editable || !editor || e.target !== e.currentTarget)
                         return;
                     editor.commands.focus("end");
                 }}
                 sx={{
                     px: 1,
                     py: 0,
-                    backgroundColor: "background.paper",
-                    cursor: editable
-                        ? "text"
-                        : undefined,
+                    backgroundColor: p.surface,
+                    color: p.ink,
+                    cursor: editable ? "text" : undefined,
                     ...(editable
                         ? {
                               flex: 1,
@@ -2163,20 +2255,20 @@ export function RichTextEditor({
                         "& ol": { listStyleType: "decimal" },
                         "& blockquote": {
                             borderLeft: "4px solid",
-                            borderColor: "grey.300",
+                            borderColor: p.line,
                             paddingLeft: "1em",
                             marginLeft: 0,
                             fontStyle: "italic",
-                            color: "text.secondary",
+                            color: p.ink2,
                         },
                         "& code": {
-                            backgroundColor: "grey.100",
+                            backgroundColor: p.surface3,
                             borderRadius: "4px",
                             padding: "0.2em 0.4em",
                             fontFamily: "monospace",
                         },
                         "& a": {
-                            color: "primary.main",
+                            color: p.indigo,
                             textDecoration: "underline",
                             ...(editable && {
                                 pointerEvents: "none",
@@ -2189,7 +2281,7 @@ export function RichTextEditor({
                             margin: "1em 0",
                         },
                         "& mark": {
-                            backgroundColor: "#fef08a",
+                            backgroundColor: p.warnSoft,
                             padding: "0.1em 0.25em",
                             borderRadius: "2px",
                         },
@@ -2206,12 +2298,12 @@ export function RichTextEditor({
                         "& dd": {
                             margin: 0,
                             gridColumn: 2,
-                            color: "text.secondary",
+                            color: p.ink2,
                         },
                         "& hr": {
                             border: "none",
                             borderTop: "2px solid",
-                            borderColor: "grey.300",
+                            borderColor: p.line,
                             margin: "1.5em 0",
                         },
                         "& table": {
@@ -2220,18 +2312,18 @@ export function RichTextEditor({
                             margin: "1em 0",
                             "& td, & th": {
                                 border: "1px solid",
-                                borderColor: "grey.300",
+                                borderColor: p.line,
                                 padding: "0.5em",
                                 minWidth: "50px",
                             },
                             "& th": {
-                                backgroundColor: "grey.100",
+                                backgroundColor: p.surface3,
                                 fontWeight: 600,
                             },
                         },
                         "& [data-type='details']": {
                             border: "1px solid",
-                            borderColor: "grey.300",
+                            borderColor: p.line,
                             borderRadius: "4px",
                             padding: "0.5em",
                             margin: "1em 0",
@@ -2256,8 +2348,8 @@ export function RichTextEditor({
                         },
                         "& .placeholder-chip": {
                             display: "inline-block",
-                            backgroundColor: "primary.light",
-                            color: "primary.contrastText",
+                            backgroundColor: p.indigoSoft,
+                            color: p.indigoInk,
                             padding: "0 0.45em",
                             borderRadius: "4px",
                             fontSize: "0.9em",
@@ -2269,7 +2361,7 @@ export function RichTextEditor({
                         },
                         "& p.is-editor-empty:first-child::before": {
                             content: `"${placeholder}"`,
-                            color: "text.disabled",
+                            color: p.ink3,
                             float: "left",
                             height: 0,
                             pointerEvents: "none",

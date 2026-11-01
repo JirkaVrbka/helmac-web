@@ -1,17 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    TextField,
-    Typography,
-} from "@mui/material";
+import { Alert, Box, Button, TextField, Typography } from "@mui/material";
 import { Edit, Save } from "@mui/icons-material";
 import { updateGlobalBankAccount } from "@/lib/actions/bank-account";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface BankAccountSettingsProps {
     bankAccountPrefix: string | null;
@@ -19,6 +13,28 @@ interface BankAccountSettingsProps {
     bankAccountBankCode: string | null;
     bankSwift: string | null;
 }
+
+const ghostButtonSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    borderRadius: "10px",
+    boxShadow: "none",
+    "&:hover": {
+        borderColor: p.indigo,
+        backgroundColor: p.indigoSoft,
+        color: p.indigo,
+        boxShadow: "none",
+    },
+};
+
+const primaryButtonSx = {
+    backgroundColor: p.indigo,
+    color: "#fff",
+    borderRadius: "10px",
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#4338ca", boxShadow: "none" },
+};
 
 export function BankAccountSettings({
     bankAccountPrefix,
@@ -46,7 +62,11 @@ export function BankAccountSettings({
         fd.set("bankSwift", swift);
         const result = await updateGlobalBankAccount(fd);
         if (result.error) {
-            setError(typeof result.error === "string" ? result.error : Object.values(result.error).flat().join(", "));
+            setError(
+                typeof result.error === "string"
+                    ? result.error
+                    : Object.values(result.error).flat().join(", ")
+            );
         } else {
             setBankEditing(false);
         }
@@ -63,47 +83,80 @@ export function BankAccountSettings({
     };
 
     return (
-        <Card variant="outlined">
-            <CardContent>
-                {/* Header row with title + edit/cancel/save buttons */}
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-                    <Typography variant="h6">
-                        Bankovní účet pro platbu
-                    </Typography>
-                    {!bankEditing && hasSavedBank && (
+        <Box
+            sx={{
+                backgroundColor: p.surface,
+                border: `1px solid ${p.line}`,
+                borderRadius: "14px",
+                overflow: "hidden",
+            }}
+        >
+            {/* Header strip with kicker + edit/cancel/save buttons */}
+            <Box
+                sx={{
+                    px: 2.5,
+                    py: 1.5,
+                    borderBottom: `1px solid ${p.line}`,
+                    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                }}
+            >
+                <Typography
+                    sx={{
+                        flex: 1,
+                        fontSize: 11,
+                        letterSpacing: "0.14em",
+                        textTransform: "uppercase",
+                        fontWeight: 700,
+                        color: p.ink3,
+                    }}
+                >
+                    Bankovní účet pro platbu
+                </Typography>
+                {!bankEditing && hasSavedBank && (
+                    <Button
+                        variant="outlined"
+                        startIcon={<Edit />}
+                        onClick={() => setBankEditing(true)}
+                        size="small"
+                        sx={ghostButtonSx}
+                    >
+                        Upravit
+                    </Button>
+                )}
+                {bankEditing && hasSavedBank && (
+                    <Box sx={{ display: "flex", gap: 1 }}>
                         <Button
                             variant="outlined"
-                            startIcon={<Edit />}
-                            onClick={() => setBankEditing(true)}
+                            onClick={handleBankCancel}
+                            disabled={bankSaving}
                             size="small"
+                            sx={ghostButtonSx}
                         >
-                            Upravit
+                            Zrušit
                         </Button>
-                    )}
-                    {bankEditing && hasSavedBank && (
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                            <Button
-                                variant="outlined"
-                                onClick={handleBankCancel}
-                                disabled={bankSaving}
-                                size="small"
-                            >
-                                Zrušit
-                            </Button>
-                            <Button
-                                variant="contained"
-                                startIcon={<Save />}
-                                onClick={handleBankSave}
-                                disabled={bankSaving}
-                                size="small"
-                            >
-                                {bankSaving ? "Ukládám..." : "Uložit"}
-                            </Button>
-                        </Box>
-                    )}
-                </Box>
+                        <Button
+                            variant="contained"
+                            startIcon={<Save />}
+                            onClick={handleBankSave}
+                            disabled={bankSaving}
+                            size="small"
+                            sx={primaryButtonSx}
+                        >
+                            {bankSaving ? "Ukládám..." : "Uložit"}
+                        </Button>
+                    </Box>
+                )}
+            </Box>
 
-                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <Box sx={{ p: 2.5 }}>
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
 
                 {!bankEditing && hasSavedBank ? (
                     <Box
@@ -112,54 +165,71 @@ export function BankAccountSettings({
                             flexDirection: "column",
                             gap: 0.5,
                             px: 2,
-                            py: 1,
-                            borderRadius: 1,
-                            backgroundColor: "action.hover",
+                            py: 1.25,
+                            borderRadius: "10px",
+                            backgroundColor: p.surface2,
+                            border: `1px solid ${p.line}`,
                         }}
                     >
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ color: p.ink }}>
                             {bankPrefix && <>{bankPrefix}-</>}
-                            <Typography component="span" variant="body2" fontWeight={600}>
+                            <Typography
+                                component="span"
+                                variant="body2"
+                                fontWeight={600}
+                            >
                                 {bankNumber}
                             </Typography>
                             /{bankCode}
                         </Typography>
                         {swift && (
-                            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: p.ink3,
+                                    fontFamily: "'JetBrains Mono', monospace",
+                                }}
+                            >
                                 SWIFT: {swift}
                             </Typography>
                         )}
                     </Box>
                 ) : (
                     <>
-                        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                gap: 1,
+                                alignItems: "center",
+                            }}
+                        >
                             <TextField
                                 label="Předčíslí"
                                 value={bankPrefix}
                                 onChange={(e) => setBankPrefix(e.target.value)}
                                 disabled={bankSaving}
                                 size="small"
-                                sx={{ width: 100 }}
+                                sx={{ width: 100, ...builderFieldSx }}
                                 inputProps={{ maxLength: 6 }}
                             />
-                            <Typography>-</Typography>
+                            <Typography sx={{ color: p.ink2 }}>-</Typography>
                             <TextField
                                 label="Číslo účtu"
                                 value={bankNumber}
                                 onChange={(e) => setBankNumber(e.target.value)}
                                 disabled={bankSaving}
                                 size="small"
-                                sx={{ flex: 1 }}
+                                sx={{ flex: 1, ...builderFieldSx }}
                                 inputProps={{ maxLength: 10 }}
                             />
-                            <Typography>/</Typography>
+                            <Typography sx={{ color: p.ink2 }}>/</Typography>
                             <TextField
                                 label="Kód banky"
                                 value={bankCode}
                                 onChange={(e) => setBankCode(e.target.value)}
                                 disabled={bankSaving}
                                 size="small"
-                                sx={{ width: 100 }}
+                                sx={{ width: 100, ...builderFieldSx }}
                                 inputProps={{ maxLength: 4 }}
                             />
                         </Box>
@@ -171,9 +241,16 @@ export function BankAccountSettings({
                                 disabled={bankSaving}
                                 size="small"
                                 fullWidth
-                                inputProps={{ maxLength: 11, style: { textTransform: "uppercase", fontFamily: "monospace" } }}
+                                inputProps={{
+                                    maxLength: 11,
+                                    style: {
+                                        textTransform: "uppercase",
+                                        fontFamily: "monospace",
+                                    },
+                                }}
                                 placeholder="např. GIBACZPX"
                                 helperText="SWIFT/BIC kód banky pro zahraniční platby (8 nebo 11 znaků, volitelné)"
+                                sx={builderFieldSx}
                             />
                         </Box>
                         {!hasSavedBank && (
@@ -184,6 +261,7 @@ export function BankAccountSettings({
                                     size="small"
                                     onClick={handleBankSave}
                                     disabled={bankSaving}
+                                    sx={primaryButtonSx}
                                 >
                                     {bankSaving ? "Ukládám..." : "Uložit"}
                                 </Button>
@@ -191,10 +269,14 @@ export function BankAccountSettings({
                         )}
                     </>
                 )}
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
-                    Pokud je vyplněno, po registraci se zobrazí QR kód pro platbu
+                <Typography
+                    variant="caption"
+                    sx={{ mt: 1, display: "block", color: p.ink3 }}
+                >
+                    Pokud je vyplněno, po registraci se zobrazí QR kód pro
+                    platbu
                 </Typography>
-            </CardContent>
-        </Card>
+            </Box>
+        </Box>
     );
 }

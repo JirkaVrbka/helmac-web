@@ -2,7 +2,6 @@
 
 import {
     Box,
-    Chip,
     FormControl,
     InputLabel,
     MenuItem,
@@ -21,6 +20,8 @@ import type { BankTransactionMatchStatus } from "@prisma/client";
 import { formatDate } from "@/lib/utils/date";
 import { PairTransactionButton } from "@/components/admin/pair-transaction-button";
 import type { UnpaidOrderOption } from "@/lib/services/v2";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface TransactionRow {
     id: string;
@@ -42,21 +43,67 @@ interface BankTransactionsTableProps {
     showFilter?: boolean;
 }
 
-const statusConfig: Record<BankTransactionMatchStatus, { label: string; color: "success" | "warning" | "error" | "info" | "default" }> = {
-    UNPROCESSED: { label: "Nezpracováno", color: "default" },
-    MATCHED: { label: "Spárováno", color: "success" },
-    PARTIAL_PAYMENT: { label: "Částečná platba", color: "warning" },
-    OVERPAYMENT: { label: "Přeplatek", color: "success" },
-    NO_VARIABLE_SYMBOL: { label: "Bez VS", color: "default" },
-    UNKNOWN_VS: { label: "Neznámý VS", color: "error" },
-    ALREADY_PAID: { label: "Již zaplaceno", color: "info" },
-    OUTGOING: { label: "Odchozí", color: "default" },
+const statusConfig: Record<
+    BankTransactionMatchStatus,
+    { label: string; bg: string; fg: string }
+> = {
+    UNPROCESSED: { label: "Nezpracováno", bg: p.surface3, fg: p.ink2 },
+    MATCHED: { label: "Spárováno", bg: p.value, fg: p.valueInk },
+    PARTIAL_PAYMENT: {
+        label: "Částečná platba",
+        bg: p.warnSoft,
+        fg: p.warnInk,
+    },
+    OVERPAYMENT: { label: "Přeplatek", bg: p.value, fg: p.valueInk },
+    NO_VARIABLE_SYMBOL: { label: "Bez VS", bg: p.surface3, fg: p.ink2 },
+    UNKNOWN_VS: { label: "Neznámý VS", bg: p.neg, fg: p.negInk },
+    ALREADY_PAID: { label: "Již zaplaceno", bg: p.field, fg: p.fieldInk },
+    OUTGOING: { label: "Odchozí", bg: p.surface3, fg: p.ink2 },
 };
 
 const PAIRABLE_STATUSES = new Set<BankTransactionMatchStatus>([
     "UNKNOWN_VS",
     "NO_VARIABLE_SYMBOL",
 ]);
+
+function StatusBadge({
+    label,
+    bg,
+    fg,
+}: {
+    label: string;
+    bg: string;
+    fg: string;
+}) {
+    return (
+        <Box
+            component="span"
+            sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                px: "9px",
+                py: "3px",
+                borderRadius: "20px",
+                fontSize: 11,
+                fontWeight: 600,
+                backgroundColor: bg,
+                color: fg,
+            }}
+        >
+            <Box
+                component="span"
+                sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    backgroundColor: "currentColor",
+                }}
+            />
+            {label}
+        </Box>
+    );
+}
 
 export function BankTransactionsTable({
     transactions,
@@ -66,13 +113,14 @@ export function BankTransactionsTable({
 }: BankTransactionsTableProps) {
     const [filter, setFilter] = useState<string>("ALL");
 
-    const filtered = filter === "ALL"
-        ? transactions
-        : transactions.filter((tx) => tx.matchStatus === filter);
+    const filtered =
+        filter === "ALL"
+            ? transactions
+            : transactions.filter((tx) => tx.matchStatus === filter);
 
     if (transactions.length === 0) {
         return (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: p.ink3 }}>
                 Zatím žádné transakce.
             </Typography>
         );
@@ -81,7 +129,10 @@ export function BankTransactionsTable({
     return (
         <Box>
             {showFilter && (
-                <FormControl size="small" sx={{ mb: 2, minWidth: 200 }}>
+                <FormControl
+                    size="small"
+                    sx={{ mb: 2, minWidth: 200, ...builderFieldSx }}
+                >
                     <InputLabel>Filtr stavu</InputLabel>
                     <Select
                         value={filter}
@@ -89,15 +140,44 @@ export function BankTransactionsTable({
                         onChange={(e) => setFilter(e.target.value)}
                     >
                         <MenuItem value="ALL">Vše</MenuItem>
-                        {Object.entries(statusConfig).map(([key, { label }]) => (
-                            <MenuItem key={key} value={key}>{label}</MenuItem>
-                        ))}
+                        {Object.entries(statusConfig).map(
+                            ([key, { label }]) => (
+                                <MenuItem key={key} value={key}>
+                                    {label}
+                                </MenuItem>
+                            )
+                        )}
                     </Select>
                 </FormControl>
             )}
 
-            <TableContainer>
-                <Table size="small">
+            <TableContainer
+                sx={{
+                    border: `1px solid ${p.line}`,
+                    borderRadius: "14px",
+                    overflow: "hidden",
+                }}
+            >
+                <Table
+                    size="small"
+                    sx={{
+                        "& .MuiTableHead-root .MuiTableCell-root": {
+                            backgroundColor: p.surface2,
+                            color: p.ink3,
+                            textTransform: "uppercase",
+                            fontSize: 10,
+                            letterSpacing: "0.12em",
+                            fontWeight: 700,
+                            borderBottom: `1px solid ${p.line}`,
+                        },
+                        "& .MuiTableBody-root .MuiTableCell-root": {
+                            borderBottomColor: p.lineSoft,
+                        },
+                        "& .MuiTableBody-root .MuiTableRow-root:hover": {
+                            backgroundColor: p.surface2,
+                        },
+                    }}
+                >
                     <TableHead>
                         <TableRow>
                             <TableCell>Datum</TableCell>
@@ -113,40 +193,72 @@ export function BankTransactionsTable({
                             const config = statusConfig[tx.matchStatus];
                             return (
                                 <TableRow key={tx.id}>
-                                    <TableCell>
+                                    <TableCell sx={{ color: p.ink }}>
                                         {formatDate(tx.date)}
                                     </TableCell>
-                                    <TableCell align="right" sx={{
-                                        color: tx.amount < 0 ? "error.main" : "success.main",
-                                        fontWeight: 500,
-                                    }}>
-                                        {tx.amount.toLocaleString("cs-CZ")} {tx.currency}
+                                    <TableCell
+                                        align="right"
+                                        sx={{
+                                            color:
+                                                tx.amount < 0
+                                                    ? p.negInk
+                                                    : p.valueInk,
+                                            fontWeight: 600,
+                                            fontFamily:
+                                                "'JetBrains Mono', monospace",
+                                        }}
+                                    >
+                                        {tx.amount.toLocaleString("cs-CZ")}{" "}
+                                        {tx.currency}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell
+                                        sx={{
+                                            color: p.ink,
+                                            fontFamily:
+                                                "'JetBrains Mono', monospace",
+                                        }}
+                                    >
                                         {tx.variableSymbol || "—"}
                                     </TableCell>
                                     <TableCell>
-                                        <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                                            {tx.counterpartName || tx.counterpartAccount || "—"}
+                                        <Typography
+                                            variant="body2"
+                                            noWrap
+                                            sx={{ maxWidth: 200, color: p.ink }}
+                                        >
+                                            {tx.counterpartName ||
+                                                tx.counterpartAccount ||
+                                                "—"}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Chip
+                                        <StatusBadge
                                             label={config.label}
-                                            color={config.color}
-                                            size="small"
-                                            variant="outlined"
+                                            bg={config.bg}
+                                            fg={config.fg}
                                         />
                                     </TableCell>
                                     <TableCell>
                                         {tx.orderId ? (
-                                            <Link
+                                            <Box
+                                                component={Link}
                                                 href={`/admin/rocniky/${yearId}/registrace/${tx.legacySubmissionId ?? tx.orderId}`}
-                                                style={{ color: "inherit" }}
+                                                sx={{
+                                                    color: p.indigo,
+                                                    fontWeight: 600,
+                                                    textDecoration: "none",
+                                                    "&:hover": {
+                                                        textDecoration:
+                                                            "underline",
+                                                    },
+                                                }}
                                             >
                                                 Detail
-                                            </Link>
-                                        ) : unpaidOrders && PAIRABLE_STATUSES.has(tx.matchStatus) ? (
+                                            </Box>
+                                        ) : unpaidOrders &&
+                                          PAIRABLE_STATUSES.has(
+                                              tx.matchStatus
+                                          ) ? (
                                             <PairTransactionButton
                                                 transactionId={tx.id}
                                                 unpaidOrders={unpaidOrders}

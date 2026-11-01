@@ -15,10 +15,9 @@ import { formatPrice } from "@/lib/utils/pricing";
 import { StatMetricEditor } from "./metric-editor";
 import { StatFilterEditor } from "./filter-editor";
 import { StatSuffixEditor } from "./suffix-editor";
-import {
-    useRegistrationFields,
-    useRegistrationStats,
-} from "./hooks";
+import { useRegistrationFields, useRegistrationStats } from "./hooks";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface StatSingleBlockEditorProps {
     block: StatSingleBlock;
@@ -39,13 +38,11 @@ export function StatSingleBlockEditor({
     const source = block.source ?? "builtin";
 
     const defaultLabel =
-        source === "builtin" &&
-        isBuiltinMetric(block.metric)
+        source === "builtin" && isBuiltinMetric(block.metric)
             ? BUILTIN_METRIC_LABELS[block.metric]
             : source === "field"
-              ? fields?.find(
-                    (f) => f.name === block.metric
-                )?.label ?? block.metric
+              ? (fields?.find((f) => f.name === block.metric)?.label ??
+                block.metric)
               : block.metric;
 
     const aggLabel = block.aggregation
@@ -96,26 +93,21 @@ export function StatSingleBlockEditor({
                     onChange={(e) =>
                         onChange({
                             ...block,
-                            label:
-                                e.target.value ||
-                                undefined,
+                            label: e.target.value || undefined,
                         })
                     }
                     size="small"
                     fullWidth
                     placeholder={placeholder}
+                    sx={builderFieldSx}
                 />
                 <StatSuffixEditor
                     value={block.suffix}
-                    onChange={(suffix) =>
-                        onChange({ ...block, suffix })
-                    }
+                    onChange={(suffix) => onChange({ ...block, suffix })}
                 />
                 <StatFilterEditor
                     filter={block.filter}
-                    onChange={(f) =>
-                        onChange({ ...block, filter: f })
-                    }
+                    onChange={(f) => onChange({ ...block, filter: f })}
                     yearId={yearId}
                 />
             </Box>
@@ -128,9 +120,8 @@ export function StatSingleBlockEditor({
                     justifyContent: "center",
                     flex: 1,
                     py: 1.5,
-                    backgroundColor: "grey.50",
-                    borderTop: "1px solid",
-                    borderColor: "divider",
+                    backgroundColor: p.surface2,
+                    borderTop: `1px solid ${p.line}`,
                 }}
             >
                 <IconPicker
@@ -153,18 +144,13 @@ export function StatSingleBlockEditor({
                                 justifyContent: "center",
                                 borderRadius: "50%",
                                 border: "1.5px solid",
-                                borderColor: currentIcon
-                                    ? "divider"
-                                    : "text.disabled",
-                                borderStyle: currentIcon
-                                    ? "solid"
-                                    : "dashed",
-                                backgroundColor:
-                                    "rgba(25, 118, 210, 0.04)",
+                                borderColor: currentIcon ? p.line : p.ink3,
+                                borderStyle: currentIcon ? "solid" : "dashed",
+                                backgroundColor: p.indigoSoft,
                                 cursor: "pointer",
+                                transition: "all 140ms ease",
                                 "&:hover": {
-                                    borderColor:
-                                        "primary.main",
+                                    borderColor: p.indigo,
                                 },
                             }}
                         >
@@ -173,15 +159,15 @@ export function StatSingleBlockEditor({
                                     name={currentIcon}
                                     sx={{
                                         fontSize: "1.5rem",
-                                        color: "text.secondary",
+                                        color: p.indigo,
                                     }}
                                 />
                             ) : (
                                 <Typography
                                     variant="caption"
-                                    color="text.disabled"
                                     sx={{
                                         fontSize: "0.55rem",
+                                        color: p.ink3,
                                     }}
                                 >
                                     Ikona
@@ -194,7 +180,7 @@ export function StatSingleBlockEditor({
                     variant="h5"
                     sx={{
                         fontWeight: 700,
-                        color: "primary.main",
+                        color: p.indigo,
                     }}
                 >
                     {resolvePreviewPrefix() && (
@@ -203,7 +189,7 @@ export function StatSingleBlockEditor({
                             variant="body2"
                             sx={{
                                 mr: 0.5,
-                                color: "text.secondary",
+                                color: p.ink2,
                                 fontWeight: 400,
                             }}
                         >
@@ -217,7 +203,7 @@ export function StatSingleBlockEditor({
                             variant="body2"
                             sx={{
                                 ml: 0.5,
-                                color: "text.secondary",
+                                color: p.ink2,
                                 fontWeight: 400,
                             }}
                         >
@@ -225,10 +211,7 @@ export function StatSingleBlockEditor({
                         </Typography>
                     )}
                 </Typography>
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                >
+                <Typography variant="caption" sx={{ color: p.ink2 }}>
                     {block.label ?? defaultLabel}
                 </Typography>
             </Box>
@@ -237,19 +220,15 @@ export function StatSingleBlockEditor({
 
     function resolvePreviewRaw(): number {
         if (!stats) return 0;
-        if (
-            source === "builtin" &&
-            isBuiltinMetric(block.metric)
-        ) {
+        if (source === "builtin" && isBuiltinMetric(block.metric)) {
             return stats[block.metric as BuiltinMetric] ?? 0;
         }
         const fs = stats.fields?.[block.metric];
         if (!fs) return 0;
         const agg = block.aggregation ?? "count";
-        const filteredOption =
-            block.filter?.fieldFilters?.find(
-                (ff) => ff.fieldName === block.metric
-            )?.value;
+        const filteredOption = block.filter?.fieldFilters?.find(
+            (ff) => ff.fieldName === block.metric
+        )?.value;
         if (filteredOption !== undefined && agg === "count") {
             return fs.counts?.[filteredOption] ?? 0;
         }
@@ -270,30 +249,21 @@ export function StatSingleBlockEditor({
     } | null {
         if (!block.suffix || !stats) return null;
         if (block.suffix.source === "manual") {
-            return block.suffix.text
-                ? { text: block.suffix.text }
-                : null;
+            return block.suffix.text ? { text: block.suffix.text } : null;
         }
-        const filteredOption =
-            block.filter?.fieldFilters?.find(
-                (ff) => ff.fieldName === block.metric
-            )?.value;
-        const limits =
-            stats.capacityLimits?.[block.metric];
+        const filteredOption = block.filter?.fieldFilters?.find(
+            (ff) => ff.fieldName === block.metric
+        )?.value;
+        const limits = stats.capacityLimits?.[block.metric];
         if (block.suffix.source === "capacity") {
             if (!limits) return null;
             if (filteredOption !== undefined) {
                 const cap = limits[filteredOption];
-                return cap !== undefined
-                    ? { text: `/ ${cap}` }
-                    : null;
+                return cap !== undefined ? { text: `/ ${cap}` } : null;
             }
             const values = Object.values(limits);
             if (values.length === 0) return null;
-            const total = values.reduce(
-                (a, b) => a + b,
-                0
-            );
+            const total = values.reduce((a, b) => a + b, 0);
             return { text: `/ ${total}` };
         }
         if (block.suffix.source === "total") {
@@ -306,17 +276,13 @@ export function StatSingleBlockEditor({
             } else {
                 const values = Object.values(limits);
                 if (values.length === 0) return null;
-                cap = values.reduce(
-                    (a, b) => a + b,
-                    0
-                );
+                cap = values.reduce((a, b) => a + b, 0);
             }
             const raw = resolvePreviewRaw();
             const remaining = Math.max(0, cap - raw);
             return {
                 prefix: "Zbývá",
-                displayOverride:
-                    remaining.toLocaleString("cs-CZ"),
+                displayOverride: remaining.toLocaleString("cs-CZ"),
                 text: `z ${cap.toLocaleString("cs-CZ")}`,
             };
         }
@@ -328,10 +294,7 @@ export function StatSingleBlockEditor({
         const si = resolvePreviewSuffixInfo();
         if (si?.displayOverride) return si.displayOverride;
         const raw = resolvePreviewRaw();
-        if (
-            source === "builtin" &&
-            isBuiltinMetric(block.metric)
-        ) {
+        if (source === "builtin" && isBuiltinMetric(block.metric)) {
             return BUILTIN_CURRENCY_METRICS.includes(
                 block.metric as BuiltinMetric
             )

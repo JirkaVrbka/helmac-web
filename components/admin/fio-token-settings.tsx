@@ -5,8 +5,6 @@ import {
     Alert,
     Box,
     Button,
-    Card,
-    CardContent,
     FormControlLabel,
     Switch,
     TextField,
@@ -21,12 +19,56 @@ import {
 } from "@/lib/actions/bank-account";
 import type { MatchResult } from "@/lib/utils/payment-matching";
 import { formatDateTime } from "@/lib/utils/date";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface FioTokenSettingsProps {
     hasToken: boolean;
     syncEnabled: boolean;
     lastSyncAt: string | null;
 }
+
+const ghostButtonSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    borderRadius: "10px",
+    boxShadow: "none",
+    "&:hover": {
+        borderColor: p.indigo,
+        backgroundColor: p.indigoSoft,
+        color: p.indigo,
+        boxShadow: "none",
+    },
+};
+
+const primaryButtonSx = {
+    backgroundColor: p.indigo,
+    color: "#fff",
+    borderRadius: "10px",
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#4338ca", boxShadow: "none" },
+};
+
+const dangerButtonSx = {
+    backgroundColor: p.neg,
+    color: p.negInk,
+    borderRadius: "10px",
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#fecaca", boxShadow: "none" },
+};
+
+const builderSwitchSx = {
+    "& .MuiSwitch-thumb": { color: "#fff" },
+    "& .MuiSwitch-track": {
+        backgroundColor: p.surface3,
+        opacity: 1,
+    },
+    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+        backgroundColor: p.indigo,
+        opacity: 1,
+    },
+};
 
 export function FioTokenSettings({
     hasToken: initialHasToken,
@@ -39,7 +81,9 @@ export function FioTokenSettings({
     const [isEditing, setIsEditing] = useState(false);
     const [token, setToken] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>(
+        {}
+    );
     const [success, setSuccess] = useState<string | null>(null);
     const [syncResult, setSyncResult] = useState<MatchResult | null>(null);
     const [isSaving, startSaving] = useTransition();
@@ -79,7 +123,9 @@ export function FioTokenSettings({
         startRemoving(async () => {
             const result = await removeGlobalFioToken();
             if (result && "error" in result && result.error) {
-                setError(typeof result.error === "string" ? result.error : "Chyba");
+                setError(
+                    typeof result.error === "string" ? result.error : "Chyba"
+                );
             } else {
                 setHasToken(false);
                 setSyncEnabled(false);
@@ -96,7 +142,9 @@ export function FioTokenSettings({
         startToggling(async () => {
             const result = await toggleGlobalFioSync(checked);
             if (result && "error" in result && result.error) {
-                setError(typeof result.error === "string" ? result.error : "Chyba");
+                setError(
+                    typeof result.error === "string" ? result.error : "Chyba"
+                );
             } else {
                 setSyncEnabled(checked);
             }
@@ -111,7 +159,9 @@ export function FioTokenSettings({
         startSyncing(async () => {
             const result = await triggerGlobalManualSync();
             if (result && "error" in result && result.error) {
-                setError(typeof result.error === "string" ? result.error : "Chyba");
+                setError(
+                    typeof result.error === "string" ? result.error : "Chyba"
+                );
             } else if (result && "result" in result && result.result) {
                 setSyncResult(result.result);
                 setLastSyncAt(new Date().toISOString());
@@ -122,58 +172,96 @@ export function FioTokenSettings({
     };
 
     return (
-        <Card variant="outlined" sx={{ mt: 3 }}>
-            <CardContent>
-                {/* Header row with title + edit/done button */}
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-                    <Typography variant="h6">
-                        Fio Banka — automatické párování plateb
-                    </Typography>
-                    {!isEditing ? (
-                        <Button
-                            variant="outlined"
-                            startIcon={<Edit />}
-                            onClick={() => setIsEditing(true)}
-                            size="small"
-                        >
-                            Upravit
-                        </Button>
-                    ) : (
-                        <Button
-                            variant="outlined"
-                            onClick={() => setIsEditing(false)}
-                            size="small"
-                        >
-                            Hotovo
-                        </Button>
-                    )}
-                </Box>
+        <Box
+            sx={{
+                mt: 3,
+                backgroundColor: p.surface,
+                border: `1px solid ${p.line}`,
+                borderRadius: "14px",
+                overflow: "hidden",
+            }}
+        >
+            {/* Header strip with kicker + edit/done button */}
+            <Box
+                sx={{
+                    px: 2.5,
+                    py: 1.5,
+                    borderBottom: `1px solid ${p.line}`,
+                    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                }}
+            >
+                <Typography
+                    sx={{
+                        flex: 1,
+                        fontSize: 11,
+                        letterSpacing: "0.14em",
+                        textTransform: "uppercase",
+                        fontWeight: 700,
+                        color: p.ink3,
+                    }}
+                >
+                    Fio Banka — automatické párování plateb
+                </Typography>
+                {!isEditing ? (
+                    <Button
+                        variant="outlined"
+                        startIcon={<Edit />}
+                        onClick={() => setIsEditing(true)}
+                        size="small"
+                        sx={ghostButtonSx}
+                    >
+                        Upravit
+                    </Button>
+                ) : (
+                    <Button
+                        variant="outlined"
+                        onClick={() => setIsEditing(false)}
+                        size="small"
+                        sx={ghostButtonSx}
+                    >
+                        Hotovo
+                    </Button>
+                )}
+            </Box>
 
+            <Box sx={{ p: 2.5 }}>
                 {!isEditing ? (
                     <>
                         {/* Read-only display */}
                         <Box
                             sx={{
                                 px: 2,
-                                py: 1,
-                                borderRadius: 1,
-                                backgroundColor: "action.hover",
+                                py: 1.25,
+                                borderRadius: "10px",
+                                backgroundColor: p.surface2,
+                                border: `1px solid ${p.line}`,
                                 mb: 2,
                             }}
                         >
-                            <Typography variant="body2">
+                            <Typography variant="body2" sx={{ color: p.ink }}>
                                 {hasToken
                                     ? "Fio API token je nastaven."
                                     : "Fio API token není nastaven."}
                             </Typography>
                             {hasToken && (
-                                <Typography variant="body2">
-                                    Automatická synchronizace: {syncEnabled ? "zapnuto" : "vypnuto"}
+                                <Typography
+                                    variant="body2"
+                                    sx={{ color: p.ink }}
+                                >
+                                    Automatická synchronizace:{" "}
+                                    {syncEnabled ? "zapnuto" : "vypnuto"}
                                 </Typography>
                             )}
                             {hasToken && lastSyncAt && (
-                                <Typography variant="body2">
-                                    Poslední synchronizace: {formatDateTime(lastSyncAt)}
+                                <Typography
+                                    variant="body2"
+                                    sx={{ color: p.ink }}
+                                >
+                                    Poslední synchronizace:{" "}
+                                    {formatDateTime(lastSyncAt)}
                                 </Typography>
                             )}
                         </Box>
@@ -186,8 +274,11 @@ export function FioTokenSettings({
                                 onClick={handleManualSync}
                                 disabled={isSyncing}
                                 size="small"
+                                sx={ghostButtonSx}
                             >
-                                {isSyncing ? "Synchronizuji..." : "Synchronizovat nyní"}
+                                {isSyncing
+                                    ? "Synchronizuji..."
+                                    : "Synchronizovat nyní"}
                             </Button>
                         )}
                     </>
@@ -206,7 +297,7 @@ export function FioTokenSettings({
                                     placeholder="64znakový API token z Fio internetbanking"
                                     error={!!fieldErrors.fioToken}
                                     helperText={fieldErrors.fioToken?.[0]}
-                                    sx={{ mb: 1 }}
+                                    sx={{ mb: 1, ...builderFieldSx }}
                                 />
                                 <Button
                                     variant="contained"
@@ -214,24 +305,31 @@ export function FioTokenSettings({
                                     onClick={handleSaveToken}
                                     disabled={isSaving || !token}
                                     size="small"
+                                    sx={primaryButtonSx}
                                 >
                                     {isSaving ? "Ukládání..." : "Uložit token"}
                                 </Button>
                             </Box>
                         ) : (
                             <Box sx={{ mb: 2 }}>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                <Typography
+                                    variant="body2"
+                                    sx={{ color: p.ink2, mb: 1 }}
+                                >
                                     Fio API token je nastaven.
                                 </Typography>
                                 <Button
-                                    variant="outlined"
-                                    color="error"
+                                    variant="contained"
+                                    disableElevation
                                     startIcon={<Delete />}
                                     onClick={handleRemoveToken}
                                     disabled={isRemoving}
                                     size="small"
+                                    sx={dangerButtonSx}
                                 >
-                                    {isRemoving ? "Odebírání..." : "Odebrat token"}
+                                    {isRemoving
+                                        ? "Odebírání..."
+                                        : "Odebrat token"}
                                 </Button>
                             </Box>
                         )}
@@ -243,11 +341,21 @@ export function FioTokenSettings({
                                     control={
                                         <Switch
                                             checked={syncEnabled}
-                                            onChange={(e) => handleToggleSync(e.target.checked)}
+                                            onChange={(e) =>
+                                                handleToggleSync(
+                                                    e.target.checked
+                                                )
+                                            }
                                             disabled={isToggling}
+                                            sx={builderSwitchSx}
                                         />
                                     }
                                     label="Automatická synchronizace (jednou denně)"
+                                    sx={{
+                                        "& .MuiFormControlLabel-label": {
+                                            color: p.ink2,
+                                        },
+                                    }}
                                 />
                             </Box>
                         )}
@@ -260,8 +368,11 @@ export function FioTokenSettings({
                                 onClick={handleManualSync}
                                 disabled={isSyncing}
                                 size="small"
+                                sx={ghostButtonSx}
                             >
-                                {isSyncing ? "Synchronizuji..." : "Synchronizovat nyní"}
+                                {isSyncing
+                                    ? "Synchronizuji..."
+                                    : "Synchronizovat nyní"}
                             </Button>
                         )}
                     </>
@@ -286,31 +397,49 @@ export function FioTokenSettings({
                             Zpracováno: {syncResult.total} transakcí
                         </Typography>
                         {syncResult.matched > 0 && (
-                            <Typography variant="body2">Spárováno: {syncResult.matched}</Typography>
+                            <Typography variant="body2">
+                                Spárováno: {syncResult.matched}
+                            </Typography>
                         )}
                         {syncResult.overpayment > 0 && (
-                            <Typography variant="body2">Přeplatky: {syncResult.overpayment}</Typography>
+                            <Typography variant="body2">
+                                Přeplatky: {syncResult.overpayment}
+                            </Typography>
                         )}
                         {syncResult.partial > 0 && (
-                            <Typography variant="body2">Částečné platby: {syncResult.partial}</Typography>
+                            <Typography variant="body2">
+                                Částečné platby: {syncResult.partial}
+                            </Typography>
                         )}
                         {syncResult.unknownVs > 0 && (
-                            <Typography variant="body2">Neznámý VS: {syncResult.unknownVs}</Typography>
+                            <Typography variant="body2">
+                                Neznámý VS: {syncResult.unknownVs}
+                            </Typography>
                         )}
                         {syncResult.alreadyPaid > 0 && (
-                            <Typography variant="body2">Již zaplaceno: {syncResult.alreadyPaid}</Typography>
+                            <Typography variant="body2">
+                                Již zaplaceno: {syncResult.alreadyPaid}
+                            </Typography>
                         )}
                         {syncResult.outgoing > 0 && (
-                            <Typography variant="body2">Odchozí: {syncResult.outgoing}</Typography>
+                            <Typography variant="body2">
+                                Odchozí: {syncResult.outgoing}
+                            </Typography>
                         )}
                         {syncResult.noVs > 0 && (
-                            <Typography variant="body2">Bez VS: {syncResult.noVs}</Typography>
+                            <Typography variant="body2">
+                                Bez VS: {syncResult.noVs}
+                            </Typography>
                         )}
                         {syncResult.duplicates > 0 && (
-                            <Typography variant="body2">Duplikáty: {syncResult.duplicates}</Typography>
+                            <Typography variant="body2">
+                                Duplikáty: {syncResult.duplicates}
+                            </Typography>
                         )}
                         {syncResult.emailsSent > 0 && (
-                            <Typography variant="body2">Odesláno emailů: {syncResult.emailsSent}</Typography>
+                            <Typography variant="body2">
+                                Odesláno emailů: {syncResult.emailsSent}
+                            </Typography>
                         )}
                         {syncResult.errors.length > 0 && (
                             <Typography variant="body2" color="error">
@@ -319,7 +448,7 @@ export function FioTokenSettings({
                         )}
                     </Alert>
                 )}
-            </CardContent>
-        </Card>
+            </Box>
+        </Box>
     );
 }

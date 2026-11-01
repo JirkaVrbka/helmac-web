@@ -1,16 +1,11 @@
-import {
-    Container,
-    Typography,
-    Card,
-    CardContent,
-    Box,
-} from "@mui/material";
-import { Add } from "@mui/icons-material";
+import { Container, Typography, Box } from "@mui/material";
 import { LinkButton } from "@/components/ui/link-button";
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/admin/page-header";
 import { ListFilters } from "@/components/admin/list-filters";
 import { NewsList } from "@/components/admin/news-list";
+import { DashedAddButton } from "@/components/admin/dashed-add-button";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 import { Prisma } from "@prisma/client";
 
 interface NewsListPageProps {
@@ -53,7 +48,9 @@ async function getYears() {
     });
 }
 
-export default async function NewsListPage({ searchParams }: NewsListPageProps) {
+export default async function NewsListPage({
+    searchParams,
+}: NewsListPageProps) {
     const params = await searchParams;
     const [news, years] = await Promise.all([getNews(params), getYears()]);
 
@@ -69,13 +66,9 @@ export default async function NewsListPage({ searchParams }: NewsListPageProps) 
                 }}
             >
                 {years.length > 0 && (
-                    <LinkButton
-                        href="/admin/novinky/nova"
-                        variant="contained"
-                        startIcon={<Add />}
-                    >
+                    <DashedAddButton href="/admin/novinky/nova">
                         Nová novinka
-                    </LinkButton>
+                    </DashedAddButton>
                 )}
             </Box>
 
@@ -88,31 +81,56 @@ export default async function NewsListPage({ searchParams }: NewsListPageProps) 
             )}
 
             {years.length === 0 ? (
-                <Card>
-                    <CardContent>
-                        <Typography color="text.secondary" textAlign="center">
-                            Nejprve vytvořte ročník pro přidávání novinek.
-                        </Typography>
-                        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                            <LinkButton
-                                href="/admin/rocniky/novy"
-                                variant="outlined"
-                            >
-                                Vytvořit ročník
-                            </LinkButton>
-                        </Box>
-                    </CardContent>
-                </Card>
+                <Box
+                    sx={{
+                        border: `1px dashed ${p.line}`,
+                        borderRadius: "14px",
+                        p: 5,
+                        textAlign: "center",
+                    }}
+                >
+                    <Typography sx={{ color: p.ink3 }}>
+                        Nejprve vytvořte ročník pro přidávání novinek.
+                    </Typography>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            mt: 2,
+                        }}
+                    >
+                        <LinkButton
+                            href="/admin/rocniky/novy"
+                            variant="outlined"
+                            sx={{
+                                borderRadius: "10px",
+                                color: p.ink2,
+                                borderColor: p.line,
+                                "&:hover": {
+                                    borderColor: p.ink3,
+                                    backgroundColor: p.surface2,
+                                },
+                            }}
+                        >
+                            Vytvořit ročník
+                        </LinkButton>
+                    </Box>
+                </Box>
             ) : news.length === 0 ? (
-                <Card>
-                    <CardContent>
-                        <Typography color="text.secondary" textAlign="center">
-                            {params.q || params.yearId
-                                ? "Žádné novinky neodpovídají filtru."
-                                : "Zatím nebyly vytvořeny žádné novinky."}
-                        </Typography>
-                    </CardContent>
-                </Card>
+                <Box
+                    sx={{
+                        border: `1px dashed ${p.line}`,
+                        borderRadius: "14px",
+                        p: 5,
+                        textAlign: "center",
+                    }}
+                >
+                    <Typography sx={{ color: p.ink3 }}>
+                        {params.q || params.yearId
+                            ? "Žádné novinky neodpovídají filtru."
+                            : "Zatím nebyly vytvořeny žádné novinky."}
+                    </Typography>
+                </Box>
             ) : (
                 <NewsList news={news} />
             )}

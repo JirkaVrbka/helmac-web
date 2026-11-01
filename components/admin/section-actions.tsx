@@ -31,8 +31,7 @@ export function SectionActions({
     const router = useRouter();
     const toast = useToast();
     const [loading, setLoading] = useState(false);
-    const [deleteDialogOpen, setDeleteDialogOpen] =
-        useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const handleDelete = async () => {
         setLoading(true);
@@ -66,12 +65,14 @@ export function SectionActions({
             <Tooltip title="Smazat sekci">
                 <IconButton
                     size="small"
-                    onClick={() =>
-                        setDeleteDialogOpen(true)
-                    }
+                    onClick={() => setDeleteDialogOpen(true)}
                     sx={{
                         color: p.ink3,
-                        "&:hover": { color: p.negInk },
+                        borderRadius: "8px",
+                        "&:hover": {
+                            color: p.negInk,
+                            backgroundColor: p.neg,
+                        },
                     }}
                 >
                     <Delete sx={{ fontSize: 16 }} />
@@ -80,34 +81,46 @@ export function SectionActions({
 
             <Dialog
                 open={deleteDialogOpen}
-                onClose={() =>
-                    setDeleteDialogOpen(false)
-                }
+                onClose={() => setDeleteDialogOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>Smazat sekci?</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Smazat sekci?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         Opravdu chcete smazat sekci{" "}
-                        <strong>
-                            &quot;{sectionTitle}&quot;
-                        </strong>
+                        <strong>&quot;{sectionTitle}&quot;</strong>
                         ?
                         <br />
                         Tato akce je nevratná.
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
                     <Button
-                        onClick={() =>
-                            setDeleteDialogOpen(false)
-                        }
+                        onClick={() => setDeleteDialogOpen(false)}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
                     >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleDelete}
-                        color="error"
                         variant="contained"
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.neg,
+                            color: p.negInk,
+                            "&:hover": { backgroundColor: "#fecaca" },
+                        }}
                     >
                         Smazat
                     </Button>

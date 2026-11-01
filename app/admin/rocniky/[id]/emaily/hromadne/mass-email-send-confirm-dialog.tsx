@@ -20,6 +20,24 @@ import {
     startCampaign,
 } from "@/lib/actions/email-campaigns";
 import type { RecipientFilter } from "@/lib/validators/email-campaign";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+
+const ghostBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    backgroundColor: p.surface,
+    "&:hover": { borderColor: p.ink3, backgroundColor: p.surface2 },
+};
+
+const indigoBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    backgroundColor: p.indigo,
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#4338ca", boxShadow: "none" },
+};
 
 interface MassEmailSendConfirmDialogProps {
     open: boolean;
@@ -101,20 +119,28 @@ export function MassEmailSendConfirmDialog({
                 // sees the error, and offer a link to retry from the detail
                 setDraftId(campaignId);
                 setError(
-                    `${started.error}. Email byl uložen jako koncept — odeslání můžete zopakovat z jeho detailu.`,
+                    `${started.error}. Email byl uložen jako koncept — odeslání můžete zopakovat z jeho detailu.`
                 );
                 return;
             }
             router.push(
-                `/admin/rocniky/${yearId}/emaily/hromadne/${campaignId}`,
+                `/admin/rocniky/${yearId}/emaily/hromadne/${campaignId}`
             );
             router.refresh();
         });
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-            <DialogTitle>Odeslat hromadný email?</DialogTitle>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: "14px" } }}
+        >
+            <DialogTitle sx={{ fontWeight: 700 }}>
+                Odeslat hromadný email?
+            </DialogTitle>
             <DialogContent>
                 <Box
                     sx={{
@@ -141,20 +167,19 @@ export function MassEmailSendConfirmDialog({
                         <Typography>
                             Filtru aktuálně odpovídá <strong>{count}</strong>{" "}
                             příjemců (skupina: {groupLabel}). Přesný počet se
-                            určí při odeslání. Odesílání probíhá na pozadí a kvůli
-                            limitům poskytovatele může trvat déle.
+                            určí při odeslání. Odesílání probíhá na pozadí a
+                            kvůli limitům poskytovatele může trvat déle.
                         </Typography>
                     ) : null}
 
                     <Box>
                         <Typography
                             variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 0.5 }}
+                            sx={{ color: p.ink3, mb: 0.5 }}
                         >
                             Předmět
                         </Typography>
-                        <Typography sx={{ fontWeight: 500 }}>
+                        <Typography sx={{ fontWeight: 500, color: p.ink }}>
                             {subject}
                         </Typography>
                     </Box>
@@ -162,16 +187,14 @@ export function MassEmailSendConfirmDialog({
                     <Box>
                         <Typography
                             variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 0.5 }}
+                            sx={{ color: p.ink3, mb: 0.5 }}
                         >
                             Text emailu
                         </Typography>
                         <Box
                             sx={{
-                                border: 1,
-                                borderColor: "divider",
-                                borderRadius: 1,
+                                border: `1px solid ${p.line}`,
+                                borderRadius: "10px",
                                 p: 2,
                                 maxHeight: 300,
                                 overflowY: "auto",
@@ -198,7 +221,7 @@ export function MassEmailSendConfirmDialog({
                                         size="small"
                                         onClick={() => {
                                             router.push(
-                                                `/admin/rocniky/${yearId}/emaily/hromadne/${draftId}`,
+                                                `/admin/rocniky/${yearId}/emaily/hromadne/${draftId}`
                                             );
                                             router.refresh();
                                         }}
@@ -213,17 +236,23 @@ export function MassEmailSendConfirmDialog({
                     )}
                 </Box>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={handleClose} disabled={isSending}>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+                <Button
+                    onClick={handleClose}
+                    disabled={isSending}
+                    sx={ghostBtnSx}
+                >
                     Zrušit
                 </Button>
                 <Button
                     variant="contained"
+                    disableElevation
                     startIcon={
                         isSending ? <CircularProgress size={18} /> : <Send />
                     }
                     onClick={handleSend}
                     disabled={isSending || !count}
+                    sx={indigoBtnSx}
                 >
                     {isSending
                         ? "Odesílání..."

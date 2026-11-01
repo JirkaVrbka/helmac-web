@@ -2,7 +2,10 @@
 
 import { Box, Typography, ButtonBase } from "@mui/material";
 import { Add } from "@mui/icons-material";
-import type { FormField, PricingDefinition } from "@/lib/types/registration-form";
+import type {
+    FormField,
+    PricingDefinition,
+} from "@/lib/types/registration-form";
 import type { EmailConditionalSection } from "@/lib/types/email-sections";
 import { SectionTokens } from "./section-tokens";
 import { builderPalette as p } from "./palette";
@@ -101,7 +104,8 @@ export function SectionRail({
             <Box sx={{ flex: 1, overflowY: "auto", p: "8px" }}>
                 {items.map((item, idx) => {
                     const isActive = activeId === item.id;
-                    const body = item.kind === "base" ? item.body : item.section.body;
+                    const body =
+                        item.kind === "base" ? item.body : item.section.body;
                     const preview = stripHtmlPreview(body);
 
                     return (
@@ -120,10 +124,14 @@ export function SectionRail({
                                 mb: "2px",
                                 transition: "background 140ms ease",
                                 background: isActive
-                                    ? `linear-gradient(90deg, ${p.indigoSoft} 0%, #eef1ff 100%)`
+                                    ? `linear-gradient(90deg, ${p.indigoSoft} 0%, ${p.indigoSoft} 100%)`
                                     : "transparent",
-                                boxShadow: isActive ? `inset 3px 0 0 ${p.indigo}` : "none",
-                                "&:hover": isActive ? undefined : { backgroundColor: p.surface2 },
+                                boxShadow: isActive
+                                    ? `inset 3px 0 0 ${p.indigo}`
+                                    : "none",
+                                "&:hover": isActive
+                                    ? undefined
+                                    : { backgroundColor: p.surface2 },
                             }}
                         >
                             {/* number badge */}
@@ -133,7 +141,9 @@ export function SectionRail({
                                     fontSize: 11,
                                     fontWeight: 600,
                                     color: isActive ? "white" : p.ink3,
-                                    backgroundColor: isActive ? p.indigo : p.surface3,
+                                    backgroundColor: isActive
+                                        ? p.indigo
+                                        : p.surface3,
                                     width: 22,
                                     height: 22,
                                     borderRadius: "6px",
@@ -154,14 +164,18 @@ export function SectionRail({
                                         <SectionTokens
                                             rules={[]}
                                             availableFields={availableFields}
-                                            pricingDefinitions={pricingDefinitions}
+                                            pricingDefinitions={
+                                                pricingDefinitions
+                                            }
                                             baseLabel="Základní text"
                                         />
                                     ) : (
                                         <SectionTokens
                                             rules={item.section.condition.rules}
                                             availableFields={availableFields}
-                                            pricingDefinitions={pricingDefinitions}
+                                            pricingDefinitions={
+                                                pricingDefinitions
+                                            }
                                         />
                                     )}
                                 </Box>

@@ -6,6 +6,7 @@ import { Button, Tooltip } from "@mui/material";
 import { Sync } from "@mui/icons-material";
 import { triggerGlobalManualSync } from "@/lib/actions/bank-account";
 import { useToast } from "@/lib/hooks/use-toast";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 function formatNewPaymentsMessage(count: number): string {
     if (count === 0) {
@@ -35,7 +36,8 @@ export function ValidatePaymentsButton() {
             }
 
             if ("result" in result && result.result) {
-                const newPayments = result.result.matched + result.result.overpayment;
+                const newPayments =
+                    result.result.matched + result.result.overpayment;
                 toast.info(formatNewPaymentsMessage(newPayments));
                 router.refresh();
             }
@@ -51,6 +53,16 @@ export function ValidatePaymentsButton() {
                     startIcon={<Sync />}
                     onClick={handleClick}
                     disabled={isPending}
+                    sx={{
+                        borderRadius: "10px",
+                        color: p.ink2,
+                        borderColor: p.line,
+                        "&:hover": {
+                            borderColor: p.indigo,
+                            backgroundColor: p.indigoSoft,
+                            color: p.indigo,
+                        },
+                    }}
                 >
                     Validuj platby
                 </Button>

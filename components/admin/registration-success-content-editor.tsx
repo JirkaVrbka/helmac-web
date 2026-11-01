@@ -6,6 +6,7 @@ import { Save } from "@mui/icons-material";
 import { BlockEditor } from "@/components/admin/block-editor";
 import { updateRegistrationSuccessContent } from "@/lib/actions/years";
 import type { ContentBlock } from "@/lib/types/content-blocks";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface RegistrationSuccessContentEditorProps {
     yearId: string;
@@ -55,6 +56,16 @@ export function RegistrationSuccessContentEditor({
                     }
                     onClick={handleSave}
                     disabled={saving}
+                    sx={{
+                        backgroundColor: p.indigo,
+                        color: p.surface,
+                        borderRadius: "10px",
+                        boxShadow: "none",
+                        "&:hover": {
+                            backgroundColor: "#4338ca",
+                            boxShadow: "none",
+                        },
+                    }}
                 >
                     {saving ? "Ukládám..." : "Uložit"}
                 </Button>

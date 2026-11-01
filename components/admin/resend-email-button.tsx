@@ -15,6 +15,7 @@ import {
 import { Email, CheckCircle, Cancel } from "@mui/icons-material";
 import { resendConfirmationEmail } from "@/lib/actions/registration-submissions";
 import { formatDateTime } from "@/lib/utils/date";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface ResendEmailButtonProps {
     submissionId: string;
@@ -22,7 +23,11 @@ interface ResendEmailButtonProps {
     emailSentAt: Date | null;
 }
 
-export function ResendEmailButton({ submissionId, emailSent, emailSentAt }: ResendEmailButtonProps) {
+export function ResendEmailButton({
+    submissionId,
+    emailSent,
+    emailSentAt,
+}: ResendEmailButtonProps) {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -50,11 +55,11 @@ export function ResendEmailButton({ submissionId, emailSent, emailSentAt }: Rese
         <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
                 {emailSent ? (
-                    <CheckCircle fontSize="small" color="success" />
+                    <CheckCircle fontSize="small" sx={{ color: p.valueInk }} />
                 ) : (
-                    <Cancel fontSize="small" color="disabled" />
+                    <Cancel fontSize="small" sx={{ color: p.ink3 }} />
                 )}
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ color: p.ink2 }}>
                     {emailSent
                         ? `Email odeslán ${emailSentAt ? formatDateTime(emailSentAt) : ""}`
                         : "Email nebyl odeslán"}
@@ -73,25 +78,71 @@ export function ResendEmailButton({ submissionId, emailSent, emailSentAt }: Rese
             )}
 
             <Button
-                variant="outlined"
                 size="small"
                 startIcon={<Email />}
                 onClick={() => setConfirmOpen(true)}
                 disabled={sending}
+                sx={{
+                    backgroundColor: p.surface,
+                    border: `1px solid ${p.line}`,
+                    color: p.ink2,
+                    borderRadius: "10px",
+                    boxShadow: "none",
+                    "&:hover": {
+                        backgroundColor: p.surface2,
+                        borderColor: p.ink3,
+                        boxShadow: "none",
+                    },
+                }}
             >
                 {sending ? "Odesílání..." : "Znovu odeslat email"}
             </Button>
 
-            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-                <DialogTitle>Znovu odeslat potvrzovací email?</DialogTitle>
+            <Dialog
+                open={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Znovu odeslat potvrzovací email?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Potvrzovací email bude znovu odeslán na emailovou adresu z registrace.
+                        Potvrzovací email bude znovu odeslán na emailovou adresu
+                        z registrace.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setConfirmOpen(false)}>Zrušit</Button>
-                    <Button onClick={handleResend} variant="contained">
+                    <Button
+                        onClick={() => setConfirmOpen(false)}
+                        sx={{
+                            backgroundColor: p.surface,
+                            border: `1px solid ${p.line}`,
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            "&:hover": {
+                                backgroundColor: p.surface2,
+                                borderColor: p.ink3,
+                            },
+                        }}
+                    >
+                        Zrušit
+                    </Button>
+                    <Button
+                        onClick={handleResend}
+                        variant="contained"
+                        disableElevation
+                        sx={{
+                            backgroundColor: p.indigo,
+                            color: p.surface,
+                            borderRadius: "10px",
+                            boxShadow: "none",
+                            "&:hover": {
+                                backgroundColor: "#4338ca",
+                                boxShadow: "none",
+                            },
+                        }}
+                    >
                         Odeslat
                     </Button>
                 </DialogActions>

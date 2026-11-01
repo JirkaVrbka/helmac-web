@@ -9,9 +9,6 @@ import {
     TextField,
     Alert,
     CircularProgress,
-    Card,
-    CardContent,
-    CardActions,
     Typography,
     Accordion,
     AccordionSummary,
@@ -34,10 +31,67 @@ import { createYear, loadYearCopyInventory } from "@/lib/actions/years";
 import type { YearActionState } from "@/lib/actions/years";
 import type { YearCopyInventory } from "@/lib/services/year-copy-inventory";
 import type { YearCopySelection } from "@/lib/utils/year-copy";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface YearNewFormProps {
     years: { id: string; year: number; title: string }[];
 }
+
+// Photo-field label / hint (admin design system).
+const photoLabelSx = {
+    fontSize: 12,
+    fontWeight: 600,
+    color: p.ink2,
+    display: "block",
+    mb: 0.5,
+};
+
+const photoHintSx = {
+    fontSize: 12,
+    color: p.ink3,
+    display: "block",
+    mb: 1,
+};
+
+// Ghost (secondary / cancel) button (admin design system).
+const ghostButtonSx = {
+    textTransform: "none" as const,
+    fontWeight: 600,
+    borderRadius: "10px",
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    "&:hover": {
+        borderColor: p.ink3,
+        backgroundColor: p.surface2,
+    },
+};
+
+// Blanket content styling: tints every checkbox and accordion in the form to
+// the builder palette in one place (color only — no layout clobbering).
+const builderFormSx = {
+    p: 2.5,
+    display: "flex",
+    flexDirection: "column",
+    gap: 3,
+    "& .MuiCheckbox-root": { color: p.ink3 },
+    "& .MuiCheckbox-root.Mui-checked": { color: p.indigo },
+    "& .MuiCheckbox-root.MuiCheckbox-indeterminate": { color: p.indigo },
+    "& .MuiAccordion-root": {
+        backgroundColor: p.surface,
+        border: `1px solid ${p.line}`,
+        borderRadius: "10px",
+        boxShadow: "none",
+        overflow: "hidden",
+    },
+    "& .MuiAccordion-root::before": { display: "none" },
+    "& .MuiAccordionSummary-expandIconWrapper": { color: p.ink3 },
+    "& .MuiAccordionSummary-content .MuiTypography-root": {
+        fontWeight: 600,
+        color: p.ink,
+    },
+};
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -47,6 +101,14 @@ function SubmitButton() {
             type="submit"
             variant="contained"
             disabled={pending}
+            disableElevation
+            sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: "10px",
+                backgroundColor: p.indigo,
+                "&:hover": { backgroundColor: "#4338ca" },
+            }}
             startIcon={
                 pending ? (
                     <CircularProgress size={20} color="inherit" />
@@ -332,10 +394,12 @@ function ReuseSection({ inventory, anchorStartDateError }: ReuseSectionProps) {
                             textField: {
                                 required: true,
                                 fullWidth: true,
+                                size: "small",
                                 error: !!anchorStartDateError,
                                 helperText:
                                     anchorStartDateError ??
                                     "Zdrojový ročník nemá uložené datum začátku — zadejte ho, aby šlo správně posunout zkopírovaná data (program, termíny registrace).",
+                                sx: builderFieldSx,
                             },
                         }}
                     />
@@ -549,15 +613,16 @@ export function YearNewForm({ years }: YearNewFormProps) {
     };
 
     return (
-        <Card>
+        <Box
+            sx={{
+                backgroundColor: p.surface,
+                border: `1px solid ${p.line}`,
+                borderRadius: "14px",
+                overflow: "hidden",
+            }}
+        >
             <Box component="form" action={formAction} noValidate>
-                <CardContent
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 3,
-                    }}
-                >
+                <Box sx={builderFormSx}>
                     {state?.error?._form && (
                         <Alert severity="error">{state.error._form[0]}</Alert>
                     )}
@@ -575,6 +640,7 @@ export function YearNewForm({ years }: YearNewFormProps) {
                         <TextField
                             required
                             fullWidth
+                            size="small"
                             id="year"
                             name="year"
                             label="Rok"
@@ -582,28 +648,33 @@ export function YearNewForm({ years }: YearNewFormProps) {
                             error={!!state?.error?.year}
                             helperText={state?.error?.year?.[0]}
                             inputProps={{ min: 2000, max: 2100 }}
+                            sx={builderFieldSx}
                         />
 
                         <TextField
                             required
                             fullWidth
+                            size="small"
                             id="title"
                             name="title"
                             label="Název ročníku"
                             error={!!state?.error?.title}
                             helperText={state?.error?.title?.[0]}
                             placeholder="např. Helmáč 2025"
+                            sx={builderFieldSx}
                         />
                     </Box>
 
                     <TextField
                         fullWidth
+                        size="small"
                         id="subtitle"
                         name="subtitle"
                         label="Podtitulek"
                         error={!!state?.error?.subtitle}
                         helperText={state?.error?.subtitle?.[0]}
                         placeholder="např. Téma ročníku nebo popis"
+                        sx={builderFieldSx}
                     />
 
                     <Box
@@ -626,9 +697,11 @@ export function YearNewForm({ years }: YearNewFormProps) {
                                     textField: {
                                         required: true,
                                         fullWidth: true,
+                                        size: "small",
                                         error: !!state?.error?.startDate,
                                         helperText:
                                             state?.error?.startDate?.[0],
+                                        sx: builderFieldSx,
                                     },
                                 }}
                             />
@@ -649,8 +722,10 @@ export function YearNewForm({ years }: YearNewFormProps) {
                                     textField: {
                                         required: true,
                                         fullWidth: true,
+                                        size: "small",
                                         error: !!state?.error?.endDate,
                                         helperText: state?.error?.endDate?.[0],
+                                        sx: builderFieldSx,
                                     },
                                 }}
                             />
@@ -663,14 +738,10 @@ export function YearNewForm({ years }: YearNewFormProps) {
                     </Box>
 
                     <Box>
-                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        <Typography sx={photoLabelSx}>
                             Foto záhlaví podstránek
                         </Typography>
-                        <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: "block", mb: 1 }}
-                        >
+                        <Typography sx={photoHintSx}>
                             Obrázek na pozadí záhlaví veřejných podstránek
                             (Program, Pravidla, Galerie, apod.)
                         </Typography>
@@ -695,14 +766,10 @@ export function YearNewForm({ years }: YearNewFormProps) {
                     </Box>
 
                     <Box>
-                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        <Typography sx={photoLabelSx}>
                             Foto hlavní sekce
                         </Typography>
-                        <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: "block", mb: 1 }}
-                        >
+                        <Typography sx={photoHintSx}>
                             Obrázek na pozadí úvodní sekce domovské stránky
                         </Typography>
                         <ImageUploader
@@ -726,7 +793,7 @@ export function YearNewForm({ years }: YearNewFormProps) {
                     </Box>
 
                     <Box>
-                        <FormControl fullWidth>
+                        <FormControl fullWidth size="small" sx={builderFieldSx}>
                             <InputLabel id="source-year-label">
                                 Zkopírovat obsah z ročníku
                             </InputLabel>
@@ -755,7 +822,7 @@ export function YearNewForm({ years }: YearNewFormProps) {
                         />
                     </Box>
 
-                    {loading && <CircularProgress />}
+                    {loading && <CircularProgress sx={{ color: p.indigo }} />}
 
                     {sourceYearId && inventory && (
                         <ReuseSection
@@ -766,13 +833,22 @@ export function YearNewForm({ years }: YearNewFormProps) {
                             }
                         />
                     )}
-                </CardContent>
+                </Box>
 
-                <CardActions sx={{ px: 2, pb: 2 }}>
+                <Box
+                    sx={{
+                        px: 2.5,
+                        pb: 2.5,
+                        display: "flex",
+                        gap: 1.5,
+                    }}
+                >
                     <SubmitButton />
-                    <LinkButton href="/admin/rocniky">Zrušit</LinkButton>
-                </CardActions>
+                    <LinkButton href="/admin/rocniky" sx={ghostButtonSx}>
+                        Zrušit
+                    </LinkButton>
+                </Box>
             </Box>
-        </Card>
+        </Box>
     );
 }

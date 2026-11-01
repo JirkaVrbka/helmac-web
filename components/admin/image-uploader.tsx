@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { CloudUpload, Delete, Image as ImageIcon } from "@mui/icons-material";
 import { storageUrl } from "@/lib/utils/storage";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface ImageUploaderProps {
     value?: string;
@@ -22,7 +23,12 @@ interface ImageUploaderProps {
 }
 
 const DEFAULT_MAX_SIZE_MB = 15;
-const DEFAULT_ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const DEFAULT_ACCEPTED_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+];
 
 export function ImageUploader({
     value,
@@ -51,7 +57,8 @@ export function ImageUploader({
             // Handle rejected files
             if (rejectedFiles.length > 0) {
                 const rejection = rejectedFiles[0];
-                const errorMessage = rejection.errors[0]?.message || "Soubor nelze nahrat";
+                const errorMessage =
+                    rejection.errors[0]?.message || "Soubor nelze nahrat";
                 handleError(errorMessage);
                 return;
             }
@@ -63,7 +70,9 @@ export function ImageUploader({
             // Validate file size
             const maxSizeBytes = maxSizeMB * 1024 * 1024;
             if (file.size > maxSizeBytes) {
-                handleError(`Soubor je prilis velky. Maximum je ${maxSizeMB} MB.`);
+                handleError(
+                    `Soubor je prilis velky. Maximum je ${maxSizeMB} MB.`
+                );
                 return;
             }
 
@@ -101,7 +110,8 @@ export function ImageUploader({
                     throw new Error("Server nevratil URL obrazku");
                 }
             } catch (err) {
-                const message = err instanceof Error ? err.message : "Nahravani selhalo";
+                const message =
+                    err instanceof Error ? err.message : "Nahravani selhalo";
                 handleError(message);
                 setPreview(null);
             } finally {
@@ -141,7 +151,11 @@ export function ImageUploader({
     return (
         <Box>
             {error && (
-                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+                <Alert
+                    severity="error"
+                    sx={{ mb: 2 }}
+                    onClose={() => setError(null)}
+                >
                     {error}
                 </Alert>
             )}
@@ -151,19 +165,24 @@ export function ImageUploader({
                 sx={{
                     border: "2px dashed",
                     borderColor: isDragActive
-                        ? "primary.main"
+                        ? p.indigo
                         : error
-                          ? "error.main"
-                          : "grey.300",
-                    borderRadius: 2,
+                          ? p.negInk
+                          : p.line,
+                    borderRadius: "12px",
                     p: 3,
                     textAlign: "center",
-                    cursor: uploading || externalDisabled ? "default" : "pointer",
-                    bgcolor: isDragActive ? "action.hover" : "transparent",
-                    transition: "all 0.2s ease",
+                    cursor:
+                        uploading || externalDisabled ? "default" : "pointer",
+                    bgcolor: isDragActive ? p.indigoSoft : p.surface,
+                    transition: "all 140ms ease",
                     "&:hover": {
-                        borderColor: uploading || externalDisabled ? "grey.300" : "primary.main",
-                        bgcolor: uploading || externalDisabled ? "transparent" : "action.hover",
+                        borderColor:
+                            uploading || externalDisabled ? p.line : p.indigo,
+                        bgcolor:
+                            uploading || externalDisabled
+                                ? p.surface
+                                : p.indigoSoft,
                     },
                     position: "relative",
                     minHeight: 200,
@@ -176,9 +195,18 @@ export function ImageUploader({
                 <input {...getInputProps()} />
 
                 {uploading ? (
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                        <CircularProgress size={40} />
-                        <Typography color="text.secondary">Nahravam...</Typography>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 2,
+                        }}
+                    >
+                        <CircularProgress size={40} sx={{ color: p.indigo }} />
+                        <Typography sx={{ color: p.ink2 }}>
+                            Nahravam...
+                        </Typography>
                     </Box>
                 ) : displayUrl ? (
                     <Box sx={{ position: "relative", width: "100%" }}>
@@ -199,7 +227,8 @@ export function ImageUploader({
                                 maxHeight: 250,
                                 maxWidth: "100%",
                                 objectFit: "contain",
-                                borderRadius: 1,
+                                borderRadius: "10px",
+                                border: `1px solid ${p.line}`,
                             }}
                         />
                         {!externalDisabled && (
@@ -212,10 +241,10 @@ export function ImageUploader({
                                     position: "absolute",
                                     top: -12,
                                     right: -12,
-                                    bgcolor: "error.main",
-                                    color: "white",
+                                    bgcolor: p.neg,
+                                    color: p.negInk,
                                     "&:hover": {
-                                        bgcolor: "error.dark",
+                                        bgcolor: "#fecaca",
                                     },
                                 }}
                                 size="small"
@@ -225,20 +254,37 @@ export function ImageUploader({
                         )}
                     </Box>
                 ) : (
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 1,
+                        }}
+                    >
                         {isDragActive ? (
                             <>
-                                <CloudUpload sx={{ fontSize: 48, color: "primary.main" }} />
-                                <Typography color="primary">Pustit pro nahrani</Typography>
+                                <CloudUpload
+                                    sx={{ fontSize: 48, color: p.indigo }}
+                                />
+                                <Typography sx={{ color: p.indigo }}>
+                                    Pustit pro nahrani
+                                </Typography>
                             </>
                         ) : (
                             <>
-                                <ImageIcon sx={{ fontSize: 48, color: "grey.400" }} />
-                                <Typography color="text.secondary">
+                                <ImageIcon
+                                    sx={{ fontSize: 48, color: p.ink3 }}
+                                />
+                                <Typography sx={{ color: p.ink2 }}>
                                     Pretahnete obrazek nebo kliknete pro vyber
                                 </Typography>
-                                <Typography variant="caption" color="text.disabled">
-                                    Podporovane formaty: JPG, PNG, WebP, GIF (max {maxSizeMB} MB)
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: p.ink3 }}
+                                >
+                                    Podporovane formaty: JPG, PNG, WebP, GIF
+                                    (max {maxSizeMB} MB)
                                 </Typography>
                             </>
                         )}
@@ -249,8 +295,12 @@ export function ImageUploader({
             {value && (
                 <Typography
                     variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 1, display: "block", wordBreak: "break-all" }}
+                    sx={{
+                        mt: 1,
+                        display: "block",
+                        wordBreak: "break-all",
+                        color: p.ink3,
+                    }}
                 >
                     {value}
                 </Typography>

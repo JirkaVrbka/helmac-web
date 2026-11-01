@@ -17,6 +17,7 @@ import { Delete } from "@mui/icons-material";
 import { deleteAlbum } from "@/lib/actions/albums";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/lib/hooks/use-toast";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface AlbumActionsProps {
     albumId: string;
@@ -58,10 +59,17 @@ export function AlbumActions({ albumId }: AlbumActionsProps) {
                 <Tooltip title="Smazat album">
                     <IconButton
                         size="small"
-                        color="error"
                         onClick={() => setDeleteDialogOpen(true)}
+                        sx={{
+                            color: p.ink3,
+                            borderRadius: "8px",
+                            "&:hover": {
+                                color: p.negInk,
+                                backgroundColor: p.neg,
+                            },
+                        }}
                     >
-                        <Delete />
+                        <Delete sx={{ fontSize: 16 }} />
                     </IconButton>
                 </Tooltip>
             </Box>
@@ -69,8 +77,11 @@ export function AlbumActions({ albumId }: AlbumActionsProps) {
             <Dialog
                 open={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>Smazat album?</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Smazat album?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         Opravdu chcete smazat toto album? Tato akce je nevratná.
@@ -81,14 +92,31 @@ export function AlbumActions({ albumId }: AlbumActionsProps) {
                         </DialogContentText>
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
+                    <Button
+                        onClick={() => setDeleteDialogOpen(false)}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleDelete}
-                        color="error"
                         variant="contained"
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.neg,
+                            color: p.negInk,
+                            "&:hover": { backgroundColor: "#fecaca" },
+                        }}
                     >
                         Smazat
                     </Button>

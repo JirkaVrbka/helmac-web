@@ -5,6 +5,7 @@ import { Box, Collapse, Typography } from "@mui/material";
 import { extractMarkdownToc } from "@/lib/utils/markdown-toc-helpers";
 import { blocksToMarkdown } from "@/lib/types/content-blocks";
 import type { ContentBlock } from "@/lib/types/content-blocks";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface TocPreviewProps {
     show: boolean;
@@ -20,14 +21,11 @@ export function TocPreview({
     children,
 }: TocPreviewProps) {
     const markdown = useMemo(
-        () => (blocks ? blocksToMarkdown(blocks) : content ?? ""),
-        [blocks, content],
+        () => (blocks ? blocksToMarkdown(blocks) : (content ?? "")),
+        [blocks, content]
     );
 
-    const items = useMemo(
-        () => extractMarkdownToc(markdown),
-        [markdown],
-    );
+    const items = useMemo(() => extractMarkdownToc(markdown), [markdown]);
 
     const hasToc = show && items.length > 0;
 
@@ -39,9 +37,7 @@ export function TocPreview({
                 alignItems: "flex-start",
             }}
         >
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-                {children}
-            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
 
             <Collapse
                 orientation="horizontal"
@@ -53,8 +49,7 @@ export function TocPreview({
                     sx={{
                         width: 200,
                         flexShrink: 0,
-                        borderLeft: "1px solid",
-                        borderColor: "divider",
+                        borderLeft: `1px solid ${p.line}`,
                         pl: 3,
                         position: "sticky",
                         top: 80,
@@ -67,13 +62,14 @@ export function TocPreview({
                     }}
                 >
                     <Typography
-                        variant="overline"
                         sx={{
                             display: "block",
                             mb: 1.5,
-                            fontWeight: 600,
-                            color: "text.secondary",
-                            letterSpacing: "0.08em",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: p.ink3,
+                            letterSpacing: "0.14em",
+                            textTransform: "uppercase",
                         }}
                     >
                         Obsah
@@ -90,24 +86,16 @@ export function TocPreview({
                                 key={item.id}
                                 variant="body2"
                                 sx={{
-                                    pl:
-                                        item.level === 3
-                                            ? 2
-                                            : 0,
+                                    pl: item.level === 3 ? 2 : 0,
                                     py: 0.5,
-                                    borderLeft: "2px solid",
-                                    borderColor:
-                                        "transparent",
-                                    paddingLeft:
-                                        item.level === 3
-                                            ? 3
-                                            : 1,
+                                    borderLeft: "2px solid transparent",
+                                    paddingLeft: item.level === 3 ? 3 : 1,
                                     fontSize:
                                         item.level === 3
                                             ? "0.8125rem"
                                             : "0.875rem",
                                     lineHeight: 1.4,
-                                    color: "text.secondary",
+                                    color: p.ink2,
                                 }}
                             >
                                 {item.text}

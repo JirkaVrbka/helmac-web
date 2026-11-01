@@ -1,22 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import {
-    Box,
-    Button,
-    TextField,
-    Typography,
-    Alert,
-} from "@mui/material";
+import { Box, Button, TextField, Typography, Alert } from "@mui/material";
 import { Edit, Save, Close } from "@mui/icons-material";
 import { updateAdminNote } from "@/lib/actions/registration-submissions";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface AdminNoteDetailProps {
     submissionId: string;
     adminNote: string | null;
 }
 
-export function AdminNoteDetail({ submissionId, adminNote }: AdminNoteDetailProps) {
+export function AdminNoteDetail({
+    submissionId,
+    adminNote,
+}: AdminNoteDetailProps) {
     const [editing, setEditing] = useState(false);
     const [note, setNote] = useState(adminNote ?? "");
     const [error, setError] = useState<string | null>(null);
@@ -61,7 +60,7 @@ export function AdminNoteDetail({ submissionId, adminNote }: AdminNoteDetailProp
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Zadejte poznámku..."
-                    sx={{ mb: 2 }}
+                    sx={{ ...builderFieldSx, mb: 2 }}
                 />
                 <Box sx={{ display: "flex", gap: 1 }}>
                     <Button
@@ -70,6 +69,12 @@ export function AdminNoteDetail({ submissionId, adminNote }: AdminNoteDetailProp
                         startIcon={<Save />}
                         onClick={handleSave}
                         disabled={isPending}
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                     >
                         {isPending ? "Ukládání..." : "Uložit"}
                     </Button>
@@ -78,6 +83,15 @@ export function AdminNoteDetail({ submissionId, adminNote }: AdminNoteDetailProp
                         startIcon={<Close />}
                         onClick={handleCancel}
                         disabled={isPending}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
                     >
                         Zrušit
                     </Button>
@@ -90,8 +104,11 @@ export function AdminNoteDetail({ submissionId, adminNote }: AdminNoteDetailProp
         <Box>
             <Typography
                 variant="body2"
-                color={adminNote ? "text.primary" : "text.secondary"}
-                sx={{ mb: 2, whiteSpace: "pre-wrap" }}
+                sx={{
+                    mb: 2,
+                    whiteSpace: "pre-wrap",
+                    color: adminNote ? p.ink : p.ink3,
+                }}
             >
                 {adminNote || "Žádná poznámka"}
             </Typography>
@@ -99,6 +116,12 @@ export function AdminNoteDetail({ submissionId, adminNote }: AdminNoteDetailProp
                 size="small"
                 startIcon={<Edit />}
                 onClick={handleEdit}
+                sx={{
+                    color: p.indigo,
+                    borderRadius: "10px",
+                    textTransform: "none",
+                    "&:hover": { backgroundColor: p.indigoSoft },
+                }}
             >
                 {adminNote ? "Upravit" : "Přidat poznámku"}
             </Button>

@@ -1,17 +1,11 @@
-import {
-    Container,
-    Typography,
-    Card,
-    CardContent,
-    Box,
-} from "@mui/material";
-import { Add } from "@mui/icons-material";
+import { Container, Typography, Box } from "@mui/material";
 import { notFound } from "next/navigation";
-import { LinkButton } from "@/components/ui/link-button";
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/admin/page-header";
 import { ListFilters } from "@/components/admin/list-filters";
 import { AlbumList } from "@/components/admin/album-list";
+import { DashedAddButton } from "@/components/admin/dashed-add-button";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 import { Prisma } from "@prisma/client";
 
 interface YearGalleryPageProps {
@@ -47,10 +41,16 @@ async function getAlbums(yearId: string, filters: { q?: string }) {
     });
 }
 
-export default async function YearGalleryPage({ params, searchParams }: YearGalleryPageProps) {
+export default async function YearGalleryPage({
+    params,
+    searchParams,
+}: YearGalleryPageProps) {
     const { id } = await params;
     const search = await searchParams;
-    const [year, albums] = await Promise.all([getYear(id), getAlbums(id, search)]);
+    const [year, albums] = await Promise.all([
+        getYear(id),
+        getAlbums(id, search),
+    ]);
 
     if (!year) {
         notFound();
@@ -61,40 +61,64 @@ export default async function YearGalleryPage({ params, searchParams }: YearGall
             <PageHeader
                 breadcrumbs={[
                     { label: "Ročníky", href: "/admin/rocniky" },
-                    { label: `${year.year} - ${year.title}`, href: `/admin/rocniky/${year.id}` },
+                    {
+                        label: `${year.year} - ${year.title}`,
+                        href: `/admin/rocniky/${year.id}`,
+                    },
                     { label: "Galerie" },
                 ]}
                 title="Galerie"
             />
+
+            {/* toolbar */}
             <Box
                 sx={{
                     display: "flex",
-                    justifyContent: "flex-end",
                     alignItems: "center",
-                    mb: 4,
+                    gap: 1.5,
+                    mb: 2,
+                    flexWrap: "wrap",
                 }}
             >
-                <LinkButton
-                    href={`/admin/rocniky/${id}/galerie/nove`}
-                    variant="contained"
-                    startIcon={<Add />}
+                <Box
+                    component="span"
+                    sx={{
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 11,
+                        color: p.ink2,
+                        backgroundColor: p.surface3,
+                        px: "9px",
+                        py: "3px",
+                        borderRadius: "6px",
+                    }}
                 >
+                    Celkem {albums.length} alb
+                </Box>
+                <Box sx={{ flex: 1 }} />
+                <DashedAddButton href={`/admin/rocniky/${id}/galerie/nove`}>
                     Nové album
-                </LinkButton>
+                </DashedAddButton>
             </Box>
 
             <ListFilters searchPlaceholder="Hledat alba..." />
 
             {albums.length === 0 ? (
-                <Card>
-                    <CardContent>
-                        <Typography color="text.secondary" textAlign="center">
-                            {search.q
-                                ? "Žádná alba neodpovídají filtru."
-                                : "Zatím nebyla vytvořena žádná alba pro tento ročník."}
-                        </Typography>
-                    </CardContent>
-                </Card>
+                <Box
+                    sx={{
+                        backgroundColor: p.surface,
+                        border: `1px dashed ${p.line}`,
+                        borderRadius: "14px",
+                        py: 7.5,
+                        px: 3,
+                        textAlign: "center",
+                    }}
+                >
+                    <Typography sx={{ color: p.ink3 }}>
+                        {search.q
+                            ? "Žádná alba neodpovídají filtru."
+                            : "Zatím nebyla vytvořena žádná alba pro tento ročník."}
+                    </Typography>
+                </Box>
             ) : (
                 <AlbumList
                     albums={albums}

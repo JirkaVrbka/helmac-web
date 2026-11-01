@@ -15,6 +15,16 @@ import type {
     PricingDefinition,
 } from "@/lib/types/registration-form";
 import { FIELD_TYPE_ICONS } from "./field-type-icons";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+
+const categoryLabelSx = {
+    fontSize: 11,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: p.ink3,
+    fontWeight: 600,
+    mb: 1,
+} as const;
 
 interface DraggablePaletteItemProps {
     type: FieldType;
@@ -38,71 +48,84 @@ function DraggablePaletteItem({
 
     if (compact) {
         return (
-            <Paper
+            <Box
                 ref={setNodeRef}
                 {...attributes}
                 {...listeners}
                 onClick={() => onAdd?.(type)}
-                variant="outlined"
                 sx={{
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: 0.5,
-                    p: 1,
-                    cursor: "pointer",
+                    gap: 0.75,
+                    px: "6px",
+                    py: "11px",
+                    textAlign: "center",
+                    border: `1px solid ${p.line}`,
+                    borderRadius: "10px",
+                    backgroundColor: p.surface,
+                    color: p.ink2,
+                    cursor: "grab",
                     opacity: isDragging ? 0.5 : 1,
                     minHeight: 64,
+                    transition: "all 140ms ease",
                     "&:hover": {
-                        borderColor: "primary.main",
-                        backgroundColor: "action.hover",
+                        borderColor: p.indigo,
+                        backgroundColor: p.indigoSoft,
                     },
                     "&:active": {
                         cursor: "grabbing",
                     },
                 }}
             >
-                <Box sx={{ color: "primary.main", display: "flex" }}>
-                    {icon}
-                </Box>
+                <Box sx={{ color: p.indigo, display: "flex" }}>{icon}</Box>
                 <Typography
-                    variant="caption"
-                    sx={{ fontSize: "0.65rem", textAlign: "center" }}
+                    sx={{
+                        fontSize: "0.72rem",
+                        fontWeight: 600,
+                        textAlign: "center",
+                    }}
                 >
                     {label}
                 </Typography>
-            </Paper>
+            </Box>
         );
     }
 
     return (
-        <Paper
+        <Box
             ref={setNodeRef}
             {...attributes}
             {...listeners}
             onClick={() => onAdd?.(type)}
-            variant="outlined"
             sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 1,
-                px: 1.5,
-                py: 1,
-                cursor: "pointer",
+                gap: 1.25,
+                px: "11px",
+                py: "9px",
+                border: `1px solid ${p.line}`,
+                borderRadius: "10px",
+                backgroundColor: p.surface,
+                color: p.ink2,
+                cursor: "grab",
                 opacity: isDragging ? 0.5 : 1,
+                transition: "all 140ms ease",
                 "&:hover": {
-                    borderColor: "primary.main",
-                    backgroundColor: "action.hover",
+                    borderColor: p.indigo,
+                    backgroundColor: p.indigoSoft,
                 },
                 "&:active": {
                     cursor: "grabbing",
                 },
             }}
         >
-            <Box sx={{ color: "primary.main", display: "flex" }}>{icon}</Box>
-            <Typography variant="body2">{label}</Typography>
-        </Paper>
+            <Box sx={{ color: p.indigo, display: "flex" }}>{icon}</Box>
+            <Typography sx={{ fontSize: "0.82rem", fontWeight: 600 }}>
+                {label}
+            </Typography>
+        </Box>
     );
 }
 
@@ -121,37 +144,40 @@ function DraggableConditionItem({
     });
 
     return (
-        <Paper
+        <Box
             ref={setNodeRef}
             {...attributes}
             {...listeners}
             onClick={() => onAdd?.(condition.id)}
-            variant="outlined"
             sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 1,
-                px: 1.5,
-                py: 1,
-                cursor: "pointer",
+                gap: 1.25,
+                px: "11px",
+                py: "9px",
+                border: `1px solid ${p.line}`,
+                borderRadius: "10px",
+                backgroundColor: p.surface,
+                color: p.ink2,
+                cursor: "grab",
                 opacity: isDragging ? 0.5 : 1,
-                borderColor: "info.main",
+                transition: "all 140ms ease",
                 "&:hover": {
-                    borderColor: "info.dark",
-                    backgroundColor: "action.hover",
+                    borderColor: p.fieldInk,
+                    backgroundColor: p.field,
                 },
                 "&:active": {
                     cursor: "grabbing",
                 },
             }}
         >
-            <Box sx={{ color: "info.main", display: "flex" }}>
+            <Box sx={{ color: p.fieldInk, display: "flex" }}>
                 <AccountTree fontSize="small" />
             </Box>
-            <Typography variant="body2" noWrap>
+            <Typography sx={{ fontSize: "0.82rem", fontWeight: 600 }} noWrap>
                 {condition.name || "(nepojmenovaná)"}
             </Typography>
-        </Paper>
+        </Box>
     );
 }
 
@@ -171,34 +197,48 @@ function DraggablePricingItem({
 
     const isQuantity = definition.type === "quantity";
     const isMultiSelect = !isQuantity && definition.multiSelect;
-    const color = isQuantity ? "info" : isMultiSelect ? "primary" : "success";
+    // Visual accent per pricing kind: quantity → info-blue, multi-select →
+    // indigo, single select → success-green.
+    const accent = isQuantity
+        ? p.fieldInk
+        : isMultiSelect
+          ? p.indigo
+          : p.valueInk;
+    const accentHoverBg = isQuantity
+        ? p.field
+        : isMultiSelect
+          ? p.indigoSoft
+          : p.value;
 
     return (
-        <Paper
+        <Box
             ref={setNodeRef}
             {...attributes}
             {...listeners}
             onClick={() => onAdd?.(definition.id)}
-            variant="outlined"
             sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 1,
-                px: 1.5,
-                py: 1,
-                cursor: "pointer",
+                gap: 1.25,
+                px: "11px",
+                py: "9px",
+                border: `1px solid ${p.line}`,
+                borderRadius: "10px",
+                backgroundColor: p.surface,
+                color: p.ink2,
+                cursor: "grab",
                 opacity: isDragging ? 0.5 : 1,
-                borderColor: `${color}.main`,
+                transition: "all 140ms ease",
                 "&:hover": {
-                    borderColor: `${color}.dark`,
-                    backgroundColor: "action.hover",
+                    borderColor: accent,
+                    backgroundColor: accentHoverBg,
                 },
                 "&:active": {
                     cursor: "grabbing",
                 },
             }}
         >
-            <Box sx={{ color: `${color}.main`, display: "flex" }}>
+            <Box sx={{ color: accent, display: "flex" }}>
                 {isQuantity ? (
                     <Calculate fontSize="small" />
                 ) : isMultiSelect ? (
@@ -207,10 +247,10 @@ function DraggablePricingItem({
                     <Sell fontSize="small" />
                 )}
             </Box>
-            <Typography variant="body2" noWrap>
+            <Typography sx={{ fontSize: "0.82rem", fontWeight: 600 }} noWrap>
                 {definition.name || "(nepojmenovaná)"}
             </Typography>
-        </Paper>
+        </Box>
     );
 }
 
@@ -238,21 +278,17 @@ export function FieldPalette({
 
     return (
         <Paper
-            variant="outlined"
+            elevation={0}
             sx={{
                 p: 2,
-                borderRadius: 2,
+                borderRadius: "14px",
+                border: `1px solid ${p.line}`,
+                backgroundColor: p.surface,
                 position: "sticky",
                 top: 16,
             }}
         >
-            <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                sx={{ mb: 1 }}
-            >
-                Vstupní pole
-            </Typography>
+            <Typography sx={categoryLabelSx}>Vstupní pole</Typography>
             <Box
                 sx={{
                     display: "grid",
@@ -273,13 +309,7 @@ export function FieldPalette({
                 ))}
             </Box>
 
-            <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                sx={{ mb: 1 }}
-            >
-                Rozložení
-            </Typography>
+            <Typography sx={categoryLabelSx}>Rozložení</Typography>
             <Box
                 sx={{
                     display: "flex",
@@ -301,13 +331,7 @@ export function FieldPalette({
 
             {conditions.length > 0 && (
                 <>
-                    <Typography
-                        variant="subtitle2"
-                        color="text.secondary"
-                        sx={{ mb: 1 }}
-                    >
-                        Podmínky
-                    </Typography>
+                    <Typography sx={categoryLabelSx}>Podmínky</Typography>
                     <Box
                         sx={{
                             display: "flex",
@@ -329,13 +353,7 @@ export function FieldPalette({
 
             {pricingDefinitions.length > 0 && (
                 <>
-                    <Typography
-                        variant="subtitle2"
-                        color="text.secondary"
-                        sx={{ mb: 1 }}
-                    >
-                        Ceník
-                    </Typography>
+                    <Typography sx={categoryLabelSx}>Ceník</Typography>
                     <Box
                         sx={{
                             display: "flex",
@@ -361,18 +379,15 @@ export function FieldPalette({
                     alignItems: "flex-start",
                     gap: 1,
                     p: 1.5,
-                    borderRadius: 1,
-                    backgroundColor: "info.50",
-                    bgcolor: (theme) =>
-                        theme.palette.mode === "light"
-                            ? "rgba(2, 136, 209, 0.08)"
-                            : "rgba(2, 136, 209, 0.15)",
+                    borderRadius: "12px",
+                    backgroundColor: p.field,
+                    color: p.fieldInk,
                 }}
             >
                 <InfoOutlined
-                    sx={{ fontSize: 16, color: "info.main", mt: 0.25 }}
+                    sx={{ fontSize: 16, color: p.fieldInk, mt: 0.25 }}
                 />
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{ color: p.fieldInk }}>
                     Klikněte na pole pro přidání na konec, nebo přetáhněte na
                     konkrétní místo.
                 </Typography>

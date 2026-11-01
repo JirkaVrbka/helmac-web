@@ -1,9 +1,6 @@
 import {
     Alert,
     Box,
-    Card,
-    CardContent,
-    Chip,
     Container,
     LinearProgress,
     Table,
@@ -25,8 +22,84 @@ import { EMAIL_QUEUE_CONFIG } from "@/lib/utils/email-queue";
 import { CAMPAIGN_STATUS_CONFIG } from "../campaign-status";
 import { CampaignDetailActions } from "./campaign-detail-actions";
 import { MassEmailRecipientList } from "./mass-email-recipient-list";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 export const dynamic = "force-dynamic";
+
+// Builder-palette status tones keyed to campaign status meaning.
+const CAMPAIGN_BADGE: Record<string, { bg: string; fg: string }> = {
+    DRAFT: { bg: p.surface3, fg: p.ink2 },
+    SENDING: { bg: p.field, fg: p.fieldInk },
+    PAUSED: { bg: p.warnSoft, fg: p.warnInk },
+    COMPLETED: { bg: p.value, fg: p.valueInk },
+};
+
+function StatusBadge({
+    label,
+    bg,
+    fg,
+}: {
+    label: string;
+    bg: string;
+    fg: string;
+}) {
+    return (
+        <Box
+            component="span"
+            sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                px: "9px",
+                py: "3px",
+                borderRadius: "20px",
+                fontSize: 11,
+                fontWeight: 700,
+                backgroundColor: bg,
+                color: fg,
+                whiteSpace: "nowrap",
+            }}
+        >
+            <Box
+                component="span"
+                sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    backgroundColor: "currentColor",
+                }}
+            />
+            {label}
+        </Box>
+    );
+}
+
+const paneSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    borderRadius: "14px",
+    overflow: "hidden",
+    mb: 2.25,
+};
+
+const paneHeadSx = {
+    px: 2.5,
+    py: 1.75,
+    borderBottom: `1px solid ${p.line}`,
+    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+    display: "flex",
+    alignItems: "center",
+    gap: 1.5,
+};
+
+const kickerSx = {
+    fontSize: 11,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase" as const,
+    color: p.ink3,
+    fontWeight: 700,
+    flex: 1,
+};
 
 // A SENDING campaign whose lock is idle this long with items still pending
 // most likely lost its self-invocation chain. Centralized in EMAIL_QUEUE_CONFIG
@@ -98,7 +171,7 @@ export default async function KampanDetailPage({
         ]);
 
         const filter = recipientFilterSchema.safeParse(
-            campaign.recipientFilter,
+            campaign.recipientFilter
         );
 
         return (
@@ -128,9 +201,7 @@ export default async function KampanDetailPage({
                     status={campaign.status}
                     stalled={false}
                     failedCount={0}
-                    recipientFilter={
-                        filter.success ? filter.data : undefined
-                    }
+                    recipientFilter={filter.success ? filter.data : undefined}
                 />
             </Container>
         );
@@ -189,26 +260,38 @@ export default async function KampanDetailPage({
                 </Alert>
             )}
 
-            <Card variant="outlined" sx={{ mb: 3 }}>
-                <CardContent>
+            <Box sx={{ ...paneSx, mb: 2.25 }}>
+                <Box sx={{ p: 2.5 }}>
                     <Box
                         sx={{
                             display: "flex",
                             alignItems: "center",
                             gap: 2,
                             mb: 2,
+                            flexWrap: "wrap",
                         }}
                     >
-                        <Chip
+                        <StatusBadge
                             label={statusConfig.label}
-                            color={statusConfig.color}
+                            bg={
+                                (
+                                    CAMPAIGN_BADGE[campaign.status] ??
+                                    CAMPAIGN_BADGE.DRAFT
+                                ).bg
+                            }
+                            fg={
+                                (
+                                    CAMPAIGN_BADGE[campaign.status] ??
+                                    CAMPAIGN_BADGE.DRAFT
+                                ).fg
+                            }
                         />
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" sx={{ color: p.ink3 }}>
                             Předmět: {campaign.subject}
                         </Typography>
                     </Box>
 
-                    <Typography variant="body2" sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={{ mb: 1, color: p.ink }}>
                         Odesláno {sentCount} z {campaign.totalCount}
                         {failedCount > 0 && ` · neúspěšných: ${failedCount}`}
                         {pendingCount > 0 && ` · ve frontě: ${pendingCount}`}
@@ -216,30 +299,38 @@ export default async function KampanDetailPage({
                     <LinearProgress
                         variant="determinate"
                         value={progress}
-                        sx={{ height: 8, borderRadius: 1, mb: 2 }}
+                        sx={{
+                            height: 8,
+                            borderRadius: "6px",
+                            mb: 2,
+                            backgroundColor: p.surface3,
+                            "& .MuiLinearProgress-bar": {
+                                backgroundColor: p.indigo,
+                                borderRadius: "6px",
+                            },
+                        }}
                     />
 
                     {campaign.startedAt && (
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" sx={{ color: p.ink3 }}>
                             Spuštěno:{" "}
                             {campaign.startedAt.toLocaleString("cs-CZ")}
                             {campaign.completedAt &&
                                 ` · Dokončeno: ${campaign.completedAt.toLocaleString("cs-CZ")}`}
                         </Typography>
                     )}
-                </CardContent>
-            </Card>
+                </Box>
+            </Box>
 
-            <Card variant="outlined" sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                        Text emailu
-                    </Typography>
+            <Box sx={{ ...paneSx, mb: 2.25 }}>
+                <Box sx={paneHeadSx}>
+                    <Typography sx={kickerSx}>Text emailu</Typography>
+                </Box>
+                <Box sx={{ p: 2.5 }}>
                     <Box
                         sx={{
-                            border: 1,
-                            borderColor: "divider",
-                            borderRadius: 1,
+                            border: `1px solid ${p.line}`,
+                            borderRadius: "10px",
                             p: 2,
                             maxHeight: 300,
                             overflowY: "auto",
@@ -249,8 +340,8 @@ export default async function KampanDetailPage({
                         // input reaches here.
                         dangerouslySetInnerHTML={{ __html: campaign.body }}
                     />
-                </CardContent>
-            </Card>
+                </Box>
+            </Box>
 
             <Box sx={{ mb: 3 }}>
                 <MassEmailRecipientList
@@ -274,49 +365,64 @@ export default async function KampanDetailPage({
             />
 
             {failedItems.length > 0 && (
-                <Card variant="outlined" sx={{ mt: 3 }}>
-                    <CardContent>
-                        <Typography variant="h6" sx={{ mb: 2 }}>
-                            Neúspěšné emaily
-                        </Typography>
-                        <Table size="small">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Příjemce</TableCell>
-                                    <TableCell>Pokusů</TableCell>
-                                    <TableCell>Chyba</TableCell>
+                <Box sx={{ ...paneSx, mt: 3, mb: 0 }}>
+                    <Box sx={paneHeadSx}>
+                        <Typography sx={kickerSx}>Neúspěšné emaily</Typography>
+                    </Box>
+                    <Table
+                        size="small"
+                        sx={{
+                            "& .MuiTableHead-root .MuiTableCell-root": {
+                                backgroundColor: p.surface2,
+                                color: p.ink3,
+                                textTransform: "uppercase",
+                                fontSize: 10,
+                                letterSpacing: "0.12em",
+                                fontWeight: 700,
+                                borderBottom: `1px solid ${p.line}`,
+                            },
+                            "& .MuiTableBody-root .MuiTableCell-root": {
+                                borderBottomColor: p.lineSoft,
+                                color: p.ink,
+                            },
+                        }}
+                    >
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Příjemce</TableCell>
+                                <TableCell>Pokusů</TableCell>
+                                <TableCell>Chyba</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {failedItems.map((item) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>{item.recipient}</TableCell>
+                                    <TableCell>{item.attempts}</TableCell>
+                                    <TableCell
+                                        sx={{
+                                            maxWidth: 400,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            color: `${p.ink3} !important`,
+                                        }}
+                                    >
+                                        {item.lastError ?? "—"}
+                                    </TableCell>
                                 </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {failedItems.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>{item.recipient}</TableCell>
-                                        <TableCell>{item.attempts}</TableCell>
-                                        <TableCell
-                                            sx={{
-                                                maxWidth: 400,
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                            }}
-                                        >
-                                            {item.lastError ?? "—"}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        {failedCount > failedItems.length && (
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mt: 1 }}
-                            >
-                                Zobrazeno prvních {failedItems.length} z{" "}
-                                {failedCount}.
-                            </Typography>
-                        )}
-                    </CardContent>
-                </Card>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    {failedCount > failedItems.length && (
+                        <Typography
+                            variant="body2"
+                            sx={{ color: p.ink3, p: 2, pt: 1.5 }}
+                        >
+                            Zobrazeno prvních {failedItems.length} z{" "}
+                            {failedCount}.
+                        </Typography>
+                    )}
+                </Box>
             )}
         </Container>
     );

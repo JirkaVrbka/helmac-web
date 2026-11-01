@@ -36,7 +36,8 @@ Date: YYYY-MM-DD
 
 <!-- add one line per record, newest last -->
 
-| Record                                       | Date       | Summary                                                                                                                                                                                          |
-| -------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [0001](0001-interactive-project-overview.md) | 2026-10-13 | Interactive single-file project overview (`docs/overview.html`): big picture, clickable SVG flows with code modals, and a static-analysis code browser.                                          |
-| [0002](0002-reuse-year-content.md)           | 2026-10-19 | Reuse content (pages, homepage steps, news, section types, program days, registration form, V2 email templates) from a previous Year when creating a new one, with id-remap + date re-anchoring. |
+| Record                                       | Date       | Summary                                                                                                                                                                                                       |
+| -------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0001](0001-interactive-project-overview.md) | 2026-10-13 | Interactive single-file project overview (`docs/overview.html`): big picture, clickable SVG flows with code modals, and a static-analysis code browser.                                                       |
+| [0002](0002-reuse-year-content.md)           | 2026-10-19 | Reuse content (pages, homepage steps, news, section types, program days, registration form, V2 email templates) from a previous Year when creating a new one, with id-remap + date re-anchoring.              |
+| [0003](0003-admin-restyle-mockups.md)        | 2026-10-30 | Restyle the entire admin area (all ~53 screens + chrome: drawer/app bar/breadcrumbs) to the `mockups/admin/` builder palette — restyle-only, behavior/features/indicators preserved; chrome brought in scope. |

@@ -1,10 +1,4 @@
-import {
-    Container,
-    Typography,
-    Card,
-    CardContent,
-    Box,
-} from "@mui/material";
+import { Container, Typography, Box } from "@mui/material";
 import {
     CalendarMonth,
     Article,
@@ -17,6 +11,7 @@ import {
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { LinkButton } from "@/components/ui/link-button";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 async function getStats() {
     const [yearsCount, pagesCount, newsCount, albumsCount] = await Promise.all([
@@ -31,7 +26,10 @@ async function getStats() {
 
 async function getSetupStatus() {
     const [mainEmail, bankAccount] = await Promise.all([
-        db.emailAccount.findFirst({ where: { isMain: true }, select: { id: true } }),
+        db.emailAccount.findFirst({
+            where: { isMain: true },
+            select: { id: true },
+        }),
         db.bankAccount.findFirst({
             select: { bankAccountNumber: true, fioSyncEnabled: true },
         }),
@@ -44,10 +42,35 @@ async function getSetupStatus() {
     };
 }
 
+// Kicker label — the signature section-header treatment (admin design system).
+const kickerSx = {
+    fontSize: 11,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase" as const,
+    fontWeight: 700,
+    color: p.ink3,
+};
+
+// Pane: white surface, 1px border, 14px radius (admin design system).
+const paneSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    borderRadius: "14px",
+    overflow: "hidden",
+};
+
+const paneHeadSx = {
+    px: 2.5,
+    py: 1.5,
+    borderBottom: `1px solid ${p.line}`,
+    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+};
+
 export default async function AdminDashboardPage() {
     const session = await auth();
     const isAdminOrAbove =
-        session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
+        session?.user?.role === "ADMIN" ||
+        session?.user?.role === "SUPER_ADMIN";
 
     const [stats, activeYear, setupStatus] = await Promise.all([
         getStats(),
@@ -63,25 +86,21 @@ export default async function AdminDashboardPage() {
             title: "Ročníky",
             value: stats.yearsCount,
             icon: CalendarMonth,
-            color: "#1976d2",
         },
         {
             title: "Stránky",
             value: stats.pagesCount,
             icon: Article,
-            color: "#388e3c",
         },
         {
             title: "Novinky",
             value: stats.newsCount,
             icon: Newspaper,
-            color: "#f57c00",
         },
         {
             title: "Alba",
             value: stats.albumsCount,
             icon: PhotoLibrary,
-            color: "#7b1fa2",
         },
     ];
 
@@ -107,147 +126,219 @@ export default async function AdminDashboardPage() {
 
     return (
         <Container maxWidth="lg">
-            <Typography variant="h4" sx={{ mb: 4 }}>
+            <Typography
+                sx={{
+                    fontSize: "1.4rem",
+                    fontWeight: 700,
+                    color: p.ink,
+                    mb: 3,
+                }}
+            >
                 Vítejte, {session?.user?.name || "Admine"}!
             </Typography>
 
-            {/* Stats Cards */}
+            {/* Stats Tiles */}
             <Box
                 sx={{
                     display: "grid",
-                    gridTemplateColumns: {
-                        xs: "repeat(2, 1fr)",
-                        sm: "repeat(3, 1fr)",
-                        lg: "repeat(5, 1fr)",
-                    },
+                    gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
                     gap: 2,
-                    mb: 4,
+                    mb: 3,
                 }}
             >
                 {statCards.map((card) => {
                     const Icon = card.icon;
                     return (
-                        <Card key={card.title}>
-                            <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1.5,
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            p: 1,
-                                            borderRadius: 1.5,
-                                            backgroundColor: card.color,
-                                            color: "white",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                        }}
-                                    >
-                                        <Icon fontSize="small" />
-                                    </Box>
-                                    <Box>
-                                        <Typography
-                                            variant="h5"
-                                            fontWeight="bold"
-                                        >
-                                            {card.value}
-                                        </Typography>
-                                        <Typography
-                                            variant="caption"
-                                            color="text.secondary"
-                                        >
-                                            {card.title}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </CardContent>
-                        </Card>
+                        <Box
+                            key={card.title}
+                            sx={{
+                                ...paneSx,
+                                p: "18px 20px",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 0.75,
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 38,
+                                    height: 38,
+                                    borderRadius: "11px",
+                                    backgroundColor: p.indigoSoft,
+                                    color: p.indigo,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <Icon sx={{ fontSize: 20 }} />
+                            </Box>
+                            <Typography
+                                sx={{
+                                    fontFamily: "'JetBrains Mono', monospace",
+                                    fontSize: "1.7rem",
+                                    fontWeight: 700,
+                                    lineHeight: 1.1,
+                                    color: p.ink,
+                                }}
+                            >
+                                {card.value}
+                            </Typography>
+                            <Typography
+                                sx={{ fontSize: "0.8rem", color: p.ink2 }}
+                            >
+                                {card.title}
+                            </Typography>
+                        </Box>
                     );
                 })}
             </Box>
 
             {/* Setup Status (ADMIN / SUPER_ADMIN only) */}
             {setupChecks && (
-                <Card sx={{ mb: 3 }}>
-                    <CardContent>
-                        <Typography variant="h6" sx={{ mb: 2 }}>
-                            Stav nastavení
-                        </Typography>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-                            {setupChecks.map((check) => (
+                <Box sx={{ ...paneSx, mb: 2.25 }}>
+                    <Box sx={paneHeadSx}>
+                        <Typography sx={kickerSx}>Stav nastavení</Typography>
+                    </Box>
+                    <Box sx={{ px: 2.5, py: 0.5 }}>
+                        {setupChecks.map((check, i) => (
+                            <Box
+                                key={check.label}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    py: 1.25,
+                                    borderBottom:
+                                        i < setupChecks.length - 1
+                                            ? `1px solid ${p.lineSoft}`
+                                            : "none",
+                                }}
+                            >
                                 <Box
-                                    key={check.label}
                                     sx={{
                                         display: "flex",
                                         alignItems: "center",
-                                        justifyContent: "space-between",
+                                        gap: 1.25,
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        {check.ok ? (
-                                            <CheckCircle color="success" fontSize="small" />
-                                        ) : (
-                                            <Warning color="warning" fontSize="small" />
-                                        )}
-                                        <Typography variant="body2">
-                                            {check.label}
-                                        </Typography>
-                                    </Box>
-                                    {!check.ok && (
-                                        <LinkButton
-                                            href={check.href}
-                                            size="small"
-                                            variant="text"
-                                        >
-                                            Nastavit
-                                        </LinkButton>
+                                    {check.ok ? (
+                                        <CheckCircle
+                                            fontSize="small"
+                                            sx={{ color: p.valueInk }}
+                                        />
+                                    ) : (
+                                        <Warning
+                                            fontSize="small"
+                                            sx={{ color: p.warnInk }}
+                                        />
                                     )}
+                                    <Typography
+                                        sx={{
+                                            fontSize: "0.9rem",
+                                            color: p.ink,
+                                        }}
+                                    >
+                                        {check.label}
+                                    </Typography>
                                 </Box>
-                            ))}
-                        </Box>
-                    </CardContent>
-                </Card>
+                                {!check.ok && (
+                                    <LinkButton
+                                        href={check.href}
+                                        size="small"
+                                        sx={{
+                                            textTransform: "none",
+                                            fontWeight: 600,
+                                            borderRadius: "10px",
+                                            color: p.indigo,
+                                            "&:hover": {
+                                                backgroundColor: p.indigoSoft,
+                                            },
+                                        }}
+                                    >
+                                        Nastavit
+                                    </LinkButton>
+                                )}
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
             )}
 
             {/* Active Year */}
-            <Card>
-                <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                        Aktuální ročník
-                    </Typography>
+            <Box sx={paneSx}>
+                <Box sx={paneHeadSx}>
+                    <Typography sx={kickerSx}>Aktuální ročník</Typography>
+                </Box>
+                <Box sx={{ p: 2.5 }}>
                     {activeYear ? (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Typography variant="body1">
-                                {activeYear.title || `Ročník ${activeYear.year}`}
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                                flexWrap: "wrap",
+                            }}
+                        >
+                            <Typography sx={{ fontSize: "1rem", color: p.ink }}>
+                                {activeYear.title ||
+                                    `Ročník ${activeYear.year}`}
                             </Typography>
                             <LinkButton
                                 href={`/admin/rocniky/${activeYear.id}`}
-                                variant="contained"
                                 startIcon={<Edit />}
+                                sx={{
+                                    textTransform: "none",
+                                    fontWeight: 600,
+                                    borderRadius: "10px",
+                                    backgroundColor: p.indigo,
+                                    color: p.surface,
+                                    boxShadow: "none",
+                                    "&:hover": {
+                                        backgroundColor: "#4338ca",
+                                        boxShadow: "none",
+                                    },
+                                }}
                             >
                                 Upravit ročník
                             </LinkButton>
                         </Box>
                     ) : (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Typography variant="body2" color="text.secondary">
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                                flexWrap: "wrap",
+                            }}
+                        >
+                            <Typography
+                                sx={{ fontSize: "0.9rem", color: p.ink3 }}
+                            >
                                 Žádný aktivní ročník
                             </Typography>
                             <LinkButton
                                 href="/admin/rocniky"
-                                variant="outlined"
                                 size="small"
+                                sx={{
+                                    textTransform: "none",
+                                    fontWeight: 600,
+                                    borderRadius: "10px",
+                                    backgroundColor: p.surface,
+                                    border: `1px solid ${p.line}`,
+                                    color: p.ink2,
+                                    "&:hover": {
+                                        borderColor: p.ink3,
+                                        backgroundColor: p.surface2,
+                                    },
+                                }}
                             >
                                 Spravovat ročníky
                             </LinkButton>
                         </Box>
                     )}
-                </CardContent>
-            </Card>
+                </Box>
+            </Box>
         </Container>
     );
 }

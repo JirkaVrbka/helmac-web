@@ -14,13 +14,18 @@ import {
 } from "@mui/material";
 import { StickyNote2 } from "@mui/icons-material";
 import { updateAdminNote } from "@/lib/actions/registration-submissions";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface AdminNoteButtonProps {
     submissionId: string;
     adminNote: string | null;
 }
 
-export function AdminNoteButton({ submissionId, adminNote }: AdminNoteButtonProps) {
+export function AdminNoteButton({
+    submissionId,
+    adminNote,
+}: AdminNoteButtonProps) {
     const [open, setOpen] = useState(false);
     const [note, setNote] = useState(adminNote ?? "");
     const [error, setError] = useState<string | null>(null);
@@ -60,11 +65,16 @@ export function AdminNoteButton({ submissionId, adminNote }: AdminNoteButtonProp
                         e.stopPropagation();
                         handleOpen();
                     }}
+                    sx={{
+                        borderRadius: "8px",
+                        color: hasNote ? p.indigo : p.ink3,
+                        "&:hover": {
+                            color: p.indigo,
+                            backgroundColor: p.indigoSoft,
+                        },
+                    }}
                 >
-                    <StickyNote2
-                        fontSize="small"
-                        color={hasNote ? "primary" : "disabled"}
-                    />
+                    <StickyNote2 fontSize="small" />
                 </IconButton>
             </Tooltip>
             <Dialog
@@ -73,8 +83,11 @@ export function AdminNoteButton({ submissionId, adminNote }: AdminNoteButtonProp
                 maxWidth="sm"
                 fullWidth
                 onClick={(e) => e.stopPropagation()}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>Poznámka admina</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Poznámka admina
+                </DialogTitle>
                 <DialogContent>
                     {error && (
                         <Alert severity="error" sx={{ mb: 2 }}>
@@ -90,17 +103,35 @@ export function AdminNoteButton({ submissionId, adminNote }: AdminNoteButtonProp
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                         placeholder="Zadejte poznámku..."
-                        sx={{ mt: 1 }}
+                        sx={{ ...builderFieldSx, mt: 1 }}
                     />
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose} disabled={isPending}>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
+                    <Button
+                        onClick={handleClose}
+                        disabled={isPending}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleSave}
                         variant="contained"
                         disabled={isPending}
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                     >
                         {isPending ? "Ukládání..." : "Uložit"}
                     </Button>

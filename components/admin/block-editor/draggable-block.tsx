@@ -3,14 +3,12 @@
 import { useCallback } from "react";
 import { Box } from "@mui/material";
 import { useDraggable } from "@dnd-kit/core";
-import type {
-    ContentBlock,
-    BlockLayout,
-} from "@/lib/types/content-blocks";
+import type { ContentBlock, BlockLayout } from "@/lib/types/content-blocks";
 import { GRID_COLUMNS } from "./constants";
 import { BlockFrame } from "./block-frame";
 import { BlockContent } from "./block-content";
 import { useGridResize } from "./use-grid-resize";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 const HIT_AREA_SX = {
     position: "absolute",
@@ -40,35 +38,24 @@ export function DraggableBlock({
     containerRef,
     yearId,
 }: DraggableBlockProps) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        isDragging,
-    } = useDraggable({
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: block.id,
         data: { zoneId, block },
     });
 
     const getCellWidth = useCallback(() => {
         if (containerRef.current) {
-            return (
-                containerRef.current.offsetWidth /
-                GRID_COLUMNS
-            );
+            return containerRef.current.offsetWidth / GRID_COLUMNS;
         }
         return 60;
     }, [containerRef]);
 
-    const {
-        handlePointerDown,
-        handlePointerMove,
-        handlePointerUp,
-    } = useGridResize({
-        layout: block.layout,
-        getCellWidth,
-        onChange: onLayoutChange,
-    });
+    const { handlePointerDown, handlePointerMove, handlePointerUp } =
+        useGridResize({
+            layout: block.layout,
+            getCellWidth,
+            onChange: onLayoutChange,
+        });
 
     return (
         <Box
@@ -87,9 +74,7 @@ export function DraggableBlock({
         >
             <BlockFrame
                 type={block.type}
-                width={
-                    block.layout?.w ?? GRID_COLUMNS
-                }
+                width={block.layout?.w ?? GRID_COLUMNS}
                 onDuplicate={onDuplicate}
                 onDelete={onDelete}
                 dragHandleListeners={listeners}
@@ -111,9 +96,7 @@ export function DraggableBlock({
                     width: 8,
                     cursor: "ew-resize",
                 }}
-                onPointerDown={(e) =>
-                    handlePointerDown("w", e)
-                }
+                onPointerDown={(e) => handlePointerDown("w", e)}
             >
                 <Box
                     component="span"
@@ -121,13 +104,11 @@ export function DraggableBlock({
                         position: "absolute",
                         left: 2,
                         top: "50%",
-                        transform:
-                            "translateY(-50%)",
+                        transform: "translateY(-50%)",
                         width: 6,
                         height: 48,
                         borderRadius: 1,
-                        backgroundColor:
-                            "primary.main",
+                        backgroundColor: p.indigo,
                     }}
                 />
             </Box>
@@ -140,9 +121,7 @@ export function DraggableBlock({
                     width: 8,
                     cursor: "ew-resize",
                 }}
-                onPointerDown={(e) =>
-                    handlePointerDown("e", e)
-                }
+                onPointerDown={(e) => handlePointerDown("e", e)}
             >
                 <Box
                     component="span"
@@ -150,13 +129,11 @@ export function DraggableBlock({
                         position: "absolute",
                         right: 2,
                         top: "50%",
-                        transform:
-                            "translateY(-50%)",
+                        transform: "translateY(-50%)",
                         width: 6,
                         height: 48,
                         borderRadius: 1,
-                        backgroundColor:
-                            "primary.main",
+                        backgroundColor: p.indigo,
                     }}
                 />
             </Box>

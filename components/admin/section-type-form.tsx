@@ -27,6 +27,8 @@ import {
     SectionTypeActionState,
 } from "@/lib/actions/sections";
 import { useRouter } from "next/navigation";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 function slugify(text: string): string {
     return text
@@ -65,12 +67,8 @@ export function SectionTypeForm({
     onClose,
 }: SectionTypeFormProps) {
     const router = useRouter();
-    const [slugManual, setSlugManual] = useState(
-        mode === "edit"
-    );
-    const [slug, setSlug] = useState(
-        defaultValues?.slug || ""
-    );
+    const [slugManual, setSlugManual] = useState(mode === "edit");
+    const [slug, setSlug] = useState(defaultValues?.slug || "");
     const [icon, setIcon] = useState<string | null>(
         defaultValues?.icon || null
     );
@@ -89,17 +87,14 @@ export function SectionTypeForm({
     const [state, formAction, isPending] = useActionState<
         SectionTypeActionState,
         FormData
-    >(
-        async (prev, formData) => {
-            const result = await serverAction(prev, formData);
-            if (result?.success) {
-                onClose();
-                router.refresh();
-            }
-            return result;
-        },
-        null,
-    );
+    >(async (prev, formData) => {
+        const result = await serverAction(prev, formData);
+        if (result?.success) {
+            onClose();
+            router.refresh();
+        }
+        return result;
+    }, null);
 
     const handleLabelChange = (value: string) => {
         if (!slugManual) {
@@ -113,28 +108,20 @@ export function SectionTypeForm({
             onClose={onClose}
             maxWidth="sm"
             fullWidth
+            PaperProps={{ sx: { borderRadius: "14px" } }}
         >
             <Box component="form" action={formAction}>
-                <DialogTitle>
-                    {mode === "create"
-                        ? "Nový typ sekce"
-                        : "Upravit typ sekce"}
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    {mode === "create" ? "Nový typ sekce" : "Upravit typ sekce"}
                 </DialogTitle>
                 <DialogContent>
                     {state?.error?._form && (
-                        <Alert
-                            severity="error"
-                            sx={{ mb: 2 }}
-                        >
+                        <Alert severity="error" sx={{ mb: 2 }}>
                             {state.error._form[0]}
                         </Alert>
                     )}
 
-                    <input
-                        type="hidden"
-                        name="icon"
-                        value={icon || ""}
-                    />
+                    <input type="hidden" name="icon" value={icon || ""} />
                     <input
                         type="hidden"
                         name="featuredOnIndex"
@@ -152,10 +139,7 @@ export function SectionTypeForm({
                             alignItems: "flex-start",
                         }}
                     >
-                        <IconPicker
-                            value={icon}
-                            onChange={setIcon}
-                        />
+                        <IconPicker value={icon} onChange={setIcon} />
                         <Box sx={{ flex: 1 }}>
                             <TextField
                                 autoFocus
@@ -164,22 +148,13 @@ export function SectionTypeForm({
                                 margin="dense"
                                 name="label"
                                 label="Název"
-                                defaultValue={
-                                    defaultValues?.label ||
-                                    ""
-                                }
-                                error={
-                                    !!state?.error?.label
-                                }
-                                helperText={
-                                    state?.error
-                                        ?.label?.[0]
-                                }
+                                defaultValue={defaultValues?.label || ""}
+                                error={!!state?.error?.label}
+                                helperText={state?.error?.label?.[0]}
                                 onChange={(e) =>
-                                    handleLabelChange(
-                                        e.target.value
-                                    )
+                                    handleLabelChange(e.target.value)
                                 }
+                                sx={builderFieldSx}
                             />
                             <TextField
                                 required
@@ -189,19 +164,15 @@ export function SectionTypeForm({
                                 label="Slug (URL)"
                                 value={slug}
                                 onChange={(e) => {
-                                    setSlug(
-                                        e.target.value
-                                    );
+                                    setSlug(e.target.value);
                                     setSlugManual(true);
                                 }}
-                                error={
-                                    !!state?.error?.slug
-                                }
+                                error={!!state?.error?.slug}
                                 helperText={
-                                    state?.error
-                                        ?.slug?.[0] ||
+                                    state?.error?.slug?.[0] ||
                                     `Veřejná stránka bude na /${slug}`
                                 }
+                                sx={builderFieldSx}
                             />
                         </Box>
                     </Box>
@@ -212,9 +183,12 @@ export function SectionTypeForm({
                         sx={{ mt: 2, "&:before": { display: "none" } }}
                     >
                         <AccordionSummary
-                            expandIcon={<ExpandMore />}
+                            expandIcon={<ExpandMore sx={{ color: p.ink3 }} />}
                         >
-                            <Typography variant="body2">
+                            <Typography
+                                variant="body2"
+                                sx={{ color: p.ink2, fontWeight: 600 }}
+                            >
                                 Nastavení veřejné stránky
                             </Typography>
                         </AccordionSummary>
@@ -230,31 +204,25 @@ export function SectionTypeForm({
                                 size="small"
                                 name="pageTitle"
                                 label="Titulek stránky"
-                                defaultValue={
-                                    defaultValues?.pageTitle ||
-                                    ""
-                                }
+                                defaultValue={defaultValues?.pageTitle || ""}
+                                sx={builderFieldSx}
                             />
                             <TextField
                                 fullWidth
                                 size="small"
                                 name="pageSubtitle"
                                 label="Podtitulek stránky"
-                                defaultValue={
-                                    defaultValues?.pageSubtitle ||
-                                    ""
-                                }
+                                defaultValue={defaultValues?.pageSubtitle || ""}
+                                sx={builderFieldSx}
                             />
                             <TextField
                                 fullWidth
                                 size="small"
                                 name="metaTitle"
                                 label="Meta titulek"
-                                defaultValue={
-                                    defaultValues?.metaTitle ||
-                                    ""
-                                }
+                                defaultValue={defaultValues?.metaTitle || ""}
                                 helperText="Pro SEO, např. 'Info | Helmáč'"
+                                sx={builderFieldSx}
                             />
                             <TextField
                                 fullWidth
@@ -262,24 +230,25 @@ export function SectionTypeForm({
                                 name="metaDescription"
                                 label="Meta popis"
                                 defaultValue={
-                                    defaultValues?.metaDescription ||
-                                    ""
+                                    defaultValues?.metaDescription || ""
                                 }
                                 multiline
                                 rows={2}
+                                sx={builderFieldSx}
                             />
                             <FormControlLabel
                                 control={
                                     <Switch
-                                        checked={
-                                            featuredOnIndex
-                                        }
+                                        checked={featuredOnIndex}
                                         onChange={(e) =>
-                                            setFeaturedOnIndex(
-                                                e.target
-                                                    .checked
-                                            )
+                                            setFeaturedOnIndex(e.target.checked)
                                         }
+                                        sx={{
+                                            "& .MuiSwitch-switchBase.Mui-checked":
+                                                { color: p.indigo },
+                                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                                { backgroundColor: p.indigo },
+                                        }}
                                     />
                                 }
                                 label="Zobrazit na úvodní stránce"
@@ -287,59 +256,65 @@ export function SectionTypeForm({
                             />
                             <Typography
                                 variant="caption"
-                                color="text.secondary"
-                                sx={{ ml: 4 }}
+                                sx={{ ml: 4, color: p.ink3 }}
                             >
-                                Pouze jeden typ sekcí může
-                                být zobrazený na úvodní
-                                stránce.
+                                Pouze jeden typ sekcí může být zobrazený na
+                                úvodní stránce.
                             </Typography>
                             <Box sx={{ mt: 2 }}>
                                 <Typography
                                     variant="body2"
-                                    sx={{ mb: 0.5 }}
+                                    sx={{ mb: 0.5, color: p.ink2 }}
                                 >
-                                    Popis pro úvodní
-                                    stránku
+                                    Popis pro úvodní stránku
                                 </Typography>
                                 <RichTextEditor
                                     value={description}
-                                    onChange={
-                                        setDescription
-                                    }
+                                    onChange={setDescription}
                                     format="markdown"
                                     minHeight={60}
-                                    allowedTools={[
-                                        "basicFormatting",
-                                    ]}
+                                    allowedTools={["basicFormatting"]}
                                     placeholder="Krátký popis zobrazený na úvodní stránce…"
                                 />
                                 <Typography
                                     variant="caption"
-                                    color="text.secondary"
+                                    sx={{ color: p.ink3 }}
                                 >
-                                    Zobrazí se jako
-                                    podtitulek sekce na
-                                    úvodní stránce.
+                                    Zobrazí se jako podtitulek sekce na úvodní
+                                    stránce.
                                 </Typography>
                             </Box>
                         </AccordionDetails>
                     </Accordion>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
+                    <Button
+                        onClick={onClose}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         type="submit"
                         variant="contained"
                         disabled={isPending}
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                         startIcon={
                             isPending ? (
-                                <CircularProgress
-                                    size={20}
-                                    color="inherit"
-                                />
+                                <CircularProgress size={20} color="inherit" />
                             ) : null
                         }
                     >

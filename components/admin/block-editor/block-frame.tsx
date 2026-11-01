@@ -8,6 +8,7 @@ import type {
     DraggableSyntheticListeners,
 } from "@dnd-kit/core";
 import { BLOCK_META } from "./block-meta";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface BlockFrameProps {
     type: ContentBlockType;
@@ -35,15 +36,15 @@ export function BlockFrame({
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 1,
+                border: `1px solid ${p.line}`,
+                borderRadius: "12px",
                 overflow: "hidden",
-                backgroundColor:
-                    type === "group"
-                        ? "transparent"
-                        : "background.paper",
+                backgroundColor: type === "group" ? "transparent" : p.surface,
                 height: "100%",
+                transition: "box-shadow 140ms ease",
+                "&:hover": {
+                    boxShadow: "0 2px 10px rgba(15,23,42,0.06)",
+                },
             }}
         >
             <Box
@@ -55,7 +56,9 @@ export function BlockFrame({
                     display: "flex",
                     alignItems: "center",
                     px: 0.5,
-                    backgroundColor: "action.hover",
+                    py: 0.25,
+                    backgroundColor: p.surface2,
+                    borderBottom: `1px solid ${p.line}`,
                     flexShrink: 0,
                     cursor: "grab",
                     "&:active": { cursor: "grabbing" },
@@ -69,10 +72,15 @@ export function BlockFrame({
             >
                 <Box
                     sx={{
-                        display: "flex",
+                        display: "inline-flex",
                         alignItems: "center",
-                        gap: 0.5,
-                        color: "text.disabled",
+                        justifyContent: "center",
+                        color: p.indigo,
+                        backgroundColor: p.indigoSoft,
+                        borderRadius: "6px",
+                        px: "4px",
+                        py: "2px",
+                        "& svg": { fontSize: 15 },
                     }}
                 >
                     {meta?.icon}
@@ -80,7 +88,11 @@ export function BlockFrame({
                 <Box sx={{ flex: 1 }} />
                 <Typography
                     variant="caption"
-                    color="text.disabled"
+                    sx={{
+                        color: p.ink3,
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 11,
+                    }}
                 >
                     {width}/12
                 </Typography>
@@ -89,28 +101,32 @@ export function BlockFrame({
                         size="small"
                         onClick={onDuplicate}
                         sx={{
-                            color: "text.disabled",
+                            color: p.ink3,
+                            borderRadius: "8px",
                             p: 0.25,
                             ml: 0.5,
+                            transition: "all 140ms ease",
                             "&:hover": {
-                                color: "primary.main",
+                                color: p.indigo,
+                                backgroundColor: p.indigoSoft,
                             },
                         }}
                     >
-                        <ContentCopy
-                            sx={{ fontSize: 14 }}
-                        />
+                        <ContentCopy sx={{ fontSize: 14 }} />
                     </IconButton>
                 )}
                 <IconButton
                     size="small"
                     onClick={onDelete}
                     sx={{
-                        color: "text.disabled",
+                        color: p.ink3,
+                        borderRadius: "8px",
                         p: 0.25,
                         ml: 0.5,
+                        transition: "all 140ms ease",
                         "&:hover": {
-                            color: "error.main",
+                            color: p.negInk,
+                            backgroundColor: p.neg,
                         },
                     }}
                 >
@@ -123,8 +139,7 @@ export function BlockFrame({
                         position: "absolute",
                         top: "50%",
                         left: "50%",
-                        transform:
-                            "translate(-50%, -50%)",
+                        transform: "translate(-50%, -50%)",
                         display: "flex",
                         gap: "3px",
                     }}
@@ -136,17 +151,14 @@ export function BlockFrame({
                                 width: 6,
                                 height: 6,
                                 borderRadius: "50%",
-                                backgroundColor:
-                                    "primary.main",
+                                backgroundColor: p.ink3,
                             }}
                         />
                     ))}
                 </Box>
             </Box>
 
-            <Box sx={{ flex: 1 }}>
-                {children}
-            </Box>
+            <Box sx={{ flex: 1 }}>{children}</Box>
         </Box>
     );
 }

@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { DecorativeDivider } from "@/components/public/ui/Divider";
 import type { DividerBlock, DividerVariant } from "@/lib/types/content-blocks";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 const VARIANTS: { value: DividerVariant; label: string }[] = [
     { value: "simple", label: "Jednoduchý" },
@@ -39,9 +40,8 @@ export function DividerBlockEditor({
                     gap: 0.5,
                     px: 1,
                     py: 0.5,
-                    borderBottom: "1px solid",
-                    borderColor: "divider",
-                    backgroundColor: "action.hover",
+                    borderBottom: `1px solid ${p.line}`,
+                    backgroundColor: p.surface2,
                     flexShrink: 0,
                 }}
             >
@@ -53,10 +53,28 @@ export function DividerBlockEditor({
                         if (v) onChange({ ...block, variant: v });
                     }}
                     sx={{
+                        backgroundColor: p.surface2,
+                        border: `1px solid ${p.line}`,
+                        borderRadius: "10px",
+                        p: "3px",
+                        gap: "3px",
                         "& .MuiToggleButton-root": {
                             py: 0.25,
                             px: 1,
+                            border: 0,
+                            borderRadius: "8px !important",
+                            color: p.ink2,
                             textTransform: "none",
+                            transition: "all 140ms ease",
+                            "&:hover": {
+                                backgroundColor: p.indigoSoft,
+                                color: p.indigo,
+                            },
+                            "&.Mui-selected": {
+                                backgroundColor: p.indigo,
+                                color: "#fff",
+                                "&:hover": { backgroundColor: p.indigo },
+                            },
                         },
                     }}
                 >

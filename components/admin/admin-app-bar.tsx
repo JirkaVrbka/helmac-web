@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { Menu as MenuIcon, Home, NavigateNext } from "@mui/icons-material";
 import { useSidebarContext } from "@/lib/contexts/sidebar-context";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 import Link from "next/link";
 
 interface AdminAppBarProps {
@@ -18,10 +19,7 @@ interface AdminAppBarProps {
     onMenuClick: () => void;
 }
 
-export function AdminAppBar({
-    drawerWidth,
-    onMenuClick,
-}: AdminAppBarProps) {
+export function AdminAppBar({ drawerWidth, onMenuClick }: AdminAppBarProps) {
     const { pageHeader } = useSidebarContext();
 
     return (
@@ -30,6 +28,11 @@ export function AdminAppBar({
             sx={{
                 width: { md: `calc(100% - ${drawerWidth}px)` },
                 ml: { md: `${drawerWidth}px` },
+                backgroundColor: p.surface,
+                backgroundImage: "none",
+                color: p.ink,
+                boxShadow: "none",
+                borderBottom: `1px solid ${p.line}`,
             }}
         >
             <Toolbar>
@@ -37,20 +40,27 @@ export function AdminAppBar({
                     aria-label="open drawer"
                     edge="start"
                     onClick={onMenuClick}
-                    sx={{ mr: 2, display: { md: "none" } }}
+                    sx={{ mr: 2, display: { md: "none" }, color: p.ink2 }}
                 >
                     <MenuIcon />
                 </IconButton>
                 {pageHeader ? (
-                    <Box sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        flexGrow: 1,
-                        minWidth: 0,
-                    }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexGrow: 1,
+                            minWidth: 0,
+                        }}
+                    >
                         <MuiBreadcrumbs
-                            separator={<NavigateNext fontSize="small" sx={{ color: "inherit", opacity: 0.7 }} />}
+                            separator={
+                                <NavigateNext
+                                    fontSize="small"
+                                    sx={{ color: p.ink3 }}
+                                />
+                            }
                             sx={{
                                 color: "inherit",
                                 minWidth: 0,
@@ -65,11 +75,10 @@ export function AdminAppBar({
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    color: "inherit",
-                                    opacity: 0.7,
+                                    color: p.ink2,
                                     textDecoration: "none",
                                     "&:hover": {
-                                        opacity: 1,
+                                        color: p.indigo,
                                         textDecoration: "underline",
                                     },
                                 }}
@@ -84,12 +93,11 @@ export function AdminAppBar({
                                         component={Link}
                                         href={item.href}
                                         sx={{
-                                            color: "inherit",
-                                            opacity: 0.7,
+                                            color: p.ink2,
                                             textDecoration: "none",
                                             whiteSpace: "nowrap",
                                             "&:hover": {
-                                                opacity: 1,
+                                                color: p.indigo,
                                                 textDecoration: "underline",
                                             },
                                         }}
@@ -100,7 +108,7 @@ export function AdminAppBar({
                                     <Typography
                                         key={index}
                                         sx={{
-                                            color: "inherit",
+                                            color: p.ink,
                                             whiteSpace: "nowrap",
                                         }}
                                     >
@@ -115,6 +123,7 @@ export function AdminAppBar({
                             sx={{
                                 ml: 2,
                                 flexShrink: 0,
+                                color: p.ink,
                             }}
                         >
                             {pageHeader.title}
@@ -122,7 +131,12 @@ export function AdminAppBar({
                     </Box>
                 ) : (
                     <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="h6" noWrap component="div">
+                        <Typography
+                            variant="h6"
+                            noWrap
+                            component="div"
+                            sx={{ color: p.ink }}
+                        >
                             Administrace
                         </Typography>
                     </Box>

@@ -1,9 +1,10 @@
-import { Container, Box, Divider, Typography, Card, CardContent } from "@mui/material";
+import { Container, Box, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/admin/page-header";
 import { LinkButton } from "@/components/ui/link-button";
 import { MarkEmailRead, Payment, PriceChange, Send } from "@mui/icons-material";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 import { EmailToggle } from "./email-toggle";
 import { togglePriceChangeEmail } from "@/lib/actions/years";
 import { togglePaymentEmail } from "@/lib/actions/bank-sync";
@@ -77,16 +78,62 @@ async function getYearEmailStatus(yearId: string) {
     });
 }
 
-function SenderInfo({ account }: { account: { email: string; label: string | null } | null }) {
+const paneSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    borderRadius: "14px",
+    overflow: "hidden",
+    mb: 2.25,
+};
+
+const paneHeadSx = {
+    px: 2.5,
+    py: 1.75,
+    borderBottom: `1px solid ${p.line}`,
+    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+    display: "flex",
+    alignItems: "center",
+    gap: 1.5,
+};
+
+const kickerSx = {
+    fontSize: 11,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase" as const,
+    color: p.ink3,
+    fontWeight: 700,
+    flex: 1,
+};
+
+const ghostBtnSx = {
+    borderRadius: "10px",
+    textTransform: "none",
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    backgroundColor: p.surface,
+    boxShadow: "none",
+    "&:hover": {
+        borderColor: p.ink3,
+        backgroundColor: p.surface2,
+        boxShadow: "none",
+    },
+};
+
+function SenderInfo({
+    account,
+}: {
+    account: { email: string; label: string | null } | null;
+}) {
     if (account) {
         return (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Odesílatel: {account.email}{account.label ? ` (${account.label})` : ""}
+            <Typography variant="body2" sx={{ color: p.ink3, mt: 1 }}>
+                Odesílatel: {account.email}
+                {account.label ? ` (${account.label})` : ""}
             </Typography>
         );
     }
     return (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography variant="body2" sx={{ color: p.ink3, mt: 1 }}>
             Odesílatel: Hlavní emailový účet
         </Typography>
     );
@@ -100,16 +147,23 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
         notFound();
     }
 
-    const hasConfirmationTemplate = !!year.confirmationEmailSubject && !!year.confirmationEmailBody;
-    const hasPriceChangeTemplate = !!year.priceChangeEmailSubject && !!year.priceChangeEmailBody;
-    const hasPaymentTemplate = !!year.paymentEmailSubject && !!year.paymentEmailBody;
+    const hasConfirmationTemplate =
+        !!year.confirmationEmailSubject && !!year.confirmationEmailBody;
+    const hasPriceChangeTemplate =
+        !!year.priceChangeEmailSubject && !!year.priceChangeEmailBody;
+    const hasPaymentTemplate =
+        !!year.paymentEmailSubject && !!year.paymentEmailBody;
 
     const formStructure = await getFormStructure(year.id);
     const pricingDefinitions = formStructure
         ? v2PricingDefsToPricingDefs(formStructure.pricingDefinitions)
         : [];
-    const allInputFields = (formStructure?.fields ?? []).map(v2FieldToInputField);
-    const fieldNameToLabel = new Map(allInputFields.map((f) => [f.name, f.label]));
+    const allInputFields = (formStructure?.fields ?? []).map(
+        v2FieldToInputField
+    );
+    const fieldNameToLabel = new Map(
+        allInputFields.map((f) => [f.name, f.label])
+    );
     const availableFields = allInputFields
         .filter((f) => {
             if (!OPTION_FIELD_TYPES.has(f.type)) return false;
@@ -129,18 +183,20 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
             <PageHeader
                 breadcrumbs={[
                     { label: "Ročníky", href: "/admin/rocniky" },
-                    { label: `${year.year}`, href: `/admin/rocniky/${year.id}` },
+                    {
+                        label: `${year.year}`,
+                        href: `/admin/rocniky/${year.id}`,
+                    },
                     { label: "Emaily" },
                 ]}
                 title="Emaily"
             />
 
-            <Card variant="outlined" sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                        Potvrzovací email
-                    </Typography>
-
+            <Box sx={paneSx}>
+                <Box sx={paneHeadSx}>
+                    <Typography sx={kickerSx}>Potvrzovací email</Typography>
+                </Box>
+                <Box sx={{ p: 2.5 }}>
                     <EmailToggle
                         yearId={year.id}
                         initialEnabled={year.confirmationEmailEnabled}
@@ -148,7 +204,10 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
                     />
 
                     {!hasConfirmationTemplate && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{ color: p.ink3, mt: 1, mb: 2 }}
+                        >
                             Šablona emailu zatím není nastavena.
                         </Typography>
                     )}
@@ -162,19 +221,21 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
                             href={`/admin/rocniky/${year.id}/emaily/potvrzovaci`}
                             variant="outlined"
                             startIcon={<MarkEmailRead />}
+                            sx={ghostBtnSx}
                         >
-                            {hasConfirmationTemplate ? "Zobrazit šablonu" : "Nastavit šablonu"}
+                            {hasConfirmationTemplate
+                                ? "Zobrazit šablonu"
+                                : "Nastavit šablonu"}
                         </LinkButton>
                     </Box>
-                </CardContent>
-            </Card>
+                </Box>
+            </Box>
 
-            <Card variant="outlined" sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                        Email při změně ceny
-                    </Typography>
-
+            <Box sx={paneSx}>
+                <Box sx={paneHeadSx}>
+                    <Typography sx={kickerSx}>Email při změně ceny</Typography>
+                </Box>
+                <Box sx={{ p: 2.5 }}>
                     <EmailToggle
                         yearId={year.id}
                         initialEnabled={year.priceChangeEmailEnabled}
@@ -184,7 +245,10 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
                     />
 
                     {!hasPriceChangeTemplate && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{ color: p.ink3, mt: 1, mb: 2 }}
+                        >
                             Šablona emailu zatím není nastavena.
                         </Typography>
                     )}
@@ -198,19 +262,23 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
                             href={`/admin/rocniky/${year.id}/emaily/zmena-ceny`}
                             variant="outlined"
                             startIcon={<PriceChange />}
+                            sx={ghostBtnSx}
                         >
-                            {hasPriceChangeTemplate ? "Zobrazit šablonu" : "Nastavit šablonu"}
+                            {hasPriceChangeTemplate
+                                ? "Zobrazit šablonu"
+                                : "Nastavit šablonu"}
                         </LinkButton>
                     </Box>
-                </CardContent>
-            </Card>
+                </Box>
+            </Box>
 
-            <Card variant="outlined" sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
+            <Box sx={paneSx}>
+                <Box sx={paneHeadSx}>
+                    <Typography sx={kickerSx}>
                         Email při přijetí platby
                     </Typography>
-
+                </Box>
+                <Box sx={{ p: 2.5 }}>
                     <EmailToggle
                         yearId={year.id}
                         initialEnabled={year.paymentEmailEnabled}
@@ -220,7 +288,10 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
                     />
 
                     {!hasPaymentTemplate && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{ color: p.ink3, mt: 1, mb: 2 }}
+                        >
                             Šablona emailu zatím není nastavena.
                         </Typography>
                     )}
@@ -234,20 +305,22 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
                             href={`/admin/rocniky/${year.id}/emaily/platba`}
                             variant="outlined"
                             startIcon={<Payment />}
+                            sx={ghostBtnSx}
                         >
-                            {hasPaymentTemplate ? "Zobrazit šablonu" : "Nastavit šablonu"}
+                            {hasPaymentTemplate
+                                ? "Zobrazit šablonu"
+                                : "Nastavit šablonu"}
                         </LinkButton>
                     </Box>
-                </CardContent>
-            </Card>
+                </Box>
+            </Box>
 
-            <Card variant="outlined" sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                        Hromadné emaily
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Box sx={{ ...paneSx, mb: 3.5 }}>
+                <Box sx={paneHeadSx}>
+                    <Typography sx={kickerSx}>Hromadné emaily</Typography>
+                </Box>
+                <Box sx={{ p: 2.5 }}>
+                    <Typography variant="body2" sx={{ color: p.ink3, mb: 2 }}>
                         Jednorázové hromadné emaily odeslané vybraným
                         registrovaným účastníkům.
                     </Typography>
@@ -256,16 +329,32 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
                         href={`/admin/rocniky/${year.id}/emaily/hromadne`}
                         variant="outlined"
                         startIcon={<Send />}
+                        sx={ghostBtnSx}
                     >
                         Spravovat hromadné emaily
                     </LinkButton>
-                </CardContent>
-            </Card>
+                </Box>
+            </Box>
 
             {year.conditionalEmails.length > 0 && (
                 <>
-                    <Divider sx={{ my: 4 }} />
-                    <Typography variant="h6" sx={{ mb: 3 }}>
+                    <Box
+                        sx={{
+                            height: "1px",
+                            backgroundColor: p.lineSoft,
+                            my: 3,
+                        }}
+                    />
+                    <Typography
+                        sx={{
+                            fontSize: 11,
+                            letterSpacing: "0.14em",
+                            textTransform: "uppercase",
+                            color: p.ink3,
+                            fontWeight: 700,
+                            mb: 2,
+                        }}
+                    >
                         Podmíněné emaily
                     </Typography>
                     {year.conditionalEmails.map((email) => (
@@ -275,7 +364,9 @@ export default async function EmailyPage({ params }: EmailyPageProps) {
                             email={{
                                 ...email,
                                 conditionFieldLabel:
-                                    fieldNameToLabel.get(email.conditionFieldName) ?? email.conditionFieldName,
+                                    fieldNameToLabel.get(
+                                        email.conditionFieldName
+                                    ) ?? email.conditionFieldName,
                             }}
                         />
                     ))}

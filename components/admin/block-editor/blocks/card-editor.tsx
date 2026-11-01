@@ -17,11 +17,38 @@ import {
 import { Add, Delete } from "@mui/icons-material";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
-import type { CardBlock, CardButton, CardButtonVariant } from "@/lib/types/content-blocks";
-import {
-    getLinkTargets,
-    type LinkTarget,
-} from "@/lib/actions/link-targets";
+import type {
+    CardBlock,
+    CardButton,
+    CardButtonVariant,
+} from "@/lib/types/content-blocks";
+import { getLinkTargets, type LinkTarget } from "@/lib/actions/link-targets";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
+
+const segmentedSx = {
+    backgroundColor: p.surface2,
+    border: `1px solid ${p.line}`,
+    borderRadius: "10px",
+    p: "3px",
+    gap: "3px",
+    "& .MuiToggleButton-root": {
+        border: 0,
+        borderRadius: "8px !important",
+        color: p.ink2,
+        textTransform: "none",
+        transition: "all 140ms ease",
+        "&:hover": {
+            backgroundColor: p.indigoSoft,
+            color: p.indigo,
+        },
+        "&.Mui-selected": {
+            backgroundColor: p.indigo,
+            color: "#fff",
+            "&:hover": { backgroundColor: p.indigo },
+        },
+    },
+} as const;
 
 interface CardBlockEditorProps {
     block: CardBlock;
@@ -39,7 +66,8 @@ export function CardBlockEditor({
 
     const [btnLabel, setBtnLabel] = useState("");
     const [btnHref, setBtnHref] = useState("");
-    const [btnVariant, setBtnVariant] = useState<CardButtonVariant>("contained");
+    const [btnVariant, setBtnVariant] =
+        useState<CardButtonVariant>("contained");
 
     const [linkTargets, setLinkTargets] = useState<LinkTarget[] | null>(null);
     const [linkTargetsLoading, startLoadTargets] = useTransition();
@@ -72,7 +100,12 @@ export function CardBlockEditor({
         if (editingIndex !== null) {
             const updated = block.buttons.map((btn, i) =>
                 i === editingIndex
-                    ? { ...btn, label: btnLabel, href: btnHref, variant: btnVariant }
+                    ? {
+                          ...btn,
+                          label: btnLabel,
+                          href: btnHref,
+                          variant: btnVariant,
+                      }
                     : btn
             );
             onChange({ ...block, buttons: updated });
@@ -124,26 +157,21 @@ export function CardBlockEditor({
             >
                 <ImageUploader
                     value={block.imageUrl}
-                    onChange={(url) =>
-                        onChange({ ...block, imageUrl: url })
-                    }
+                    onChange={(url) => onChange({ ...block, imageUrl: url })}
                 />
             </Box>
             <TextField
                 size="small"
                 label="Nadpis"
                 value={block.title}
-                onChange={(e) =>
-                    onChange({ ...block, title: e.target.value })
-                }
+                onChange={(e) => onChange({ ...block, title: e.target.value })}
                 fullWidth
+                sx={builderFieldSx}
             />
             <Box sx={{ flex: 1, minHeight: 60 }}>
                 <RichTextEditor
                     value={block.text}
-                    onChange={(text) =>
-                        onChange({ ...block, text })
-                    }
+                    onChange={(text) => onChange({ ...block, text })}
                     minHeight={60}
                     yearId={yearId}
                     allowedTools={[
@@ -158,7 +186,15 @@ export function CardBlockEditor({
             </Box>
 
             {/* Button list */}
-            <Box sx={{ flexShrink: 0, display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }}>
+            <Box
+                sx={{
+                    flexShrink: 0,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 0.5,
+                    alignItems: "center",
+                }}
+            >
                 {block.buttons.map((btn, i) => (
                     <Button
                         key={btn.id}
@@ -192,6 +228,13 @@ export function CardBlockEditor({
                         size="small"
                         startIcon={<Add />}
                         onClick={openAddDialog}
+                        sx={{
+                            textTransform: "none",
+                            color: p.indigo,
+                            "&:hover": {
+                                backgroundColor: p.indigoSoft,
+                            },
+                        }}
                     >
                         Přidat tlačítko
                     </Button>
@@ -199,7 +242,15 @@ export function CardBlockEditor({
                     <IconButton
                         size="small"
                         onClick={openAddDialog}
-                        sx={{ color: "primary.main" }}
+                        sx={{
+                            color: p.ink3,
+                            borderRadius: "8px",
+                            transition: "all 140ms ease",
+                            "&:hover": {
+                                color: p.indigo,
+                                backgroundColor: p.indigoSoft,
+                            },
+                        }}
                     >
                         <Add sx={{ fontSize: 18 }} />
                     </IconButton>
@@ -212,8 +263,9 @@ export function CardBlockEditor({
                 onClose={() => setDialogOpen(false)}
                 maxWidth="xs"
                 fullWidth
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
                     {editingIndex !== null
                         ? "Upravit tlačítko"
                         : "Přidat tlačítko"}
@@ -233,6 +285,7 @@ export function CardBlockEditor({
                         onChange={(e) => setBtnLabel(e.target.value)}
                         fullWidth
                         size="small"
+                        sx={builderFieldSx}
                     />
                     <TextField
                         label="Odkaz (URL)"
@@ -240,6 +293,7 @@ export function CardBlockEditor({
                         onChange={(e) => setBtnHref(e.target.value)}
                         fullWidth
                         size="small"
+                        sx={builderFieldSx}
                     />
                     <Autocomplete<LinkTarget>
                         options={linkTargets ?? []}
@@ -260,6 +314,7 @@ export function CardBlockEditor({
                         }}
                         blurOnSelect
                         size="small"
+                        sx={builderFieldSx}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -277,26 +332,38 @@ export function CardBlockEditor({
                         }}
                         size="small"
                         fullWidth
+                        sx={segmentedSx}
                     >
-                        <ToggleButton value="contained">
-                            Vyplněné
-                        </ToggleButton>
-                        <ToggleButton value="outlined">
-                            Obrysové
-                        </ToggleButton>
-                        <ToggleButton value="text">
-                            Textové
-                        </ToggleButton>
+                        <ToggleButton value="contained">Vyplněné</ToggleButton>
+                        <ToggleButton value="outlined">Obrysové</ToggleButton>
+                        <ToggleButton value="text">Textové</ToggleButton>
                     </ToggleButtonGroup>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDialogOpen(false)}>
+                    <Button
+                        onClick={() => setDialogOpen(false)}
+                        sx={{
+                            textTransform: "none",
+                            color: p.ink2,
+                            border: `1px solid ${p.line}`,
+                            borderRadius: "10px",
+                            backgroundColor: p.surface,
+                            "&:hover": { backgroundColor: p.surface2 },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         onClick={submitButton}
                         variant="contained"
+                        disableElevation
                         disabled={!btnLabel.trim()}
+                        sx={{
+                            textTransform: "none",
+                            borderRadius: "10px",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                     >
                         {editingIndex !== null ? "Uložit" : "Přidat"}
                     </Button>

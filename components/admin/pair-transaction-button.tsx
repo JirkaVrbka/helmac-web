@@ -17,6 +17,8 @@ import {
 import { LinkRounded } from "@mui/icons-material";
 import { pairTransactionWithOrder } from "@/lib/actions/bank-transactions";
 import type { UnpaidOrderOption } from "@/lib/services/v2";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface PairTransactionButtonProps {
     transactionId: string;
@@ -28,8 +30,7 @@ export function PairTransactionButton({
     unpaidOrders,
 }: PairTransactionButtonProps) {
     const [open, setOpen] = useState(false);
-    const [selected, setSelected] =
-        useState<UnpaidOrderOption | null>(null);
+    const [selected, setSelected] = useState<UnpaidOrderOption | null>(null);
     const [showPartial, setShowPartial] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
@@ -56,7 +57,7 @@ export function PairTransactionButton({
         startTransition(async () => {
             const result = await pairTransactionWithOrder(
                 transactionId,
-                selected.id,
+                selected.id
             );
             if (result.error) {
                 setError(result.error);
@@ -76,6 +77,13 @@ export function PairTransactionButton({
                     e.stopPropagation();
                     handleOpen();
                 }}
+                sx={{
+                    color: p.indigo,
+                    fontWeight: 600,
+                    "&:hover": {
+                        backgroundColor: p.indigoSoft,
+                    },
+                }}
             >
                 Spárovat
             </Button>
@@ -85,26 +93,20 @@ export function PairTransactionButton({
                 maxWidth="sm"
                 fullWidth
                 onClick={(e) => e.stopPropagation()}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
                     Spárovat transakci s registrací
                 </DialogTitle>
                 <DialogContent>
                     {error && (
-                        <Alert
-                            severity="error"
-                            sx={{ mb: 2 }}
-                        >
+                        <Alert severity="error" sx={{ mb: 2 }}>
                             {error}
                         </Alert>
                     )}
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 2 }}
-                    >
-                        Vyberte nezaplacenou registraci, ke
-                        které tato transakce patří.
+                    <Typography variant="body2" sx={{ mb: 2, color: p.ink2 }}>
+                        Vyberte nezaplacenou registraci, ke které tato transakce
+                        patří.
                     </Typography>
                     <FormControlLabel
                         control={
@@ -115,17 +117,30 @@ export function PairTransactionButton({
                                     setShowPartial(v);
                                     setSelected(null);
                                 }}
+                                sx={{
+                                    "& .MuiSwitch-switchBase.Mui-checked": {
+                                        color: p.surface,
+                                    },
+                                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                        {
+                                            backgroundColor: p.indigo,
+                                            opacity: 1,
+                                        },
+                                }}
                             />
                         }
                         label="Zobrazit i částečně zaplacené"
-                        sx={{ mb: 1 }}
+                        sx={{
+                            mb: 1,
+                            "& .MuiFormControlLabel-label": {
+                                color: p.ink2,
+                            },
+                        }}
                     />
                     <Autocomplete
                         options={filteredOrders}
                         value={selected}
-                        onChange={(_, value) =>
-                            setSelected(value)
-                        }
+                        onChange={(_, value) => setSelected(value)}
                         getOptionLabel={(o) => {
                             const parts = [
                                 o.variableSymbol
@@ -146,28 +161,45 @@ export function PairTransactionButton({
                                 autoFocus
                             />
                         )}
-                        isOptionEqualToValue={(o, v) =>
-                            o.id === v.id
-                        }
+                        isOptionEqualToValue={(o, v) => o.id === v.id}
                         noOptionsText="Žádné nezaplacené registrace"
-                        sx={{ mt: 1 }}
+                        sx={{ mt: 1, ...builderFieldSx }}
                     />
                 </DialogContent>
                 <DialogActions>
                     <Button
                         onClick={handleClose}
                         disabled={isPending}
+                        sx={{
+                            backgroundColor: p.surface,
+                            border: `1px solid ${p.line}`,
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            "&:hover": {
+                                backgroundColor: p.surface2,
+                                borderColor: p.ink3,
+                            },
+                        }}
                     >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handlePair}
                         variant="contained"
+                        disableElevation
                         disabled={isPending || !selected}
+                        sx={{
+                            backgroundColor: p.indigo,
+                            color: p.surface,
+                            borderRadius: "10px",
+                            boxShadow: "none",
+                            "&:hover": {
+                                backgroundColor: "#4338ca",
+                                boxShadow: "none",
+                            },
+                        }}
                     >
-                        {isPending
-                            ? "Párování..."
-                            : "Spárovat"}
+                        {isPending ? "Párování..." : "Spárovat"}
                     </Button>
                 </DialogActions>
             </Dialog>
