@@ -21,8 +21,69 @@ import {
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { Warning } from "@mui/icons-material";
 import dayjs, { Dayjs } from "dayjs";
-import { toggleRegistration, updateRegistrationStartDate } from "@/lib/actions/years";
+import {
+    toggleRegistration,
+    updateRegistrationStartDate,
+} from "@/lib/actions/years";
 import { formatPrice } from "@/lib/utils/pricing";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
+
+const MONO = "'JetBrains Mono', monospace";
+
+const paneSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    borderRadius: "14px",
+    overflow: "hidden",
+} as const;
+
+const paneHeadSx = {
+    px: 2.5,
+    py: 1.75,
+    borderBottom: `1px solid ${p.line}`,
+    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+    display: "flex",
+    alignItems: "center",
+    gap: 1.5,
+} as const;
+
+const kickerSx = {
+    fontSize: 11,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: p.ink3,
+    fontWeight: 700,
+} as const;
+
+const ghostBtnSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    textTransform: "none",
+    borderRadius: "10px",
+    "&:hover": { borderColor: p.ink3, backgroundColor: p.surface2 },
+} as const;
+
+const indigoBtnSx = {
+    backgroundColor: p.indigo,
+    color: "#fff",
+    textTransform: "none",
+    borderRadius: "10px",
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#4338ca", boxShadow: "none" },
+} as const;
+
+const dialogPaperProps = { sx: { borderRadius: "14px" } } as const;
+
+const switchSx = {
+    "& .MuiSwitch-switchBase.Mui-checked": { color: "#fff" },
+    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+        backgroundColor: p.indigo,
+        opacity: 1,
+    },
+    "& .MuiSwitch-track": { backgroundColor: p.surface3, opacity: 1 },
+} as const;
 
 interface RegistrationSettingsProps {
     yearId: string;
@@ -109,100 +170,180 @@ export function RegistrationSettings({
         setDateSaving(false);
     };
 
+    const kvRows: { label: string; value: string; negative?: boolean }[] = [
+        { label: "Registrací", value: String(submissionCount) },
+        { label: "Registrovaných osob", value: String(totalPeopleCount) },
+        { label: "Zaplaceno", value: formatPrice(paidSum) },
+        {
+            label: "Nezaplaceno",
+            value: formatPrice(unpaidSum),
+            negative: true,
+        },
+    ];
+
     return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {error && <Alert severity="error">{error}</Alert>}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {error && (
+                <Alert severity="error" sx={{ borderRadius: "12px" }}>
+                    {error}
+                </Alert>
+            )}
 
-            <Box sx={{ maxWidth: 500 }}>
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={isOpen}
-                            onChange={handleToggleClick}
-                            disabled={loading}
-                            color="success"
-                        />
-                    }
-                    label={
-                        <Typography fontWeight={600}>
-                            {isOpen ? "Registrace otevřena" : "Registrace uzavřena"}
-                        </Typography>
-                    }
-                />
+            <Box sx={paneSx}>
+                <Box sx={paneHeadSx}>
+                    <Typography sx={{ ...kickerSx, flex: 1 }}>
+                        Stav registrace
+                    </Typography>
+                </Box>
+                <Box sx={{ p: 2.5 }}>
+                    <FormControlLabel
+                        sx={{ mb: 2.25 }}
+                        control={
+                            <Switch
+                                checked={isOpen}
+                                onChange={handleToggleClick}
+                                disabled={loading}
+                                sx={switchSx}
+                            />
+                        }
+                        label={
+                            <Typography sx={{ fontWeight: 700, color: p.ink }}>
+                                {isOpen
+                                    ? "Registrace otevřena"
+                                    : "Registrace uzavřena"}
+                            </Typography>
+                        }
+                    />
 
-                <DatePicker
-                    label="Datum otevření registrace"
-                    value={dateValue}
-                    onChange={handleDateChange}
-                    disabled={dateSaving}
-                    format="DD.MM.YYYY"
-                    slotProps={{
-                        textField: {
-                            fullWidth: true,
-                            helperText: "Pokud je registrace uzavřena, na veřejných stránkách se zobrazí datum otevření",
-                            sx: { mt: 2 },
-                        },
-                    }}
-                />
+                    <DatePicker
+                        label="Datum otevření registrace"
+                        value={dateValue}
+                        onChange={handleDateChange}
+                        disabled={dateSaving}
+                        format="DD.MM.YYYY"
+                        slotProps={{
+                            textField: {
+                                fullWidth: true,
+                                helperText:
+                                    "Pokud je registrace uzavřena, na veřejných stránkách se zobrazí datum otevření",
+                                sx: { ...builderFieldSx, maxWidth: 320 },
+                            },
+                        }}
+                    />
+
+                    <Box
+                        sx={{
+                            mt: 2.5,
+                            display: "grid",
+                            gridTemplateColumns: "minmax(0, 190px) 1fr",
+                            columnGap: 2,
+                            rowGap: 1.25,
+                            maxWidth: 420,
+                        }}
+                    >
+                        {kvRows.map((row) => (
+                            <Box key={row.label} sx={{ display: "contents" }}>
+                                <Typography
+                                    sx={{
+                                        fontSize: "0.8rem",
+                                        fontWeight: 600,
+                                        color: p.ink3,
+                                    }}
+                                >
+                                    {row.label}
+                                </Typography>
+                                <Typography
+                                    sx={{
+                                        fontFamily: MONO,
+                                        fontSize: "0.9rem",
+                                        fontWeight: 600,
+                                        color: row.negative ? p.negInk : p.ink,
+                                    }}
+                                >
+                                    {row.value}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
             </Box>
 
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                <Typography variant="body1">
-                    Registrací: <strong>{submissionCount}</strong>
-                </Typography>
-                <Typography variant="body1">
-                    Registrovaných osob: <strong>{totalPeopleCount}</strong>
-                </Typography>
-                <Typography variant="body1">
-                    Zaplaceno: <strong>{formatPrice(paidSum)}</strong>
-                </Typography>
-                <Typography variant="body1">
-                    Nezaplaceno: <strong>{formatPrice(unpaidSum)}</strong>
-                </Typography>
-            </Box>
-
-            <Dialog open={confirmOpen} onClose={handleCancel}>
-                <DialogTitle>
-                    {pendingToggle ? "Otevřít registraci?" : "Uzavřít registraci?"}
+            <Dialog
+                open={confirmOpen}
+                onClose={handleCancel}
+                PaperProps={dialogPaperProps}
+            >
+                <DialogTitle sx={{ fontWeight: 700, color: p.ink }}>
+                    {pendingToggle
+                        ? "Otevřít registraci?"
+                        : "Uzavřít registraci?"}
                 </DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
+                    <DialogContentText sx={{ color: p.ink2 }}>
                         {pendingToggle
                             ? "Registrace bude otevřena a návštěvníci se budou moci registrovat na veřejných stránkách."
                             : "Registrace bude uzavřena a registrační formulář nebude dostupný na veřejných stránkách."}
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancel}>Zrušit</Button>
-                    <Button onClick={handleConfirm} variant="contained" autoFocus>
+                <DialogActions sx={{ px: 2, pb: 2, gap: 1 }}>
+                    <Button onClick={handleCancel} sx={ghostBtnSx}>
+                        Zrušit
+                    </Button>
+                    <Button
+                        onClick={handleConfirm}
+                        variant="contained"
+                        autoFocus
+                        sx={indigoBtnSx}
+                    >
                         Potvrdit
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={constraintsOpen} onClose={() => { setConstraintsOpen(false); setPendingToggle(null); }}>
-                <DialogTitle>Nelze otevřít registraci</DialogTitle>
+            <Dialog
+                open={constraintsOpen}
+                onClose={() => {
+                    setConstraintsOpen(false);
+                    setPendingToggle(null);
+                }}
+                PaperProps={dialogPaperProps}
+            >
+                <DialogTitle sx={{ fontWeight: 700, color: p.ink }}>
+                    Nelze otevřít registraci
+                </DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        Před otevřením registrace je nutné splnit následující podmínky:
+                    <DialogContentText sx={{ color: p.ink2 }}>
+                        Před otevřením registrace je nutné splnit následující
+                        podmínky:
                     </DialogContentText>
                     <List>
                         {!hasMainEmail && (
-                            <ListItem>
-                                <ListItemIcon><Warning color="warning" /></ListItemIcon>
+                            <ListItem sx={{ color: p.warnInk }}>
+                                <ListItemIcon>
+                                    <Warning sx={{ color: p.warnInk }} />
+                                </ListItemIcon>
                                 <ListItemText primary="Nastavte hlavní emailovou adresu" />
                             </ListItem>
                         )}
                         {!hasBankAccount && (
-                            <ListItem>
-                                <ListItemIcon><Warning color="warning" /></ListItemIcon>
+                            <ListItem sx={{ color: p.warnInk }}>
+                                <ListItemIcon>
+                                    <Warning sx={{ color: p.warnInk }} />
+                                </ListItemIcon>
                                 <ListItemText primary="Nastavte bankovní účet" />
                             </ListItem>
                         )}
                     </List>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => { setConstraintsOpen(false); setPendingToggle(null); }}>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
+                    <Button
+                        onClick={() => {
+                            setConstraintsOpen(false);
+                            setPendingToggle(null);
+                        }}
+                        variant="contained"
+                        sx={indigoBtnSx}
+                    >
                         Zavřít
                     </Button>
                 </DialogActions>

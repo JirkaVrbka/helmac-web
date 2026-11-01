@@ -17,11 +17,36 @@ import { Delete, Visibility, VisibilityOff } from "@mui/icons-material";
 import { publishPage, unpublishPage, deletePage } from "@/lib/actions/pages";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/lib/hooks/use-toast";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface PageActionsProps {
     pageId: string;
     isPublished: boolean;
 }
+
+const iconButtonSx = {
+    width: 30,
+    height: 30,
+    borderRadius: "8px",
+    color: p.ink3,
+    transition: "all 140ms ease",
+    "&:hover": {
+        color: p.indigo,
+        backgroundColor: p.indigoSoft,
+    },
+} as const;
+
+const dangerIconButtonSx = {
+    width: 30,
+    height: 30,
+    borderRadius: "8px",
+    color: p.ink3,
+    transition: "all 140ms ease",
+    "&:hover": {
+        color: p.negInk,
+        backgroundColor: p.neg,
+    },
+} as const;
 
 export function PageActions({ pageId, isPublished }: PageActionsProps) {
     const router = useRouter();
@@ -40,7 +65,9 @@ export function PageActions({ pageId, isPublished }: PageActionsProps) {
         if (result.error) {
             toast.error(result.error);
         } else {
-            toast.success(isPublished ? "Stránka byla skryta" : "Stránka byla publikována");
+            toast.success(
+                isPublished ? "Stránka byla skryta" : "Stránka byla publikována"
+            );
             router.refresh();
         }
     };
@@ -63,31 +90,37 @@ export function PageActions({ pageId, isPublished }: PageActionsProps) {
     if (loading) {
         return (
             <Box sx={{ display: "flex", alignItems: "center", px: 1 }}>
-                <CircularProgress size={20} />
+                <CircularProgress size={20} sx={{ color: p.indigo }} />
             </Box>
         );
     }
 
     return (
         <>
-            <Box sx={{ display: "flex", gap: 0.5 }}>
-                <Tooltip title={isPublished ? "Skrýt stránku" : "Publikovat stránku"}>
+            <Box sx={{ display: "flex", gap: 0.25 }}>
+                <Tooltip
+                    title={isPublished ? "Skrýt stránku" : "Publikovat stránku"}
+                >
                     <IconButton
                         size="small"
-                        color={isPublished ? "success" : "default"}
                         onClick={handleTogglePublish}
+                        sx={iconButtonSx}
                     >
-                        {isPublished ? <VisibilityOff /> : <Visibility />}
+                        {isPublished ? (
+                            <VisibilityOff sx={{ fontSize: 16 }} />
+                        ) : (
+                            <Visibility sx={{ fontSize: 16 }} />
+                        )}
                     </IconButton>
                 </Tooltip>
 
                 <Tooltip title="Smazat stránku">
                     <IconButton
                         size="small"
-                        color="error"
                         onClick={() => setDeleteDialogOpen(true)}
+                        sx={dangerIconButtonSx}
                     >
-                        <Delete />
+                        <Delete sx={{ fontSize: 16 }} />
                     </IconButton>
                 </Tooltip>
             </Box>
@@ -95,26 +128,48 @@ export function PageActions({ pageId, isPublished }: PageActionsProps) {
             <Dialog
                 open={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>Smazat stránku?</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Smazat stránku?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Opravdu chcete smazat tuto stránku? Tato akce je nevratná.
+                        Opravdu chcete smazat tuto stránku? Tato akce je
+                        nevratná.
                     </DialogContentText>
                     {error && (
-                        <DialogContentText color="error" sx={{ mt: 2 }}>
+                        <DialogContentText sx={{ mt: 2, color: p.negInk }}>
                             {error}
                         </DialogContentText>
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                    <Button
+                        onClick={() => setDeleteDialogOpen(false)}
+                        sx={{
+                            borderRadius: "10px",
+                            textTransform: "none",
+                            color: p.ink2,
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleDelete}
-                        color="error"
-                        variant="contained"
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            textTransform: "none",
+                            backgroundColor: p.neg,
+                            color: p.negInk,
+                            "&:hover": { backgroundColor: "#fecaca" },
+                        }}
                     >
                         Smazat
                     </Button>

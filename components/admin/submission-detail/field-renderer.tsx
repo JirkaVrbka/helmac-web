@@ -9,9 +9,10 @@ import {
     MenuItem,
     Radio,
     Typography,
-    Chip,
 } from "@mui/material";
 import type { V2PricingDef } from "@/lib/services/v2";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 import type { FieldMeta } from "./types";
 
 export interface FieldRendererProps {
@@ -21,14 +22,39 @@ export interface FieldRendererProps {
     multiSelected?: string[];
     pricingDef?: V2PricingDef;
     onChange: (value: string) => void;
-    onQuantityChange?: (
-        optionId: string,
-        qty: number,
-    ) => void;
-    onMultiSelectChange?: (
-        selected: string[],
-    ) => void;
+    onQuantityChange?: (optionId: string, qty: number) => void;
+    onMultiSelectChange?: (selected: string[]) => void;
     disabled: boolean;
+}
+
+// Builder-palette label above an option group (admin design system).
+const groupLabelSx = {
+    fontSize: 12,
+    fontWeight: 600,
+    color: p.ink2,
+    mb: 1,
+};
+
+// Selectable option tile — indigo accent when active (admin design system).
+function optionBoxSx(active: boolean, disabled: boolean) {
+    return {
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        px: 2,
+        py: 1.5,
+        border: `1px solid ${active ? p.indigo : p.line}`,
+        borderRadius: "10px",
+        backgroundColor: active ? p.indigoSoft : p.surface,
+        cursor: disabled ? "default" : "pointer",
+        opacity: disabled ? 0.6 : 1,
+        transition: "all 140ms ease",
+        "&:hover": disabled
+            ? {}
+            : {
+                  borderColor: active ? p.indigo : p.ink3,
+              },
+    } as const;
 }
 
 export function FieldRenderer({
@@ -54,13 +80,20 @@ export function FieldRenderer({
             }}
         >
             {field.label}
-            <Chip
-                label="Zrušené pole"
-                size="small"
-                variant="outlined"
-                color="default"
-                sx={{ height: 20, fontSize: "0.7rem" }}
-            />
+            <Box
+                component="span"
+                sx={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: p.ink2,
+                    backgroundColor: p.surface3,
+                    px: "7px",
+                    py: "2px",
+                    borderRadius: "6px",
+                }}
+            >
+                Zrušené pole
+            </Box>
         </Box>
     );
 
@@ -71,14 +104,13 @@ export function FieldRenderer({
                     control={
                         <Checkbox
                             checked={value === "true"}
-                            onChange={(e) =>
-                                onChange(
-                                    String(
-                                        e.target.checked,
-                                    ),
-                                )
-                            }
+                            onChange={(e) => onChange(String(e.target.checked))}
                             disabled={disabled}
+                            sx={{
+                                "&.Mui-checked": {
+                                    color: p.indigo,
+                                },
+                            }}
                         />
                     }
                     label={label}
@@ -87,23 +119,16 @@ export function FieldRenderer({
 
         case "select":
             return (
-                <FormControl fullWidth size="small">
+                <FormControl fullWidth size="small" sx={builderFieldSx}>
                     <InputLabel>{label}</InputLabel>
                     <Select
                         value={value}
-                        onChange={(e) =>
-                            onChange(
-                                e.target.value as string,
-                            )
-                        }
+                        onChange={(e) => onChange(e.target.value as string)}
                         label={field.label}
                         disabled={disabled}
                     >
                         {field.options.map((opt) => (
-                            <MenuItem
-                                key={opt}
-                                value={opt}
-                            >
+                            <MenuItem key={opt} value={opt}>
                                 {opt}
                             </MenuItem>
                         ))}
@@ -115,12 +140,10 @@ export function FieldRenderer({
         case "pricing_select": {
             const options =
                 field.type === "pricing_select"
-                    ? (pricingDef?.options ?? []).map(
-                          (o) => ({
-                              id: o.id,
-                              label: o.name,
-                          }),
-                      )
+                    ? (pricingDef?.options ?? []).map((o) => ({
+                          id: o.id,
+                          label: o.name,
+                      }))
                     : field.options.map((o) => ({
                           id: o,
                           label: o,
@@ -128,10 +151,7 @@ export function FieldRenderer({
             const cols = Math.min(options.length, 3);
             return (
                 <Box>
-                    <Typography
-                        variant="body2"
-                        sx={{ mb: 1 }}
-                    >
+                    <Typography variant="body2" sx={groupLabelSx}>
                         {label}
                     </Typography>
                     <Box
@@ -145,65 +165,33 @@ export function FieldRenderer({
                         }}
                     >
                         {options.map((opt) => {
-                            const isSelected =
-                                value === opt.id;
+                            const isSelected = value === opt.id;
                             return (
                                 <Box
                                     key={opt.id}
                                     onClick={() =>
-                                        !disabled &&
-                                        onChange(opt.id)
+                                        !disabled && onChange(opt.id)
                                     }
-                                    sx={{
-                                        display: "flex",
-                                        alignItems:
-                                            "center",
-                                        gap: 1,
-                                        px: 2,
-                                        py: 1.5,
-                                        border: "2px solid",
-                                        borderColor:
-                                            isSelected
-                                                ? "primary.main"
-                                                : "divider",
-                                        borderRadius: 1,
-                                        cursor: disabled
-                                            ? "default"
-                                            : "pointer",
-                                        opacity: disabled
-                                            ? 0.6
-                                            : 1,
-                                        transition:
-                                            "all 0.2s ease",
-                                        "&:hover":
-                                            disabled
-                                                ? {}
-                                                : {
-                                                      borderColor:
-                                                          isSelected
-                                                              ? "primary.main"
-                                                              : "action.selected",
-                                                  },
-                                    }}
+                                    sx={optionBoxSx(isSelected, disabled)}
                                 >
                                     <Radio
                                         size="small"
-                                        checked={
-                                            isSelected
-                                        }
-                                        disabled={
-                                            disabled
-                                        }
-                                        sx={{ p: 0 }}
+                                        checked={isSelected}
+                                        disabled={disabled}
+                                        sx={{
+                                            p: 0,
+                                            "&.Mui-checked": {
+                                                color: p.indigo,
+                                            },
+                                        }}
                                         tabIndex={-1}
                                     />
                                     <Typography
                                         variant="body1"
-                                        fontWeight={
-                                            isSelected
-                                                ? 600
-                                                : 400
-                                        }
+                                        sx={{
+                                            color: p.ink,
+                                        }}
+                                        fontWeight={isSelected ? 600 : 400}
                                     >
                                         {opt.label}
                                     </Typography>
@@ -220,10 +208,7 @@ export function FieldRenderer({
             const cols = Math.min(options.length, 3);
             return (
                 <Box>
-                    <Typography
-                        variant="body2"
-                        sx={{ mb: 1 }}
-                    >
+                    <Typography variant="body2" sx={groupLabelSx}>
                         {label}
                     </Typography>
                     <Box
@@ -237,74 +222,56 @@ export function FieldRenderer({
                         }}
                     >
                         {options.map((opt) => {
-                            const qty =
-                                quantities?.[opt.id] ?? 0;
+                            const qty = quantities?.[opt.id] ?? 0;
+                            const active = qty > 0;
                             return (
                                 <Box
                                     key={opt.id}
                                     sx={{
                                         display: "flex",
-                                        alignItems:
-                                            "center",
-                                        justifyContent:
-                                            "space-between",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
                                         gap: 1.5,
                                         px: 2,
                                         py: 1,
-                                        border: "2px solid",
-                                        borderColor:
-                                            qty > 0
-                                                ? "primary.main"
-                                                : "divider",
-                                        borderRadius: 1,
-                                        opacity: disabled
-                                            ? 0.6
-                                            : 1,
+                                        border: `1px solid ${active ? p.indigo : p.line}`,
+                                        borderRadius: "10px",
+                                        backgroundColor: active
+                                            ? p.indigoSoft
+                                            : p.surface,
+                                        opacity: disabled ? 0.6 : 1,
                                     }}
                                 >
                                     <Typography
                                         variant="body1"
-                                        fontWeight={
-                                            qty > 0
-                                                ? 600
-                                                : 400
-                                        }
+                                        sx={{
+                                            color: p.ink,
+                                        }}
+                                        fontWeight={active ? 600 : 400}
                                     >
                                         {opt.name}
                                     </Typography>
                                     <TextField
                                         type="number"
-                                        value={String(
-                                            qty,
-                                        )}
+                                        value={String(qty)}
                                         onChange={(e) => {
-                                            const n =
-                                                Math.max(
-                                                    0,
-                                                    Math.floor(
-                                                        Number(
-                                                            e
-                                                                .target
-                                                                .value,
-                                                        ) ||
-                                                            0,
-                                                    ),
-                                                );
-                                            onQuantityChange?.(
-                                                opt.id,
-                                                n,
+                                            const n = Math.max(
+                                                0,
+                                                Math.floor(
+                                                    Number(e.target.value) || 0
+                                                )
                                             );
+                                            onQuantityChange?.(opt.id, n);
                                         }}
                                         size="small"
                                         inputProps={{
                                             min: 0,
                                             step: 1,
                                         }}
-                                        disabled={
-                                            disabled
-                                        }
+                                        disabled={disabled}
                                         sx={{
                                             width: 80,
+                                            ...builderFieldSx,
                                         }}
                                     />
                                 </Box>
@@ -316,15 +283,11 @@ export function FieldRenderer({
         }
 
         case "pricing_multi_select": {
-            const msOptions =
-                pricingDef?.options ?? [];
+            const msOptions = pricingDef?.options ?? [];
             const cols = Math.min(msOptions.length, 3);
             return (
                 <Box>
-                    <Typography
-                        variant="body2"
-                        sx={{ mb: 1 }}
-                    >
+                    <Typography variant="body2" sx={groupLabelSx}>
                         {label}
                     </Typography>
                     <Box
@@ -339,86 +302,42 @@ export function FieldRenderer({
                     >
                         {msOptions.map((opt) => {
                             const isSelected =
-                                multiSelected?.includes(
-                                    opt.id,
-                                ) ?? false;
+                                multiSelected?.includes(opt.id) ?? false;
                             return (
                                 <Box
                                     key={opt.id}
                                     onClick={() => {
-                                        if (disabled)
-                                            return;
-                                        const next =
-                                            isSelected
-                                                ? (
-                                                      multiSelected ??
-                                                      []
-                                                  ).filter(
-                                                      (
-                                                          s,
-                                                      ) =>
-                                                          s !==
-                                                          opt.id,
-                                                  )
-                                                : [
-                                                      ...(multiSelected ??
-                                                          []),
-                                                      opt.id,
-                                                  ];
-                                        onMultiSelectChange?.(
-                                            next,
-                                        );
+                                        if (disabled) return;
+                                        const next = isSelected
+                                            ? (multiSelected ?? []).filter(
+                                                  (s) => s !== opt.id
+                                              )
+                                            : [
+                                                  ...(multiSelected ?? []),
+                                                  opt.id,
+                                              ];
+                                        onMultiSelectChange?.(next);
                                     }}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems:
-                                            "center",
-                                        gap: 1,
-                                        px: 2,
-                                        py: 1.5,
-                                        border: "2px solid",
-                                        borderColor:
-                                            isSelected
-                                                ? "primary.main"
-                                                : "divider",
-                                        borderRadius: 1,
-                                        cursor: disabled
-                                            ? "default"
-                                            : "pointer",
-                                        opacity: disabled
-                                            ? 0.6
-                                            : 1,
-                                        transition:
-                                            "all 0.2s ease",
-                                        "&:hover":
-                                            disabled
-                                                ? {}
-                                                : {
-                                                      borderColor:
-                                                          isSelected
-                                                              ? "primary.main"
-                                                              : "action.selected",
-                                                  },
-                                    }}
+                                    sx={optionBoxSx(isSelected, disabled)}
                                 >
                                     <Checkbox
                                         size="small"
-                                        checked={
-                                            isSelected
-                                        }
-                                        disabled={
-                                            disabled
-                                        }
-                                        sx={{ p: 0 }}
+                                        checked={isSelected}
+                                        disabled={disabled}
+                                        sx={{
+                                            p: 0,
+                                            "&.Mui-checked": {
+                                                color: p.indigo,
+                                            },
+                                        }}
                                         tabIndex={-1}
                                     />
                                     <Typography
                                         variant="body1"
-                                        fontWeight={
-                                            isSelected
-                                                ? 600
-                                                : 400
-                                        }
+                                        sx={{
+                                            color: p.ink,
+                                        }}
+                                        fontWeight={isSelected ? 600 : 400}
                                     >
                                         {opt.name}
                                     </Typography>
@@ -435,14 +354,13 @@ export function FieldRenderer({
                 <TextField
                     label={label}
                     value={value}
-                    onChange={(e) =>
-                        onChange(e.target.value)
-                    }
+                    onChange={(e) => onChange(e.target.value)}
                     multiline
                     rows={3}
                     fullWidth
                     size="small"
                     disabled={disabled}
+                    sx={builderFieldSx}
                 />
             );
 
@@ -451,29 +369,26 @@ export function FieldRenderer({
                 <TextField
                     label={label}
                     value={value}
-                    onChange={(e) =>
-                        onChange(e.target.value)
-                    }
+                    onChange={(e) => onChange(e.target.value)}
                     type={
                         field.type === "email"
                             ? "email"
                             : field.type === "number"
                               ? "number"
                               : field.type === "date" ||
-                                  field.type ===
-                                      "birth_date"
+                                  field.type === "birth_date"
                                 ? "date"
                                 : "text"
                     }
                     fullWidth
                     size="small"
                     InputLabelProps={
-                        field.type === "date" ||
-                        field.type === "birth_date"
+                        field.type === "date" || field.type === "birth_date"
                             ? { shrink: true }
                             : undefined
                     }
                     disabled={disabled}
+                    sx={builderFieldSx}
                 />
             );
     }

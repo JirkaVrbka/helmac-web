@@ -27,10 +27,9 @@ import {
 import { formatPrice } from "@/lib/utils/pricing";
 import { StatMetricEditor } from "./metric-editor";
 import { StatFilterEditor } from "./filter-editor";
-import {
-    useRegistrationFields,
-    useRegistrationStats,
-} from "./hooks";
+import { useRegistrationFields, useRegistrationStats } from "./hooks";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface StatTableBlockEditorProps {
     block: StatTableBlock;
@@ -38,10 +37,31 @@ interface StatTableBlockEditorProps {
     yearId?: string;
 }
 
-const btnSx = {
-    py: 0.25,
-    px: 1,
-    textTransform: "none",
+const segmentedSx = {
+    flexShrink: 0,
+    backgroundColor: p.surface2,
+    border: `1px solid ${p.line}`,
+    borderRadius: "10px",
+    p: "3px",
+    gap: "3px",
+    "& .MuiToggleButton-root": {
+        py: 0.25,
+        px: 1,
+        border: 0,
+        borderRadius: "8px !important",
+        color: p.ink2,
+        textTransform: "none",
+        transition: "all 140ms ease",
+        "&:hover": {
+            backgroundColor: p.indigoSoft,
+            color: p.indigo,
+        },
+        "&.Mui-selected": {
+            backgroundColor: p.indigo,
+            color: "#fff",
+            "&:hover": { backgroundColor: p.indigo },
+        },
+    },
 } as const;
 
 export function StatTableBlockEditor({
@@ -52,9 +72,7 @@ export function StatTableBlockEditor({
     const fields = useRegistrationFields(yearId);
     const stats = useRegistrationStats(
         yearId,
-        block.filter as
-            | Record<string, unknown>
-            | undefined
+        block.filter as Record<string, unknown> | undefined
     );
     const source = block.source ?? "builtin";
 
@@ -81,15 +99,11 @@ export function StatTableBlockEditor({
     const removeMetric = (id: string) => {
         onChange({
             ...block,
-            metrics: block.metrics.filter(
-                (m) => m.id !== id
-            ),
+            metrics: block.metrics.filter((m) => m.id !== id),
         });
     };
 
-    const handleSourceChange = (
-        newSource: "builtin" | "field"
-    ) => {
+    const handleSourceChange = (newSource: "builtin" | "field") => {
         onChange({
             ...block,
             source: newSource,
@@ -106,8 +120,7 @@ export function StatTableBlockEditor({
                           {
                               id: crypto.randomUUID(),
                               source: "field",
-                              metric:
-                                  fields?.[0]?.name ?? "",
+                              metric: fields?.[0]?.name ?? "",
                               aggregation: "count",
                           },
                       ],
@@ -128,30 +141,20 @@ export function StatTableBlockEditor({
 
         if (source === "builtin") {
             const cols = block.metrics
-                .filter((m) =>
-                    isBuiltinMetric(m.metric)
-                )
+                .filter((m) => isBuiltinMetric(m.metric))
                 .map((m) => {
-                    const raw =
-                        stats[
-                            m.metric as BuiltinMetric
-                        ] ?? 0;
-                    const isCurrency =
-                        BUILTIN_CURRENCY_METRICS.includes(
-                            m.metric as BuiltinMetric
-                        );
+                    const raw = stats[m.metric as BuiltinMetric] ?? 0;
+                    const isCurrency = BUILTIN_CURRENCY_METRICS.includes(
+                        m.metric as BuiltinMetric
+                    );
                     return {
                         label:
                             m.label ??
-                            BUILTIN_METRIC_LABELS[
-                                m.metric as BuiltinMetric
-                            ],
+                            BUILTIN_METRIC_LABELS[m.metric as BuiltinMetric],
                         values: [
                             isCurrency
                                 ? formatPrice(raw)
-                                : raw.toLocaleString(
-                                      "cs-CZ"
-                                  ),
+                                : raw.toLocaleString("cs-CZ"),
                         ],
                     };
                 });
@@ -163,26 +166,21 @@ export function StatTableBlockEditor({
         }
 
         const hasOptions = block.metrics.some(
-            (m) =>
-                (stats.fieldOptions?.[m.metric]
-                    ?.length ?? 0) > 0
+            (m) => (stats.fieldOptions?.[m.metric]?.length ?? 0) > 0
         );
 
         if (hasOptions) {
             const allOpts: string[] = [];
             const seen = new Set<string>();
             for (const m of block.metrics) {
-                for (const o of stats.fieldOptions?.[
-                    m.metric
-                ] ?? []) {
+                for (const o of stats.fieldOptions?.[m.metric] ?? []) {
                     if (!seen.has(o)) {
                         seen.add(o);
                         allOpts.push(o);
                     }
                 }
                 for (const o of Object.keys(
-                    stats.fields?.[m.metric]
-                        ?.counts ?? {}
+                    stats.fields?.[m.metric]?.counts ?? {}
                 )) {
                     if (!seen.has(o)) {
                         seen.add(o);
@@ -192,19 +190,14 @@ export function StatTableBlockEditor({
             }
             return {
                 columns: block.metrics.map((m) => {
-                    const fs =
-                        stats.fields?.[m.metric];
+                    const fs = stats.fields?.[m.metric];
                     return {
                         label:
                             m.label ??
-                            stats.fieldLabels?.[
-                                m.metric
-                            ] ??
+                            stats.fieldLabels?.[m.metric] ??
                             m.metric,
                         values: allOpts.map((opt) =>
-                            (
-                                fs?.counts?.[opt] ?? 0
-                            ).toLocaleString("cs-CZ")
+                            (fs?.counts?.[opt] ?? 0).toLocaleString("cs-CZ")
                         ),
                     };
                 }),
@@ -216,16 +209,11 @@ export function StatTableBlockEditor({
         const rows = stats.valueRows ?? [];
         return {
             columns: block.metrics.map((m) => ({
-                label:
-                    m.label ??
-                    stats.fieldLabels?.[m.metric] ??
-                    m.metric,
+                label: m.label ?? stats.fieldLabels?.[m.metric] ?? m.metric,
                 values: rows.map(
                     (row) =>
                         row[m.metric] ||
-                        (m.fallback
-                            ? row[m.fallback] ?? ""
-                            : "")
+                        (m.fallback ? (row[m.fallback] ?? "") : "")
                 ),
             })),
             rows: rows.map((_, i) => String(i)),
@@ -233,8 +221,7 @@ export function StatTableBlockEditor({
         };
     }
 
-    const { columns, rows, showRowLabels } =
-        getPreview();
+    const { columns, rows, showRowLabels } = getPreview();
 
     return (
         <Box
@@ -251,9 +238,8 @@ export function StatTableBlockEditor({
                     gap: 0.5,
                     px: 1,
                     py: 0.5,
-                    borderBottom: "1px solid",
-                    borderColor: "divider",
-                    backgroundColor: "action.hover",
+                    borderBottom: `1px solid ${p.line}`,
+                    backgroundColor: p.surface2,
                     flexShrink: 0,
                 }}
             >
@@ -264,21 +250,13 @@ export function StatTableBlockEditor({
                         if (v) handleSourceChange(v);
                     }}
                     size="small"
-                    sx={{
-                        flexShrink: 0,
-                        "& .MuiToggleButton-root":
-                            btnSx,
-                    }}
+                    sx={segmentedSx}
                 >
                     <ToggleButton value="builtin">
-                        <Typography variant="caption">
-                            Globální
-                        </Typography>
+                        <Typography variant="caption">Globální</Typography>
                     </ToggleButton>
                     <ToggleButton value="field">
-                        <Typography variant="caption">
-                            Z formuláře
-                        </Typography>
+                        <Typography variant="caption">Z formuláře</Typography>
                     </ToggleButton>
                 </ToggleButtonGroup>
                 <ToggleButtonGroup
@@ -293,27 +271,21 @@ export function StatTableBlockEditor({
                     }}
                     size="small"
                     sx={{
-                        flexShrink: 0,
+                        ...segmentedSx,
                         "& .MuiToggleButton-root": {
-                            ...btnSx,
+                            ...segmentedSx["& .MuiToggleButton-root"],
                             px: 0.5,
                         },
                     }}
                 >
                     <ToggleButton value="left">
-                        <FormatAlignLeft
-                            sx={{ fontSize: 14 }}
-                        />
+                        <FormatAlignLeft sx={{ fontSize: 14 }} />
                     </ToggleButton>
                     <ToggleButton value="center">
-                        <FormatAlignCenter
-                            sx={{ fontSize: 14 }}
-                        />
+                        <FormatAlignCenter sx={{ fontSize: 14 }} />
                     </ToggleButton>
                     <ToggleButton value="right">
-                        <FormatAlignRight
-                            sx={{ fontSize: 14 }}
-                        />
+                        <FormatAlignRight sx={{ fontSize: 14 }} />
                     </ToggleButton>
                 </ToggleButtonGroup>
             </Box>
@@ -332,15 +304,14 @@ export function StatTableBlockEditor({
                     onChange={(e) =>
                         onChange({
                             ...block,
-                            title:
-                                e.target.value ||
-                                undefined,
+                            title: e.target.value || undefined,
                         })
                     }
                     size="small"
                     fullWidth
                     placeholder="Nadpis (volitelné)"
                     sx={{
+                        ...builderFieldSx,
                         "& .MuiInputBase-root": {
                             fontSize: "0.8rem",
                         },
@@ -360,17 +331,14 @@ export function StatTableBlockEditor({
                             onChange={(updated) =>
                                 onChange({
                                     ...block,
-                                    metrics:
-                                        block.metrics.map(
-                                            (x) =>
-                                                x.id ===
-                                                m.id
-                                                    ? {
-                                                          ...x,
-                                                          ...updated,
-                                                      }
-                                                    : x
-                                        ),
+                                    metrics: block.metrics.map((x) =>
+                                        x.id === m.id
+                                            ? {
+                                                  ...x,
+                                                  ...updated,
+                                              }
+                                            : x
+                                    ),
                                 })
                             }
                             yearId={yearId}
@@ -381,14 +349,15 @@ export function StatTableBlockEditor({
                         {block.metrics.length > 1 && (
                             <IconButton
                                 size="small"
-                                onClick={() =>
-                                    removeMetric(m.id)
-                                }
+                                onClick={() => removeMetric(m.id)}
                                 sx={{
-                                    color: "text.disabled",
+                                    color: p.ink3,
                                     flexShrink: 0,
+                                    borderRadius: "8px",
+                                    transition: "all 140ms ease",
                                     "&:hover": {
-                                        color: "error.main",
+                                        color: p.negInk,
+                                        backgroundColor: p.neg,
                                     },
                                 }}
                             >
@@ -403,8 +372,23 @@ export function StatTableBlockEditor({
                 ))}
                 <Button
                     size="small"
+                    variant="outlined"
                     startIcon={<Add />}
                     onClick={addMetric}
+                    sx={{
+                        alignSelf: "flex-start",
+                        borderRadius: "10px",
+                        borderStyle: "dashed",
+                        borderColor: p.line,
+                        color: p.indigo,
+                        fontWeight: 600,
+                        textTransform: "none",
+                        "&:hover": {
+                            borderStyle: "dashed",
+                            borderColor: p.indigo,
+                            backgroundColor: p.indigoSoft,
+                        },
+                    }}
                 >
                     Přidat sloupec
                 </Button>
@@ -423,9 +407,8 @@ export function StatTableBlockEditor({
             <Box
                 sx={{
                     flex: 1,
-                    backgroundColor: "grey.50",
-                    borderTop: "1px solid",
-                    borderColor: "divider",
+                    backgroundColor: p.surface2,
+                    borderTop: `1px solid ${p.line}`,
                     overflow: "auto",
                 }}
             >
@@ -436,7 +419,7 @@ export function StatTableBlockEditor({
                             fontWeight: 600,
                             px: 1.5,
                             pt: 1,
-                            color: "primary.main",
+                            color: p.indigo,
                         }}
                     >
                         {block.title}
@@ -459,16 +442,12 @@ export function StatTableBlockEditor({
                             },
                             "& th": {
                                 fontWeight: 600,
-                                color: "primary.main",
-                                borderBottom:
-                                    "1px solid",
-                                borderColor: "divider",
+                                color: p.indigo,
+                                borderBottom: `1px solid ${p.line}`,
                             },
                             "& td": {
-                                borderBottom:
-                                    "1px solid",
-                                borderColor: "divider",
-                                color: "text.secondary",
+                                borderBottom: `1px solid ${p.line}`,
+                                color: p.ink2,
                             },
                             "& tr:last-child td": {
                                 borderBottom: "none",
@@ -477,13 +456,9 @@ export function StatTableBlockEditor({
                     >
                         <thead>
                             <tr>
-                                {showRowLabels && (
-                                    <th />
-                                )}
+                                {showRowLabels && <th />}
                                 {columns.map((col, i) => (
-                                    <th key={i}>
-                                        {col.label}
-                                    </th>
+                                    <th key={i}>{col.label}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -499,18 +474,9 @@ export function StatTableBlockEditor({
                                             {row}
                                         </td>
                                     )}
-                                    {columns.map(
-                                        (col, ci) => (
-                                            <td key={ci}>
-                                                {
-                                                    col
-                                                        .values[
-                                                        ri
-                                                    ]
-                                                }
-                                            </td>
-                                        )
-                                    )}
+                                    {columns.map((col, ci) => (
+                                        <td key={ci}>{col.values[ri]}</td>
+                                    ))}
                                 </tr>
                             ))}
                         </tbody>
@@ -518,8 +484,7 @@ export function StatTableBlockEditor({
                 ) : (
                     <Typography
                         variant="caption"
-                        color="text.disabled"
-                        sx={{ p: 1.5, display: "block" }}
+                        sx={{ p: 1.5, display: "block", color: p.ink3 }}
                     >
                         {stats ? "Žádná data" : "–"}
                     </Typography>

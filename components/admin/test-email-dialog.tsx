@@ -9,7 +9,6 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider,
     TextField,
     Typography,
 } from "@mui/material";
@@ -17,6 +16,8 @@ import { sendTestEmail } from "@/lib/actions/email-test";
 import type { EmailConditionalSection } from "@/lib/types/email-sections";
 import type { FormField } from "@/lib/types/registration-form";
 import type { EmailAttachment } from "@/lib/validators/email-attachment";
+import { builderPalette as pal } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface UsedPlaceholder {
     key: string;
@@ -62,7 +63,7 @@ export function TestEmailDialog({
             setError(null);
             setSuccess(false);
             setValues(
-                Object.fromEntries(usedPlaceholders.map((p) => [p.key, ""])),
+                Object.fromEntries(usedPlaceholders.map((p) => [p.key, ""]))
             );
         }
     }
@@ -108,8 +109,16 @@ export function TestEmailDialog({
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Testovací odeslání emailu</DialogTitle>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: "14px" } }}
+        >
+            <DialogTitle sx={{ fontWeight: 700 }}>
+                Testovací odeslání emailu
+            </DialogTitle>
             <DialogContent>
                 <Box
                     sx={{
@@ -129,18 +138,25 @@ export function TestEmailDialog({
                         autoFocus
                         disabled={isPending}
                         placeholder="adresa@example.com"
+                        size="small"
+                        sx={builderFieldSx}
                     />
 
                     {usedPlaceholders.length > 0 && (
                         <>
-                            <Divider sx={{ mt: 1 }}>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                >
-                                    Hodnoty z registračního formuláře
-                                </Typography>
-                            </Divider>
+                            <Typography
+                                sx={{
+                                    textAlign: "center",
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    letterSpacing: "0.1em",
+                                    textTransform: "uppercase",
+                                    color: pal.ink3,
+                                    mt: 1,
+                                }}
+                            >
+                                Hodnoty z registračního formuláře
+                            </Typography>
                             {usedPlaceholders.map((p) => (
                                 <TextField
                                     key={p.key}
@@ -156,6 +172,7 @@ export function TestEmailDialog({
                                     size="small"
                                     disabled={isPending}
                                     helperText={`{${p.key}}`}
+                                    sx={builderFieldSx}
                                 />
                             ))}
                         </>
@@ -169,14 +186,35 @@ export function TestEmailDialog({
                     )}
                 </Box>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={handleClose} disabled={isPending}>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+                <Button
+                    onClick={handleClose}
+                    disabled={isPending}
+                    sx={{
+                        borderRadius: "10px",
+                        textTransform: "none",
+                        border: `1px solid ${pal.line}`,
+                        color: pal.ink2,
+                        backgroundColor: pal.surface,
+                        "&:hover": {
+                            borderColor: pal.ink3,
+                            backgroundColor: pal.surface2,
+                        },
+                    }}
+                >
                     Zrušit
                 </Button>
                 <Button
                     onClick={handleSubmit}
                     variant="contained"
+                    disableElevation
                     disabled={isPending || !recipient.trim() || success}
+                    sx={{
+                        borderRadius: "10px",
+                        textTransform: "none",
+                        backgroundColor: pal.indigo,
+                        "&:hover": { backgroundColor: "#4338ca" },
+                    }}
                 >
                     {isPending ? "Odesílání..." : "Odeslat testovací email"}
                 </Button>

@@ -4,9 +4,6 @@ import { useState } from "react";
 import {
     Box,
     Button,
-    Card,
-    CardContent,
-    Chip,
     CircularProgress,
     Dialog,
     DialogActions,
@@ -18,8 +15,12 @@ import {
     Typography,
 } from "@mui/material";
 import { Delete, Edit, NetworkCheck } from "@mui/icons-material";
-import { deleteEmailAccount, testEmailAccount } from "@/lib/actions/email-accounts";
+import {
+    deleteEmailAccount,
+    testEmailAccount,
+} from "@/lib/actions/email-accounts";
 import { useSnackbar } from "notistack";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface EmailAccountCardProps {
     account: {
@@ -32,6 +33,22 @@ interface EmailAccountCardProps {
     };
     onEdit: (id: string) => void;
 }
+
+const iconBtnSx = {
+    width: 30,
+    height: 30,
+    borderRadius: "8px",
+    color: p.ink3,
+    "&:hover": { color: p.indigo, backgroundColor: p.indigoSoft },
+};
+
+const dangerIconBtnSx = {
+    width: 30,
+    height: 30,
+    borderRadius: "8px",
+    color: p.ink3,
+    "&:hover": { color: p.negInk, backgroundColor: p.neg },
+};
 
 export function EmailAccountCard({ account, onEdit }: EmailAccountCardProps) {
     const { enqueueSnackbar } = useSnackbar();
@@ -47,8 +64,10 @@ export function EmailAccountCard({ account, onEdit }: EmailAccountCardProps) {
 
         if (result?.error) {
             enqueueSnackbar(
-                typeof result.error === "string" ? result.error : "Nepodařilo se smazat účet",
-                { variant: "error" },
+                typeof result.error === "string"
+                    ? result.error
+                    : "Nepodařilo se smazat účet",
+                { variant: "error" }
             );
         } else {
             enqueueSnackbar("Emailový účet byl smazán", { variant: "success" });
@@ -61,84 +80,190 @@ export function EmailAccountCard({ account, onEdit }: EmailAccountCardProps) {
         setTesting(false);
 
         if (result.success) {
-            enqueueSnackbar("Připojení k SMTP serveru je funkční", { variant: "success" });
+            enqueueSnackbar("Připojení k SMTP serveru je funkční", {
+                variant: "success",
+            });
         } else {
-            enqueueSnackbar(result.error || "Test selhal", { variant: "error" });
+            enqueueSnackbar(result.error || "Test selhal", {
+                variant: "error",
+            });
         }
     };
 
     return (
         <>
-            <Card variant="outlined">
-                <CardContent>
-                    <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                        <Box>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                                <Typography variant="h6" component="span">
-                                    {account.email}
-                                </Typography>
-                                {account.isMain && (
-                                    <Chip label="Hlavní" color="primary" size="small" />
-                                )}
-                            </Box>
-                            {account.label && (
-                                <Typography variant="body2" color="text.secondary">
-                                    {account.label}
-                                </Typography>
-                            )}
-                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-                                SMTP: smtp.seznam.cz:465
+            <Box
+                sx={{
+                    backgroundColor: p.surface,
+                    border: `1px solid ${p.line}`,
+                    borderRadius: "14px",
+                    overflow: "hidden",
+                }}
+            >
+                <Box
+                    sx={{
+                        p: 2.5,
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        gap: 2,
+                    }}
+                >
+                    <Box sx={{ minWidth: 0 }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.25,
+                                mb: 0.5,
+                            }}
+                        >
+                            <Typography
+                                component="span"
+                                sx={{
+                                    fontSize: "1.05rem",
+                                    fontWeight: 700,
+                                    color: p.ink,
+                                }}
+                            >
+                                {account.email}
                             </Typography>
+                            {account.isMain && (
+                                <Box
+                                    component="span"
+                                    sx={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        px: "9px",
+                                        py: "3px",
+                                        borderRadius: "20px",
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                        backgroundColor: p.field,
+                                        color: p.fieldInk,
+                                    }}
+                                >
+                                    <Box
+                                        component="span"
+                                        sx={{
+                                            width: 6,
+                                            height: 6,
+                                            borderRadius: "50%",
+                                            backgroundColor: "currentColor",
+                                        }}
+                                    />
+                                    Hlavní
+                                </Box>
+                            )}
                         </Box>
-                        <Box sx={{ display: "flex", gap: 0.5 }}>
-                            <Tooltip title="Test připojení">
-                                <span>
-                                    <IconButton
-                                        size="small"
-                                        onClick={handleTest}
-                                        disabled={testing}
-                                    >
-                                        {testing ? <CircularProgress size={20} /> : <NetworkCheck />}
-                                    </IconButton>
-                                </span>
-                            </Tooltip>
-                            <Tooltip title="Upravit">
-                                <IconButton size="small" onClick={() => onEdit(account.id)}>
-                                    <Edit />
-                                </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Smazat">
-                                <span>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => setDeleteOpen(true)}
-                                        disabled={account.isMain}
-                                    >
-                                        <Delete />
-                                    </IconButton>
-                                </span>
-                            </Tooltip>
-                        </Box>
+                        {account.label && (
+                            <Typography variant="body2" sx={{ color: p.ink2 }}>
+                                {account.label}
+                            </Typography>
+                        )}
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: "block",
+                                mt: 1,
+                                color: p.ink3,
+                                fontFamily: "'JetBrains Mono', monospace",
+                            }}
+                        >
+                            SMTP: smtp.seznam.cz:465
+                        </Typography>
                     </Box>
-                </CardContent>
-            </Card>
+                    <Box sx={{ display: "flex", gap: 0.5, flexShrink: 0 }}>
+                        <Tooltip title="Test připojení">
+                            <span>
+                                <IconButton
+                                    size="small"
+                                    onClick={handleTest}
+                                    disabled={testing}
+                                    sx={iconBtnSx}
+                                >
+                                    {testing ? (
+                                        <CircularProgress size={18} />
+                                    ) : (
+                                        <NetworkCheck sx={{ fontSize: 18 }} />
+                                    )}
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                        <Tooltip title="Upravit">
+                            <IconButton
+                                size="small"
+                                onClick={() => onEdit(account.id)}
+                                sx={iconBtnSx}
+                            >
+                                <Edit sx={{ fontSize: 18 }} />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Smazat">
+                            <span>
+                                <IconButton
+                                    size="small"
+                                    onClick={() => setDeleteOpen(true)}
+                                    disabled={account.isMain}
+                                    sx={dangerIconBtnSx}
+                                >
+                                    <Delete sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    </Box>
+                </Box>
+            </Box>
 
-            <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
-                <DialogTitle>Smazat emailový účet</DialogTitle>
+            <Dialog
+                open={deleteOpen}
+                onClose={() => setDeleteOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Smazat emailový účet
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Opravdu chcete smazat emailový účet <strong>{account.email}</strong>?
-                        Šablony emailů, které tento účet používají, budou přepnuty na hlavní účet.
+                        Opravdu chcete smazat emailový účet{" "}
+                        <strong>{account.email}</strong>? Šablony emailů, které
+                        tento účet používají, budou přepnuty na hlavní účet.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteOpen(false)} disabled={deleting}>
+                    <Button
+                        onClick={() => setDeleteOpen(false)}
+                        disabled={deleting}
+                        sx={{
+                            backgroundColor: p.surface,
+                            border: `1px solid ${p.line}`,
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            "&:hover": {
+                                borderColor: p.indigo,
+                                backgroundColor: p.indigoSoft,
+                                color: p.indigo,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleDelete}
-                        color="error"
                         disabled={deleting}
+                        disableElevation
+                        variant="contained"
+                        sx={{
+                            backgroundColor: p.neg,
+                            color: p.negInk,
+                            borderRadius: "10px",
+                            boxShadow: "none",
+                            "&:hover": {
+                                backgroundColor: "#fecaca",
+                                boxShadow: "none",
+                            },
+                        }}
                     >
                         {deleting ? "Mazání..." : "Smazat"}
                     </Button>

@@ -15,10 +15,9 @@ import { formatPrice } from "@/lib/utils/pricing";
 import { StatMetricEditor } from "./metric-editor";
 import { StatFilterEditor } from "./filter-editor";
 import { StatSuffixEditor } from "./suffix-editor";
-import {
-    useRegistrationFields,
-    useRegistrationStats,
-} from "./hooks";
+import { useRegistrationFields, useRegistrationStats } from "./hooks";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface StatCardsBlockEditorProps {
     block: StatCardsBlock;
@@ -39,13 +38,11 @@ export function StatCardsBlockEditor({
     const source = block.source ?? "builtin";
 
     const defaultLabel =
-        source === "builtin" &&
-        isBuiltinMetric(block.metric)
+        source === "builtin" && isBuiltinMetric(block.metric)
             ? BUILTIN_METRIC_LABELS[block.metric]
             : source === "field"
-              ? fields?.find(
-                    (f) => f.name === block.metric
-                )?.label ?? block.metric
+              ? (fields?.find((f) => f.name === block.metric)?.label ??
+                block.metric)
               : block.metric;
 
     const aggLabel = block.aggregation
@@ -95,20 +92,17 @@ export function StatCardsBlockEditor({
                     onChange={(e) =>
                         onChange({
                             ...block,
-                            label:
-                                e.target.value ||
-                                undefined,
+                            label: e.target.value || undefined,
                         })
                     }
                     size="small"
                     fullWidth
                     placeholder={placeholder}
+                    sx={builderFieldSx}
                 />
                 <StatSuffixEditor
                     value={block.suffix}
-                    onChange={(suffix) =>
-                        onChange({ ...block, suffix })
-                    }
+                    onChange={(suffix) => onChange({ ...block, suffix })}
                 />
                 <StatFilterEditor
                     filter={block.filter}
@@ -132,15 +126,12 @@ export function StatCardsBlockEditor({
                     alignContent: "center",
                     py: 1.5,
                     px: 1,
-                    backgroundColor: "grey.50",
-                    borderTop: "1px solid",
-                    borderColor: "divider",
+                    backgroundColor: p.surface2,
+                    borderTop: `1px solid ${p.line}`,
                 }}
             >
                 {resolvePreviewCards().map((card, i) => {
-                    const cardIcon =
-                        block.iconMap?.[card.label] ??
-                        block.icon;
+                    const cardIcon = block.iconMap?.[card.label] ?? block.icon;
                     return (
                         <Box
                             key={i}
@@ -156,81 +147,61 @@ export function StatCardsBlockEditor({
                                 value={cardIcon ?? null}
                                 onChange={(icon) => {
                                     const map = {
-                                        ...(block.iconMap ??
-                                            {}),
+                                        ...(block.iconMap ?? {}),
                                     };
                                     if (icon) {
-                                        map[card.label] =
-                                            icon;
+                                        map[card.label] = icon;
                                     } else {
-                                        delete map[
-                                            card.label
-                                        ];
+                                        delete map[card.label];
                                     }
                                     onChange({
                                         ...block,
                                         iconMap:
-                                            Object.keys(
-                                                map
-                                            ).length > 0
+                                            Object.keys(map).length > 0
                                                 ? map
                                                 : undefined,
                                     });
                                 }}
-                                renderTrigger={(
-                                    onClick,
-                                    currentIcon
-                                ) => (
+                                renderTrigger={(onClick, currentIcon) => (
                                     <Box
                                         onClick={onClick}
                                         sx={{
                                             width: 48,
                                             height: 48,
                                             mb: 1,
-                                            display:
-                                                "flex",
-                                            alignItems:
-                                                "center",
-                                            justifyContent:
-                                                "center",
-                                            borderRadius:
-                                                "50%",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            borderRadius: "50%",
                                             border: "1.5px solid",
-                                            borderColor:
-                                                currentIcon
-                                                    ? "divider"
-                                                    : "text.disabled",
-                                            borderStyle:
-                                                currentIcon
-                                                    ? "solid"
-                                                    : "dashed",
-                                            backgroundColor:
-                                                "rgba(25, 118, 210, 0.04)",
+                                            borderColor: currentIcon
+                                                ? p.line
+                                                : p.ink3,
+                                            borderStyle: currentIcon
+                                                ? "solid"
+                                                : "dashed",
+                                            backgroundColor: p.indigoSoft,
                                             cursor: "pointer",
+                                            transition: "all 140ms ease",
                                             "&:hover": {
-                                                borderColor:
-                                                    "primary.main",
+                                                borderColor: p.indigo,
                                             },
                                         }}
                                     >
                                         {currentIcon ? (
                                             <GameIcon
-                                                name={
-                                                    currentIcon
-                                                }
+                                                name={currentIcon}
                                                 sx={{
-                                                    fontSize:
-                                                        "1.5rem",
-                                                    color: "text.secondary",
+                                                    fontSize: "1.5rem",
+                                                    color: p.indigo,
                                                 }}
                                             />
                                         ) : (
                                             <Typography
                                                 variant="caption"
-                                                color="text.disabled"
                                                 sx={{
-                                                    fontSize:
-                                                        "0.55rem",
+                                                    fontSize: "0.55rem",
+                                                    color: p.ink3,
                                                 }}
                                             >
                                                 Ikona
@@ -243,7 +214,7 @@ export function StatCardsBlockEditor({
                                 variant="h5"
                                 sx={{
                                     fontWeight: 700,
-                                    color: "primary.main",
+                                    color: p.indigo,
                                 }}
                             >
                                 {card.prefix && (
@@ -252,7 +223,7 @@ export function StatCardsBlockEditor({
                                         variant="body2"
                                         sx={{
                                             mr: 0.5,
-                                            color: "text.secondary",
+                                            color: p.ink2,
                                             fontWeight: 400,
                                         }}
                                     >
@@ -266,7 +237,7 @@ export function StatCardsBlockEditor({
                                         variant="body2"
                                         sx={{
                                             ml: 0.5,
-                                            color: "text.secondary",
+                                            color: p.ink2,
                                             fontWeight: 400,
                                         }}
                                     >
@@ -276,7 +247,7 @@ export function StatCardsBlockEditor({
                             </Typography>
                             <Typography
                                 variant="caption"
-                                color="text.secondary"
+                                sx={{ color: p.ink2 }}
                             >
                                 {card.label}
                             </Typography>
@@ -284,10 +255,7 @@ export function StatCardsBlockEditor({
                     );
                 })}
                 {resolvePreviewCards().length === 0 && (
-                    <Typography
-                        variant="caption"
-                        color="text.disabled"
-                    >
+                    <Typography variant="caption" sx={{ color: p.ink3 }}>
                         {stats ? "Žádná data" : "–"}
                     </Typography>
                 )}
@@ -305,33 +273,21 @@ export function StatCardsBlockEditor({
     } | null {
         if (!block.suffix || !stats) return null;
         if (block.suffix.source === "manual") {
-            return block.suffix.text
-                ? { text: block.suffix.text }
-                : null;
+            return block.suffix.text ? { text: block.suffix.text } : null;
         }
         if (block.suffix.source === "capacity") {
             const cap =
-                stats.capacityLimits?.[block.metric]?.[
-                    optionValue ?? ""
-                ];
-            return cap !== undefined
-                ? { text: `/ ${cap}` }
-                : null;
+                stats.capacityLimits?.[block.metric]?.[optionValue ?? ""];
+            return cap !== undefined ? { text: `/ ${cap}` } : null;
         }
         if (block.suffix.source === "total") {
             const cap =
-                stats.capacityLimits?.[block.metric]?.[
-                    optionValue ?? ""
-                ];
+                stats.capacityLimits?.[block.metric]?.[optionValue ?? ""];
             if (cap === undefined) return null;
-            const remaining = Math.max(
-                0,
-                cap - currentValue
-            );
+            const remaining = Math.max(0, cap - currentValue);
             return {
                 prefix: "Zbývá",
-                displayOverride:
-                    remaining.toLocaleString("cs-CZ"),
+                displayOverride: remaining.toLocaleString("cs-CZ"),
                 text: `z ${cap.toLocaleString("cs-CZ")}`,
             };
         }
@@ -345,27 +301,20 @@ export function StatCardsBlockEditor({
         suffix: string | null;
     }[] {
         if (!stats) return [];
-        if (
-            source === "builtin" &&
-            isBuiltinMetric(block.metric)
-        ) {
-            const raw =
-                stats[block.metric as BuiltinMetric] ?? 0;
-            const isCurrency =
-                BUILTIN_CURRENCY_METRICS.includes(
-                    block.metric as BuiltinMetric
-                );
+        if (source === "builtin" && isBuiltinMetric(block.metric)) {
+            const raw = stats[block.metric as BuiltinMetric] ?? 0;
+            const isCurrency = BUILTIN_CURRENCY_METRICS.includes(
+                block.metric as BuiltinMetric
+            );
             const si = resolveSuffixPreview(undefined, raw);
             return [
                 {
-                    value: si?.displayOverride
-                        ?? (isCurrency
+                    value:
+                        si?.displayOverride ??
+                        (isCurrency
                             ? formatPrice(raw)
                             : raw.toLocaleString("cs-CZ")),
-                    label:
-                        BUILTIN_METRIC_LABELS[
-                            block.metric as BuiltinMetric
-                        ],
+                    label: BUILTIN_METRIC_LABELS[block.metric as BuiltinMetric],
                     prefix: si?.prefix ?? null,
                     suffix: si?.text ?? null,
                 },
@@ -379,13 +328,9 @@ export function StatCardsBlockEditor({
         if (options && options.length > 0) {
             return options.map((option) => {
                 const count = counts[option] ?? 0;
-                const si = resolveSuffixPreview(
-                    option,
-                    count
-                );
+                const si = resolveSuffixPreview(option, count);
                 return {
-                    value: si?.displayOverride
-                        ?? count.toLocaleString("cs-CZ"),
+                    value: si?.displayOverride ?? count.toLocaleString("cs-CZ"),
                     label: option,
                     prefix: si?.prefix ?? null,
                     suffix: si?.text ?? null,
@@ -396,13 +341,9 @@ export function StatCardsBlockEditor({
         return Object.entries(counts)
             .sort((a, b) => b[1] - a[1])
             .map(([option, count]) => {
-                const si = resolveSuffixPreview(
-                    option,
-                    count
-                );
+                const si = resolveSuffixPreview(option, count);
                 return {
-                    value: si?.displayOverride
-                        ?? count.toLocaleString("cs-CZ"),
+                    value: si?.displayOverride ?? count.toLocaleString("cs-CZ"),
                     label: option,
                     prefix: si?.prefix ?? null,
                     suffix: si?.text ?? null,

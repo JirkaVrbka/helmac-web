@@ -2,11 +2,35 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Container, Typography, Alert, Box, Button, CircularProgress } from "@mui/material";
+import {
+    Container,
+    Typography,
+    Alert,
+    Box,
+    Button,
+    CircularProgress,
+} from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import Link from "next/link";
 import { DynamicRegistrationForm } from "@/components/public/features/registration/DynamicRegistrationForm";
 import type { RegistrationFormData } from "@/lib/types/registration-form";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+
+const ghostBtnSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    textTransform: "none",
+    borderRadius: "10px",
+    "&:hover": { borderColor: p.ink3, backgroundColor: p.surface2 },
+} as const;
+
+const infoAlertSx = {
+    borderRadius: "12px",
+    backgroundColor: p.field,
+    color: p.fieldInk,
+    "& .MuiAlert-message": { color: p.fieldInk },
+} as const;
 
 function readPreviewData(): RegistrationFormData | null {
     try {
@@ -44,14 +68,16 @@ export default function FormPreviewPage() {
     if (!formData) {
         return (
             <Container maxWidth="md" sx={{ py: 4 }}>
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    Data náhledu nebyla nalezena. Otevřete náhled znovu z editoru formuláře.
+                <Alert severity="error" sx={{ mb: 2, borderRadius: "12px" }}>
+                    Data náhledu nebyla nalezena. Otevřete náhled znovu z
+                    editoru formuláře.
                 </Alert>
                 <Button
                     component={Link}
                     href={`/admin/rocniky/${params.id}/registrace/formular`}
                     startIcon={<ArrowBack />}
                     variant="outlined"
+                    sx={ghostBtnSx}
                 >
                     Zpět na editor
                 </Button>
@@ -61,8 +87,9 @@ export default function FormPreviewPage() {
 
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
-            <Alert severity="info" sx={{ mb: 3 }}>
-                Toto je náhled formuláře. Odeslání formuláře nebude zaregistrováno.
+            <Alert icon={false} sx={{ mb: 3, ...infoAlertSx }}>
+                Toto je náhled formuláře. Odeslání formuláře nebude
+                zaregistrováno.
             </Alert>
 
             <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
@@ -72,10 +99,11 @@ export default function FormPreviewPage() {
                     startIcon={<ArrowBack />}
                     variant="outlined"
                     size="small"
+                    sx={ghostBtnSx}
                 >
                     Zpět na editor
                 </Button>
-                <Typography variant="h5">
+                <Typography variant="h5" sx={{ fontWeight: 700, color: p.ink }}>
                     Náhled registračního formuláře
                 </Typography>
             </Box>

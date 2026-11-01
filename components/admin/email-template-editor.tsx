@@ -19,15 +19,25 @@ import {
 } from "@mui/icons-material";
 import { updateEmailTemplate } from "@/lib/actions/years";
 import { TestEmailDialog } from "@/components/admin/test-email-dialog";
-import { SectionRail, BASE_SECTION_ID, type RailItem } from "@/components/admin/email-builder/section-rail";
+import {
+    SectionRail,
+    BASE_SECTION_ID,
+    type RailItem,
+} from "@/components/admin/email-builder/section-rail";
 import { SectionPaneBase } from "@/components/admin/email-builder/section-pane-base";
 import { SectionPaneConditional } from "@/components/admin/email-builder/section-pane-conditional";
 import { builderPalette as p } from "@/components/admin/email-builder/palette";
 import type { EmailConditionalSection } from "@/lib/types/email-sections";
-import type { FormField, PricingDefinition } from "@/lib/types/registration-form";
+import type {
+    FormField,
+    PricingDefinition,
+} from "@/lib/types/registration-form";
 import type { EmailAttachment } from "@/lib/validators/email-attachment";
 
-type SaveAction = (yearId: string, formData: FormData) => Promise<{ success?: boolean; error?: string | Record<string, string[]> }>;
+type SaveAction = (
+    yearId: string,
+    formData: FormData
+) => Promise<{ success?: boolean; error?: string | Record<string, string[]> }>;
 
 interface EmailAccountOption {
     id: string;
@@ -68,12 +78,19 @@ function snapshotKey(input: {
             .sort((a, b) => a.sortOrder - b.sortOrder)
             .map((s) => ({ ...s, sortOrder: s.sortOrder })),
         attachments: [...input.attachments]
-            .map((a) => ({ url: a.url, filename: a.filename, size: a.size, contentType: a.contentType }))
+            .map((a) => ({
+                url: a.url,
+                filename: a.filename,
+                size: a.size,
+                contentType: a.contentType,
+            }))
             .sort((a, b) => a.url.localeCompare(b.url)),
     });
 }
 
-function reindexSections(sections: EmailConditionalSection[]): EmailConditionalSection[] {
+function reindexSections(
+    sections: EmailConditionalSection[]
+): EmailConditionalSection[] {
     return [...sections]
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((s, i) => ({ ...s, sortOrder: i }));
@@ -104,35 +121,53 @@ export function EmailTemplateEditor({
         }),
         // we intentionally capture the initial values exactly once at mount
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [],
+        []
     );
 
     const [subject, setSubject] = useState(initial.subject);
     const [body, setBody] = useState(initial.body);
     const [bcc, setBcc] = useState(initial.bcc);
-    const [emailAccountId, setEmailAccountId] = useState(initial.emailAccountId);
-    const [sections, setSections] = useState<EmailConditionalSection[]>(initial.sections);
-    const [attachments, setAttachments] = useState<EmailAttachment[]>(initial.attachments);
+    const [emailAccountId, setEmailAccountId] = useState(
+        initial.emailAccountId
+    );
+    const [sections, setSections] = useState<EmailConditionalSection[]>(
+        initial.sections
+    );
+    const [attachments, setAttachments] = useState<EmailAttachment[]>(
+        initial.attachments
+    );
     const [activeId, setActiveId] = useState<string>(BASE_SECTION_ID);
-    const [savedSnapshot, setSavedSnapshot] = useState<string>(() => snapshotKey(initial));
+    const [savedSnapshot, setSavedSnapshot] = useState<string>(() =>
+        snapshotKey(initial)
+    );
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>(
+        {}
+    );
     const [success, setSuccess] = useState(false);
     const [testOpen, setTestOpen] = useState(false);
 
     const sortedSections = useMemo(
         () => [...sections].sort((a, b) => a.sortOrder - b.sortOrder),
-        [sections],
+        [sections]
     );
 
     const railItems: RailItem[] = useMemo(() => {
         const items: RailItem[] = [{ kind: "base", id: BASE_SECTION_ID, body }];
-        for (const s of sortedSections) items.push({ kind: "section", id: s.id, section: s });
+        for (const s of sortedSections)
+            items.push({ kind: "section", id: s.id, section: s });
         return items;
     }, [body, sortedSections]);
 
-    const currentKey = snapshotKey({ subject, body, bcc, emailAccountId, sections, attachments });
+    const currentKey = snapshotKey({
+        subject,
+        body,
+        bcc,
+        emailAccountId,
+        sections,
+        attachments,
+    });
     const dirty = currentKey !== savedSnapshot;
 
     const usedPlaceholders = useMemo(() => {
@@ -152,7 +187,9 @@ export function EmailTemplateEditor({
                 }
             }
         }
-        const labelByKey = new Map(availablePlaceholders.map((ph) => [ph.key, ph.label]));
+        const labelByKey = new Map(
+            availablePlaceholders.map((ph) => [ph.key, ph.label])
+        );
         return Array.from(keys)
             .filter((k) => k !== "qrPlatba")
             .map((k) => ({ key: k, label: labelByKey.get(k) ?? k }));
@@ -160,9 +197,10 @@ export function EmailTemplateEditor({
 
     const canTest = !!subject || !!body;
 
-    const activeSection = activeId === BASE_SECTION_ID
-        ? null
-        : sortedSections.find((s) => s.id === activeId) ?? null;
+    const activeSection =
+        activeId === BASE_SECTION_ID
+            ? null
+            : (sortedSections.find((s) => s.id === activeId) ?? null);
     const activeConditionalIndex = activeSection
         ? sortedSections.findIndex((s) => s.id === activeSection.id)
         : -1;
@@ -178,7 +216,14 @@ export function EmailTemplateEditor({
             condition: {
                 id: crypto.randomUUID(),
                 name: "",
-                rules: [{ type: "field_value", fieldId: "", operator: "equals", value: "" }],
+                rules: [
+                    {
+                        type: "field_value",
+                        fieldId: "",
+                        operator: "equals",
+                        value: "",
+                    },
+                ],
             },
             body: "",
             sortOrder: sortedSections.length,
@@ -223,7 +268,9 @@ export function EmailTemplateEditor({
     const deleteActive = () => {
         if (!activeSection) return;
         const idx = activeConditionalIndex;
-        const remaining = sortedSections.filter((s) => s.id !== activeSection.id);
+        const remaining = sortedSections.filter(
+            (s) => s.id !== activeSection.id
+        );
         setSections(reindexSections(remaining));
         const fallback = remaining[idx] ?? remaining[idx - 1];
         setActiveId(fallback ? fallback.id : BASE_SECTION_ID);
@@ -251,7 +298,10 @@ export function EmailTemplateEditor({
             if (typeof result.error === "string") {
                 setError(result.error);
             } else {
-                const errObj = result.error as Record<string, string[] | undefined>;
+                const errObj = result.error as Record<
+                    string,
+                    string[] | undefined
+                >;
                 if (errObj._form?.[0]) {
                     setError(errObj._form[0]);
                 } else {
@@ -260,7 +310,16 @@ export function EmailTemplateEditor({
                 }
             }
         } else {
-            setSavedSnapshot(snapshotKey({ subject, body, bcc, emailAccountId, sections, attachments }));
+            setSavedSnapshot(
+                snapshotKey({
+                    subject,
+                    body,
+                    bcc,
+                    emailAccountId,
+                    sections,
+                    attachments,
+                })
+            );
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
         }
@@ -302,8 +361,8 @@ export function EmailTemplateEditor({
                     onClick={saveAll}
                     disabled={saving || !dirty}
                     sx={{
-                        backgroundColor: p.ink,
-                        "&:hover": { backgroundColor: "#1e293b" },
+                        backgroundColor: p.indigo,
+                        "&:hover": { backgroundColor: "#4338ca" },
                     }}
                 >
                     {saving ? "Ukládání..." : "Uložit šablonu"}
@@ -344,10 +403,17 @@ export function EmailTemplateEditor({
                 >
                     {/* Pane head */}
                     <PaneHead
-                        index={activeId === BASE_SECTION_ID ? 0 : activeConditionalIndex + 1}
+                        index={
+                            activeId === BASE_SECTION_ID
+                                ? 0
+                                : activeConditionalIndex + 1
+                        }
                         isBase={activeId === BASE_SECTION_ID}
                         canMoveUp={activeConditionalIndex > 0}
-                        canMoveDown={activeConditionalIndex >= 0 && activeConditionalIndex < totalConditional - 1}
+                        canMoveDown={
+                            activeConditionalIndex >= 0 &&
+                            activeConditionalIndex < totalConditional - 1
+                        }
                         onMoveUp={() => moveActive(-1)}
                         onMoveDown={() => moveActive(1)}
                         onDuplicate={duplicateActive}
@@ -355,7 +421,9 @@ export function EmailTemplateEditor({
                     />
 
                     {/* Pane body */}
-                    <Box sx={{ flex: 1, overflowY: "auto", p: "22px 26px 28px" }}>
+                    <Box
+                        sx={{ flex: 1, overflowY: "auto", p: "22px 26px 28px" }}
+                    >
                         {activeId === BASE_SECTION_ID ? (
                             <SectionPaneBase
                                 subject={subject}
@@ -382,7 +450,9 @@ export function EmailTemplateEditor({
                                 onChange={updateSection}
                             />
                         ) : (
-                            <Typography color="text.secondary">Sekce neexistuje.</Typography>
+                            <Typography color="text.secondary">
+                                Sekce neexistuje.
+                            </Typography>
                         )}
                     </Box>
                 </Box>
@@ -408,11 +478,11 @@ function SaveStatePill({ dirty, saving }: { dirty: boolean; saving: boolean }) {
     const label = saving
         ? "Ukládá se..."
         : dirty
-            ? "Neuložené změny"
-            : "Změny uloženy";
+          ? "Neuložené změny"
+          : "Změny uloženy";
     const bg = saving ? p.warnSoft : dirty ? p.warnSoft : p.value;
-    const fg = saving ? p.warnInk : dirty ? p.warnInk : "#065f46";
-    const dot = saving ? p.warnInk : dirty ? p.or : "#059669";
+    const fg = saving ? p.warnInk : dirty ? p.warnInk : p.valueInk;
+    const dot = saving ? p.warnInk : dirty ? p.or : p.valueInk;
 
     return (
         <Box
@@ -430,7 +500,14 @@ function SaveStatePill({ dirty, saving }: { dirty: boolean; saving: boolean }) {
                 letterSpacing: "0.04em",
             }}
         >
-            <Box sx={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: dot }} />
+            <Box
+                sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    backgroundColor: dot,
+                }}
+            />
             {label}
         </Box>
     );
@@ -447,10 +524,21 @@ interface PaneHeadProps {
     onDelete: () => void;
 }
 
-function PaneHead({ index, isBase, canMoveUp, canMoveDown, onMoveUp, onMoveDown, onDuplicate, onDelete }: PaneHeadProps) {
+function PaneHead({
+    index,
+    isBase,
+    canMoveUp,
+    canMoveDown,
+    onMoveUp,
+    onMoveDown,
+    onDuplicate,
+    onDelete,
+}: PaneHeadProps) {
     const label = String(index + 1).padStart(2, "0");
     const title = isBase ? `Sekce ${label}` : `Sekce ${label}`;
-    const hint = isBase ? "— základní text, posílá se vždy" : "— odešle se, pokud platí pravidla";
+    const hint = isBase
+        ? "— základní text, posílá se vždy"
+        : "— odešle se, pokud platí pravidla";
 
     return (
         <Box
@@ -483,9 +571,23 @@ function PaneHead({ index, isBase, canMoveUp, canMoveDown, onMoveUp, onMoveDown,
                 {label}
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ fontSize: 16, fontWeight: 700, letterSpacing: "-0.01em" }}>
+                <Typography
+                    sx={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        letterSpacing: "-0.01em",
+                    }}
+                >
                     {title}
-                    <Box component="span" sx={{ ml: "10px", color: p.ink3, fontWeight: 400, fontSize: 12 }}>
+                    <Box
+                        component="span"
+                        sx={{
+                            ml: "10px",
+                            color: p.ink3,
+                            fontWeight: 400,
+                            fontSize: 12,
+                        }}
+                    >
                         {hint}
                     </Box>
                 </Typography>
@@ -494,14 +596,22 @@ function PaneHead({ index, isBase, canMoveUp, canMoveDown, onMoveUp, onMoveDown,
                 <Box sx={{ display: "flex", gap: 0.5 }}>
                     <Tooltip title="Posunout nahoru">
                         <span>
-                            <IconButton size="small" onClick={onMoveUp} disabled={!canMoveUp}>
+                            <IconButton
+                                size="small"
+                                onClick={onMoveUp}
+                                disabled={!canMoveUp}
+                            >
                                 <ArrowUpward sx={{ fontSize: 18 }} />
                             </IconButton>
                         </span>
                     </Tooltip>
                     <Tooltip title="Posunout dolů">
                         <span>
-                            <IconButton size="small" onClick={onMoveDown} disabled={!canMoveDown}>
+                            <IconButton
+                                size="small"
+                                onClick={onMoveDown}
+                                disabled={!canMoveDown}
+                            >
                                 <ArrowDownward sx={{ fontSize: 18 }} />
                             </IconButton>
                         </span>
@@ -512,7 +622,11 @@ function PaneHead({ index, isBase, canMoveUp, canMoveDown, onMoveUp, onMoveDown,
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Smazat sekci">
-                        <IconButton size="small" color="error" onClick={onDelete}>
+                        <IconButton
+                            size="small"
+                            color="error"
+                            onClick={onDelete}
+                        >
                             <DeleteOutline sx={{ fontSize: 18 }} />
                         </IconButton>
                     </Tooltip>

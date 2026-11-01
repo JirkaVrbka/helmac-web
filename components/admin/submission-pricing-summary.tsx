@@ -1,9 +1,10 @@
 "use client";
 
-import { Box, Typography, Chip } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { PricingSummaryData } from "@/lib/types/registration-form";
 import { formatPrice } from "@/lib/utils/pricing";
 import { formatDate } from "@/lib/utils/date";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface SubmissionPricingSummaryProps {
     pricingSummary: PricingSummaryData | null;
@@ -11,6 +12,10 @@ interface SubmissionPricingSummaryProps {
     totalPrice: number | null;
     priceDiff?: number | null;
 }
+
+const monoSx = {
+    fontFamily: "'JetBrains Mono', monospace",
+};
 
 export function SubmissionPricingSummary({
     pricingSummary,
@@ -22,12 +27,12 @@ export function SubmissionPricingSummary({
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {variableSymbol && (
                 <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ mb: 0.5, color: p.ink2 }}>
                         Variabilní symbol
                     </Typography>
                     <Typography
                         variant="h6"
-                        sx={{ fontFamily: "monospace", letterSpacing: 1 }}
+                        sx={{ ...monoSx, letterSpacing: 1, color: p.ink }}
                     >
                         {variableSymbol}
                     </Typography>
@@ -36,10 +41,14 @@ export function SubmissionPricingSummary({
 
             {totalPrice != null && (
                 <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ mb: 0.5, color: p.ink2 }}>
                         Celková cena
                     </Typography>
-                    <Typography variant="h6" fontWeight={600}>
+                    <Typography
+                        variant="h6"
+                        fontWeight={600}
+                        sx={{ ...monoSx, color: p.ink }}
+                    >
                         {formatPrice(totalPrice)}
                     </Typography>
                     {priceDiff != null && priceDiff !== 0 && (
@@ -47,9 +56,8 @@ export function SubmissionPricingSummary({
                             variant="body2"
                             fontWeight={600}
                             sx={{
-                                color: priceDiff > 0
-                                    ? "warning.main"
-                                    : "success.main",
+                                ...monoSx,
+                                color: priceDiff > 0 ? p.warnInk : p.valueInk,
                             }}
                         >
                             {priceDiff > 0 ? "+" : ""}
@@ -61,12 +69,19 @@ export function SubmissionPricingSummary({
 
             {pricingSummary && pricingSummary.tiers.length > 0 && (
                 <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={{ mb: 1, color: p.ink2 }}>
                         Cenové hladiny
                     </Typography>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                        }}
+                    >
                         {pricingSummary.tiers.map((tier, idx) => {
-                            const isApplicable = idx === pricingSummary.applicableTierIndex;
+                            const isApplicable =
+                                idx === pricingSummary.applicableTierIndex;
                             const label = tier.tierDate
                                 ? `Do ${formatDate(tier.tierDate)}`
                                 : "Na místě";
@@ -83,18 +98,51 @@ export function SubmissionPricingSummary({
                                     <Typography
                                         variant="body2"
                                         fontWeight={isApplicable ? 700 : 400}
+                                        sx={{
+                                            color: isApplicable
+                                                ? p.ink
+                                                : p.ink2,
+                                        }}
                                     >
                                         {label}
                                     </Typography>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}
+                                    >
                                         <Typography
                                             variant="body2"
-                                            fontWeight={isApplicable ? 700 : 400}
+                                            fontWeight={
+                                                isApplicable ? 700 : 400
+                                            }
+                                            sx={{
+                                                ...monoSx,
+                                                color: isApplicable
+                                                    ? p.ink
+                                                    : p.ink2,
+                                            }}
                                         >
                                             {formatPrice(tier.totalPrice)}
                                         </Typography>
                                         {isApplicable && (
-                                            <Chip label="Aktuální" size="small" color="primary" />
+                                            <Box
+                                                component="span"
+                                                sx={{
+                                                    px: "9px",
+                                                    py: "3px",
+                                                    borderRadius: "20px",
+                                                    fontSize: 11,
+                                                    fontWeight: 600,
+                                                    backgroundColor:
+                                                        p.indigoSoft,
+                                                    color: p.indigoInk,
+                                                }}
+                                            >
+                                                Aktuální
+                                            </Box>
                                         )}
                                     </Box>
                                 </Box>
@@ -105,7 +153,7 @@ export function SubmissionPricingSummary({
             )}
 
             {!variableSymbol && totalPrice == null && !pricingSummary && (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: p.ink3 }}>
                     Žádné cenové údaje
                 </Typography>
             )}

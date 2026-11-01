@@ -19,8 +19,20 @@ import {
     v2PricingDefsToPricingDefs,
 } from "@/lib/services/v2";
 import { getFieldOptionValues } from "@/lib/utils/pricing";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 type TestFilter = "real" | "test" | "all";
+
+const exportBtnSx = {
+    borderRadius: "10px",
+    color: p.ink2,
+    borderColor: p.line,
+    "&:hover": {
+        borderColor: p.indigo,
+        backgroundColor: p.indigoSoft,
+        color: p.indigo,
+    },
+} as const;
 
 interface PrihlaskyPageProps {
     params: Promise<{ id: string }>;
@@ -92,12 +104,18 @@ export default async function PrihlaskyPage({
                     title="Přihlášky"
                 />
                 <Alert severity="info" sx={{ mb: 2 }}>
-                    Pro zobrazení přihlášek je nutné
-                    nejprve vytvořit registrační formulář.
+                    Pro zobrazení přihlášek je nutné nejprve vytvořit
+                    registrační formulář.
                 </Alert>
                 <LinkButton
                     href={`/admin/rocniky/${id}/registrace/formular`}
                     variant="contained"
+                    disableElevation
+                    sx={{
+                        borderRadius: "10px",
+                        backgroundColor: p.indigo,
+                        "&:hover": { backgroundColor: "#4338ca" },
+                    }}
                 >
                     Vytvořit formulář
                 </LinkButton>
@@ -107,17 +125,12 @@ export default async function PrihlaskyPage({
 
     const orders = await getOrdersForYear(year.id, {
         isTest:
-            testFilter === "real"
-                ? false
-                : testFilter === "test"
-                  ? true
-                  : null,
+            testFilter === "real" ? false : testFilter === "test" ? true : null,
     });
 
-    const allInputFields =
-        formStructure.fields.map(v2FieldToInputField);
+    const allInputFields = formStructure.fields.map(v2FieldToInputField);
     const pricingDefinitions = v2PricingDefsToPricingDefs(
-        formStructure.pricingDefinitions,
+        formStructure.pricingDefinitions
     );
 
     const displayFields = formStructure.fields
@@ -127,37 +140,24 @@ export default async function PrihlaskyPage({
             name: f.name,
             label: f.label,
             type: f.type,
-            includeForAdditionalPeople:
-                f.includeForAdditionalPeople,
+            includeForAdditionalPeople: f.includeForAdditionalPeople,
         }));
 
-    const allFieldsInfo = formStructure.fields.map(
-        (f) => ({
-            name: f.name,
-            label: f.label,
-            type: f.type,
-            includeForAdditionalPeople:
-                f.includeForAdditionalPeople,
-        }),
-    );
+    const allFieldsInfo = formStructure.fields.map((f) => ({
+        name: f.name,
+        label: f.label,
+        type: f.type,
+        includeForAdditionalPeople: f.includeForAdditionalPeople,
+    }));
 
     const statusFilter =
         status &&
-        [
-            "PENDING",
-            "CONFIRMED",
-            "WAITLIST",
-            "CANCELLED",
-            "REJECTED",
-        ].includes(status)
+        ["PENDING", "CONFIRMED", "WAITLIST", "CANCELLED", "REJECTED"].includes(
+            status
+        )
             ? status
             : null;
-    const paidFilter =
-        paid === "true"
-            ? true
-            : paid === "false"
-              ? false
-              : null;
+    const paidFilter = paid === "true" ? true : paid === "false" ? false : null;
 
     const filterableFields = allInputFields
         .filter((f) =>
@@ -167,16 +167,13 @@ export default async function PrihlaskyPage({
                 "pricing_select",
                 "pricing_multi_select",
                 "checkbox",
-            ].includes(f.type),
+            ].includes(f.type)
         )
         .map((f) => {
             const options =
                 f.type === "checkbox"
                     ? ["Ano", "Ne"]
-                    : getFieldOptionValues(
-                          f,
-                          pricingDefinitions,
-                      );
+                    : getFieldOptionValues(f, pricingDefinitions);
             return {
                 name: f.name,
                 label: f.label,
@@ -187,28 +184,17 @@ export default async function PrihlaskyPage({
         .filter((f) => f.options.length > 0);
 
     const matchedField = fieldParam
-        ? filterableFields.find(
-              (f) => f.name === fieldParam,
-          )
+        ? filterableFields.find((f) => f.name === fieldParam)
         : null;
-    const fieldFilter = matchedField
-        ? matchedField.name
-        : null;
+    const fieldFilter = matchedField ? matchedField.name : null;
     const valueFilter =
-        matchedField &&
-        valueParam &&
-        matchedField.options.includes(valueParam)
+        matchedField && valueParam && matchedField.options.includes(valueParam)
             ? valueParam
             : null;
 
     const basePath = `/admin/rocniky/${id}/registrace/prihlasky`;
-    const statusParam = statusFilter
-        ? `status=${statusFilter}`
-        : "";
-    const paidParam =
-        paid === "true" || paid === "false"
-            ? `paid=${paid}`
-            : "";
+    const statusParam = statusFilter ? `status=${statusFilter}` : "";
+    const paidParam = paid === "true" || paid === "false" ? `paid=${paid}` : "";
     const fieldFilterParam =
         fieldFilter && valueFilter
             ? `field=${encodeURIComponent(fieldFilter)}`
@@ -217,10 +203,7 @@ export default async function PrihlaskyPage({
         fieldFilter && valueFilter
             ? `value=${encodeURIComponent(valueFilter)}`
             : "";
-    const testParam =
-        testFilter !== "real"
-            ? `test=${testFilter}`
-            : "";
+    const testParam = testFilter !== "real" ? `test=${testFilter}` : "";
     const hasActiveFilter =
         statusFilter !== null ||
         paidFilter !== null ||
@@ -257,60 +240,62 @@ export default async function PrihlaskyPage({
                 title="Přihlášky"
             />
             <SubmissionsCountProvider>
-            <SubmissionsFilterBar
-                basePath={basePath}
-                statusFilter={statusFilter}
-                paidFilter={paidFilter}
-                testFilter={testFilter}
-                isEditor={isEditor}
-                statusParam={statusParam}
-                paidParam={paidParam}
-                testParam={testParam}
-                filterableFields={
-                    filterableFields.length > 0
-                        ? filterableFields
-                        : undefined
-                }
-                activeField={fieldFilter}
-                activeValue={valueFilter}
-            >
-                <SubmissionsCountChip total={orders.length} />
-                {!isEditor && (
-                    <>
-                        <LinkButton
-                            href={`/api/registrace/${year.id}/export`}
-                            variant="outlined"
-                            startIcon={<Download />}
-                            size="small"
-                        >
-                            Export CSV
-                        </LinkButton>
-                        {hasActiveFilter && (
+                <SubmissionsFilterBar
+                    basePath={basePath}
+                    statusFilter={statusFilter}
+                    paidFilter={paidFilter}
+                    testFilter={testFilter}
+                    isEditor={isEditor}
+                    statusParam={statusParam}
+                    paidParam={paidParam}
+                    testParam={testParam}
+                    filterableFields={
+                        filterableFields.length > 0
+                            ? filterableFields
+                            : undefined
+                    }
+                    activeField={fieldFilter}
+                    activeValue={valueFilter}
+                >
+                    <SubmissionsCountChip total={orders.length} />
+                    {!isEditor && (
+                        <>
                             <LinkButton
-                                href={`/api/registrace/${year.id}/export?${filterQueryString}`}
+                                href={`/api/registrace/${year.id}/export`}
                                 variant="outlined"
                                 startIcon={<Download />}
                                 size="small"
+                                sx={exportBtnSx}
                             >
-                                Export filtrovaných
+                                Export CSV
                             </LinkButton>
-                        )}
-                        <ValidatePaymentsButton />
-                    </>
-                )}
-            </SubmissionsFilterBar>
-            <SubmissionsTable
-                orders={orders}
-                displayFields={displayFields}
-                allFields={allFieldsInfo}
-                yearId={year.id}
-                statusFilter={statusFilter}
-                paidFilter={paidFilter}
-                fieldFilter={fieldFilter}
-                valueFilter={valueFilter}
-                eventStartDate={year.startDate}
-                readOnly={isEditor}
-            />
+                            {hasActiveFilter && (
+                                <LinkButton
+                                    href={`/api/registrace/${year.id}/export?${filterQueryString}`}
+                                    variant="outlined"
+                                    startIcon={<Download />}
+                                    size="small"
+                                    sx={exportBtnSx}
+                                >
+                                    Export filtrovaných
+                                </LinkButton>
+                            )}
+                            <ValidatePaymentsButton />
+                        </>
+                    )}
+                </SubmissionsFilterBar>
+                <SubmissionsTable
+                    orders={orders}
+                    displayFields={displayFields}
+                    allFields={allFieldsInfo}
+                    yearId={year.id}
+                    statusFilter={statusFilter}
+                    paidFilter={paidFilter}
+                    fieldFilter={fieldFilter}
+                    valueFilter={valueFilter}
+                    eventStartDate={year.startDate}
+                    readOnly={isEditor}
+                />
             </SubmissionsCountProvider>
         </Container>
     );

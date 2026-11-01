@@ -22,6 +22,27 @@ import {
 } from "@/lib/actions/years";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/lib/hooks/use-toast";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+
+// Builder-palette icon button: 30px, transparent, hover → indigo soft.
+const iconBtnSx = {
+    color: p.ink3,
+    borderRadius: "8px",
+    "&:hover": {
+        color: p.indigo,
+        backgroundColor: p.indigoSoft,
+    },
+};
+
+// Destructive variant: hover → soft-danger.
+const dangerIconBtnSx = {
+    color: p.ink3,
+    borderRadius: "8px",
+    "&:hover": {
+        color: p.negInk,
+        backgroundColor: p.neg,
+    },
+};
 
 interface YearActionsProps {
     yearId: string;
@@ -29,7 +50,11 @@ interface YearActionsProps {
     isArchived: boolean;
 }
 
-export function YearActions({ yearId, isActive, isArchived }: YearActionsProps) {
+export function YearActions({
+    yearId,
+    isActive,
+    isArchived,
+}: YearActionsProps) {
     const router = useRouter();
     const toast = useToast();
     const [loading, setLoading] = useState(false);
@@ -105,10 +130,10 @@ export function YearActions({ yearId, isActive, isArchived }: YearActionsProps) 
                     <Tooltip title="Nastavit jako aktivní">
                         <IconButton
                             size="small"
-                            color="primary"
                             onClick={handleSetActive}
+                            sx={iconBtnSx}
                         >
-                            <Star />
+                            <Star sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Tooltip>
                 )}
@@ -117,10 +142,10 @@ export function YearActions({ yearId, isActive, isArchived }: YearActionsProps) 
                     <Tooltip title="Archivovat">
                         <IconButton
                             size="small"
-                            color="default"
                             onClick={handleArchive}
+                            sx={iconBtnSx}
                         >
-                            <Archive />
+                            <Archive sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Tooltip>
                 )}
@@ -129,10 +154,10 @@ export function YearActions({ yearId, isActive, isArchived }: YearActionsProps) 
                     <Tooltip title="Obnovit z archivu">
                         <IconButton
                             size="small"
-                            color="default"
                             onClick={handleUnarchive}
+                            sx={iconBtnSx}
                         >
-                            <Unarchive />
+                            <Unarchive sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Tooltip>
                 )}
@@ -141,10 +166,10 @@ export function YearActions({ yearId, isActive, isArchived }: YearActionsProps) 
                     <Tooltip title="Smazat">
                         <IconButton
                             size="small"
-                            color="error"
                             onClick={() => setDeleteDialogOpen(true)}
+                            sx={dangerIconBtnSx}
                         >
-                            <Delete />
+                            <Delete sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Tooltip>
                 )}
@@ -153,13 +178,16 @@ export function YearActions({ yearId, isActive, isArchived }: YearActionsProps) 
             <Dialog
                 open={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>Smazat ročník?</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Smazat ročník?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Opravdu chcete smazat tento ročník? Tato akce je nevratná
-                        a smaže všechny stránky, novinky a alba spojená s tímto
-                        ročníkem.
+                        Opravdu chcete smazat tento ročník? Tato akce je
+                        nevratná a smaže všechny stránky, novinky a alba spojená
+                        s tímto ročníkem.
                     </DialogContentText>
                     {error && (
                         <DialogContentText color="error" sx={{ mt: 2 }}>
@@ -167,14 +195,31 @@ export function YearActions({ yearId, isActive, isArchived }: YearActionsProps) 
                         </DialogContentText>
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
+                    <Button
+                        onClick={() => setDeleteDialogOpen(false)}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleDelete}
-                        color="error"
                         variant="contained"
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.neg,
+                            color: p.negInk,
+                            "&:hover": { backgroundColor: "#fecaca" },
+                        }}
                     >
                         Smazat
                     </Button>

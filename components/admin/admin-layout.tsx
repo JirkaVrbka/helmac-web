@@ -6,6 +6,7 @@ import { SnackbarProvider } from "notistack";
 import { SidebarContextProvider } from "@/lib/contexts/sidebar-context";
 import { AdminAppBar } from "./admin-app-bar";
 import { AdminDrawer } from "./admin-drawer";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 const DRAWER_WIDTH = 260;
 
@@ -16,7 +17,12 @@ interface AdminLayoutProps {
     activeYearId?: string;
 }
 
-export function AdminLayout({ children, userName, userRole, activeYearId }: AdminLayoutProps) {
+export function AdminLayout({
+    children,
+    userName,
+    userRole,
+    activeYearId,
+}: AdminLayoutProps) {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
@@ -45,7 +51,7 @@ export function AdminLayout({ children, userName, userRole, activeYearId }: Admi
                             flexGrow: 1,
                             p: { xs: 2, sm: 3 },
                             width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-                            backgroundColor: "background.default",
+                            backgroundColor: p.surface2,
                             overflowX: "clip",
                         }}
                     >

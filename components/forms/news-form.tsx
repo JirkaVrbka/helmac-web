@@ -6,6 +6,7 @@ import {
     Autocomplete,
     Box,
     Button,
+    ButtonBase,
     CircularProgress,
     Dialog,
     DialogActions,
@@ -22,10 +23,34 @@ import { Save, Add, Delete } from "@mui/icons-material";
 import { LinkButton } from "@/components/ui/link-button";
 import { createNews, updateNews, NewsActionState } from "@/lib/actions/news";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
-import {
-    getLinkTargets,
-    type LinkTarget,
-} from "@/lib/actions/link-targets";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
+import { getLinkTargets, type LinkTarget } from "@/lib/actions/link-targets";
+
+const segmentedSx = {
+    backgroundColor: p.surface2,
+    border: `1px solid ${p.line}`,
+    borderRadius: "10px",
+    p: "3px",
+    gap: "3px",
+    "& .MuiToggleButton-root": {
+        flex: 1,
+        border: 0,
+        borderRadius: "8px !important",
+        color: p.ink2,
+        textTransform: "none",
+        transition: "all 140ms ease",
+        "&:hover": {
+            backgroundColor: p.indigoSoft,
+            color: p.indigo,
+        },
+        "&.Mui-selected": {
+            backgroundColor: p.indigo,
+            color: "#fff",
+            "&:hover": { backgroundColor: p.indigo },
+        },
+    },
+};
 
 type ButtonVariant = "contained" | "outlined" | "text";
 
@@ -58,6 +83,12 @@ function SubmitButton({ mode }: { mode: "create" | "edit" }) {
             type="submit"
             variant="contained"
             disabled={pending}
+            disableElevation
+            sx={{
+                borderRadius: "10px",
+                backgroundColor: p.indigo,
+                "&:hover": { backgroundColor: "#4338ca" },
+            }}
             startIcon={
                 pending ? (
                     <CircularProgress size={20} color="inherit" />
@@ -84,11 +115,8 @@ export function NewsForm({
     redirectTo,
     hideYearSelect,
 }: NewsFormProps) {
-    const selectedYearId =
-        defaultValues?.yearId || years[0]?.id || "";
-    const [content, setContent] = useState(
-        defaultValues?.content || ""
-    );
+    const selectedYearId = defaultValues?.yearId || years[0]?.id || "";
+    const [content, setContent] = useState(defaultValues?.content || "");
     const [actionButtons, setActionButtons] = useState<ActionButton[]>(
         defaultValues?.actionButtons || []
     );
@@ -149,25 +177,16 @@ export function NewsForm({
 
     const action =
         mode === "create"
-            ? async (
-                  prevState: NewsActionState,
-                  formData: FormData
-              ) => {
-                  const yearId = formData.get(
-                      "yearId"
-                  ) as string;
-                  return createNews(
-                      yearId,
-                      prevState,
-                      formData
-                  );
+            ? async (prevState: NewsActionState, formData: FormData) => {
+                  const yearId = formData.get("yearId") as string;
+                  return createNews(yearId, prevState, formData);
               }
             : updateNews.bind(null, newsId as string);
 
-    const [state, formAction] = useActionState<
-        NewsActionState,
-        FormData
-    >(action, null);
+    const [state, formAction] = useActionState<NewsActionState, FormData>(
+        action,
+        null
+    );
 
     return (
         <Box component="form" action={formAction}>
@@ -193,38 +212,29 @@ export function NewsForm({
                         id="title"
                         name="title"
                         label="Název novinky"
-                        defaultValue={
-                            defaultValues?.title || ""
-                        }
+                        defaultValue={defaultValues?.title || ""}
                         error={!!state?.error?.title}
-                        helperText={
-                            state?.error?.title?.[0]
-                        }
+                        helperText={state?.error?.title?.[0]}
+                        sx={builderFieldSx}
                     />
-                    {mode === "create" &&
-                        !hideYearSelect && (
-                            <TextField
-                                select
-                                required
-                                size="small"
-                                id="yearId"
-                                name="yearId"
-                                label="Ročník"
-                                defaultValue={
-                                    selectedYearId
-                                }
-                            >
-                                {years.map((year) => (
-                                    <MenuItem
-                                        key={year.id}
-                                        value={year.id}
-                                    >
-                                        {year.year} -{" "}
-                                        {year.title}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        )}
+                    {mode === "create" && !hideYearSelect && (
+                        <TextField
+                            select
+                            required
+                            size="small"
+                            id="yearId"
+                            name="yearId"
+                            label="Ročník"
+                            defaultValue={selectedYearId}
+                            sx={builderFieldSx}
+                        >
+                            {years.map((year) => (
+                                <MenuItem key={year.id} value={year.id}>
+                                    {year.year} - {year.title}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    )}
                 </Box>
                 <Box sx={{ flex: 1 }} />
                 <Box
@@ -237,6 +247,15 @@ export function NewsForm({
                     <LinkButton
                         href={cancelHref}
                         variant="outlined"
+                        sx={{
+                            borderRadius: "10px",
+                            color: p.ink2,
+                            borderColor: p.line,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
                     >
                         Zrušit
                     </LinkButton>
@@ -245,19 +264,11 @@ export function NewsForm({
             </Box>
 
             {mode === "create" && hideYearSelect && (
-                <input
-                    type="hidden"
-                    name="yearId"
-                    value={selectedYearId}
-                />
+                <input type="hidden" name="yearId" value={selectedYearId} />
             )}
 
             {redirectTo && (
-                <input
-                    type="hidden"
-                    name="redirectTo"
-                    value={redirectTo}
-                />
+                <input type="hidden" name="redirectTo" value={redirectTo} />
             )}
 
             {state?.error?._form && (
@@ -271,11 +282,7 @@ export function NewsForm({
                 </Alert>
             )}
 
-            <input
-                type="hidden"
-                name="content"
-                value={content}
-            />
+            <input type="hidden" name="content" value={content} />
             <input
                 type="hidden"
                 name="actionButtons"
@@ -299,50 +306,96 @@ export function NewsForm({
                     mt: 2,
                 }}
             >
-                {actionButtons.map((btn, i) => (
-                    <Button
-                        key={i}
-                        variant={btn.variant || "contained"}
-                        onClick={() => openEditDialog(i)}
-                        endIcon={
-                            <Delete
-                                sx={{
-                                    fontSize:
-                                        "14px !important",
-                                    opacity: 0,
-                                    transition:
-                                        "opacity 0.15s",
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteButton(i);
-                                }}
-                            />
-                        }
-                        sx={{
-                            textTransform: "none",
-                            "&:hover .MuiButton-endIcon svg":
-                                {
+                {actionButtons.map((btn, i) => {
+                    const variant = btn.variant || "contained";
+                    const variantSx =
+                        variant === "contained"
+                            ? {
+                                  backgroundColor: p.indigo,
+                                  color: "#fff",
+                                  "&:hover": { backgroundColor: "#4338ca" },
+                              }
+                            : variant === "outlined"
+                              ? {
+                                    color: p.ink2,
+                                    borderColor: p.line,
+                                    "&:hover": {
+                                        borderColor: p.ink3,
+                                        backgroundColor: p.surface2,
+                                    },
+                                }
+                              : {
+                                    color: p.indigo,
+                                    "&:hover": {
+                                        backgroundColor: p.indigoSoft,
+                                    },
+                                };
+                    return (
+                        <Button
+                            key={i}
+                            variant={variant}
+                            disableElevation
+                            onClick={() => openEditDialog(i)}
+                            endIcon={
+                                <Delete
+                                    sx={{
+                                        fontSize: "14px !important",
+                                        opacity: 0,
+                                        transition: "opacity 0.15s",
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteButton(i);
+                                    }}
+                                />
+                            }
+                            sx={{
+                                textTransform: "none",
+                                borderRadius: "10px",
+                                ...variantSx,
+                                "&:hover .MuiButton-endIcon svg": {
                                     opacity: 1,
                                 },
+                            }}
+                        >
+                            {btn.label || "(bez textu)"}
+                        </Button>
+                    );
+                })}
+                {actionButtons.length === 0 ? (
+                    <ButtonBase
+                        onClick={openAddDialog}
+                        sx={{
+                            py: "8px",
+                            px: "14px",
+                            backgroundColor: p.surface,
+                            border: `1px dashed ${p.line}`,
+                            borderRadius: "10px",
+                            color: p.indigo,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            transition: "all 140ms ease",
+                            "&:hover": {
+                                borderColor: p.indigo,
+                                backgroundColor: p.indigoSoft,
+                            },
                         }}
                     >
-                        {btn.label || "(bez textu)"}
-                    </Button>
-                ))}
-                {actionButtons.length === 0 ? (
-                    <Button
-                        size="small"
-                        startIcon={<Add />}
-                        onClick={openAddDialog}
-                    >
+                        <Add sx={{ fontSize: 16 }} />
                         Přidat tlačítko
-                    </Button>
+                    </ButtonBase>
                 ) : (
                     <IconButton
                         size="small"
                         onClick={openAddDialog}
-                        sx={{ color: "primary.main" }}
+                        sx={{
+                            color: p.indigo,
+                            borderRadius: "8px",
+                            "&:hover": { backgroundColor: p.indigoSoft },
+                        }}
                     >
                         <Add sx={{ fontSize: 18 }} />
                     </IconButton>
@@ -355,8 +408,9 @@ export function NewsForm({
                 onClose={() => setDialogOpen(false)}
                 maxWidth="xs"
                 fullWidth
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
                     {editingIndex !== null
                         ? "Upravit tlačítko"
                         : "Přidat tlačítko"}
@@ -373,44 +427,38 @@ export function NewsForm({
                         autoFocus
                         label="Text tlačítka"
                         value={btnLabel}
-                        onChange={(e) =>
-                            setBtnLabel(e.target.value)
-                        }
+                        onChange={(e) => setBtnLabel(e.target.value)}
                         fullWidth
                         size="small"
+                        sx={builderFieldSx}
                     />
                     <TextField
                         label="Odkaz (URL)"
                         value={btnUrl}
-                        onChange={(e) =>
-                            setBtnUrl(e.target.value)
-                        }
+                        onChange={(e) => setBtnUrl(e.target.value)}
                         fullWidth
                         size="small"
+                        sx={builderFieldSx}
                     />
                     <Autocomplete<LinkTarget>
                         options={linkTargets ?? []}
                         groupBy={(option) => option.group}
-                        getOptionLabel={(option) =>
-                            option.label
+                        getOptionLabel={(option) => option.label}
+                        isOptionEqualToValue={(option, value) =>
+                            option.url === value.url
                         }
-                        isOptionEqualToValue={(
-                            option,
-                            value
-                        ) => option.url === value.url}
                         value={null}
                         onChange={(_, value) => {
                             if (value) {
                                 setBtnUrl(value.url);
                                 if (!btnLabel) {
-                                    setBtnLabel(
-                                        value.label
-                                    );
+                                    setBtnLabel(value.label);
                                 }
                             }
                         }}
                         blurOnSelect
                         size="small"
+                        sx={builderFieldSx}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -428,32 +476,40 @@ export function NewsForm({
                         }}
                         size="small"
                         fullWidth
+                        sx={segmentedSx}
                     >
-                        <ToggleButton value="contained">
-                            Vyplněné
-                        </ToggleButton>
-                        <ToggleButton value="outlined">
-                            Obrysové
-                        </ToggleButton>
-                        <ToggleButton value="text">
-                            Textové
-                        </ToggleButton>
+                        <ToggleButton value="contained">Vyplněné</ToggleButton>
+                        <ToggleButton value="outlined">Obrysové</ToggleButton>
+                        <ToggleButton value="text">Textové</ToggleButton>
                     </ToggleButtonGroup>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
                     <Button
                         onClick={() => setDialogOpen(false)}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
                     >
                         Zrušit
                     </Button>
                     <Button
                         onClick={submitButton}
                         variant="contained"
+                        disableElevation
                         disabled={!btnLabel.trim()}
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                     >
-                        {editingIndex !== null
-                            ? "Uložit"
-                            : "Přidat"}
+                        {editingIndex !== null ? "Uložit" : "Přidat"}
                     </Button>
                 </DialogActions>
             </Dialog>

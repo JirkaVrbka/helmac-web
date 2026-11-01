@@ -1,9 +1,10 @@
-import { Container, Typography, Box, Chip, Button } from "@mui/material";
-import { Visibility, VisibilityOff, OpenInNew } from "@mui/icons-material";
+import { Container, Typography, Box, Button } from "@mui/material";
+import { OpenInNew } from "@mui/icons-material";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { PageForm } from "@/components/forms/page-form";
 import { PageHeader } from "@/components/admin/page-header";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface EditPageProps {
     params: Promise<{ id: string; pageId: string }>;
@@ -33,7 +34,10 @@ export default async function EditPagePage({ params }: EditPageProps) {
             <PageHeader
                 breadcrumbs={[
                     { label: "Rocniky", href: "/admin/rocniky" },
-                    { label: `${page.year.year}`, href: `/admin/rocniky/${page.year.id}` },
+                    {
+                        label: `${page.year.year}`,
+                        href: `/admin/rocniky/${page.year.id}`,
+                    },
                     { label: page.title },
                 ]}
                 title="Upravit stranku"
@@ -49,24 +53,57 @@ export default async function EditPagePage({ params }: EditPageProps) {
                         mb: 1,
                     }}
                 >
-                    <Chip
-                        label={page.isPublished ? "Publikovano" : "Skryto"}
-                        size="small"
-                        color={page.isPublished ? "success" : "default"}
-                        icon={
-                            page.isPublished ? <Visibility /> : <VisibilityOff />
-                        }
-                    />
+                    <Box
+                        component="span"
+                        sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            px: "10px",
+                            py: "3px",
+                            borderRadius: "20px",
+                            whiteSpace: "nowrap",
+                            backgroundColor: page.isPublished
+                                ? p.value
+                                : p.surface3,
+                            color: page.isPublished ? p.valueInk : p.ink2,
+                        }}
+                    >
+                        <Box
+                            component="span"
+                            sx={{
+                                width: 7,
+                                height: 7,
+                                borderRadius: "50%",
+                                backgroundColor: page.isPublished
+                                    ? p.valueInk
+                                    : p.ink3,
+                            }}
+                        />
+                        {page.isPublished ? "Publikovano" : "Skryto"}
+                    </Box>
                     <Button
                         href={`/${page.year.year}/${page.slug}`}
                         target="_blank"
                         variant="outlined"
                         startIcon={<OpenInNew />}
+                        sx={{
+                            borderRadius: "10px",
+                            textTransform: "none",
+                            color: p.ink2,
+                            borderColor: p.line,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
                     >
                         Nahled
                     </Button>
                 </Box>
-                <Typography color="text.secondary">
+                <Typography sx={{ color: p.ink2 }}>
                     {page.year.year} - {page.title}
                 </Typography>
             </Box>

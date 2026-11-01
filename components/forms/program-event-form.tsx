@@ -1,11 +1,6 @@
 "use client";
 
-import {
-    useActionState,
-    useState,
-    useEffect,
-    useTransition,
-} from "react";
+import { useActionState, useState, useEffect, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import {
     Box,
@@ -28,15 +23,14 @@ import { Save, Add, Delete } from "@mui/icons-material";
 import dayjs, { Dayjs } from "dayjs";
 import { LinkButton } from "@/components/ui/link-button";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
-import {
-    getLinkTargets,
-    type LinkTarget,
-} from "@/lib/actions/link-targets";
+import { getLinkTargets, type LinkTarget } from "@/lib/actions/link-targets";
 import {
     createProgramEvent,
     updateProgramEvent,
     ProgramEventActionState,
 } from "@/lib/actions/program-events";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 type ButtonVariant = "contained" | "outlined" | "text";
 
@@ -64,11 +58,7 @@ interface ProgramEventFormProps {
     };
 }
 
-function SubmitButton({
-    mode,
-}: {
-    mode: "create" | "edit";
-}) {
+function SubmitButton({ mode }: { mode: "create" | "edit" }) {
     const { pending } = useFormStatus();
 
     return (
@@ -76,12 +66,15 @@ function SubmitButton({
             type="submit"
             variant="contained"
             disabled={pending}
+            disableElevation
+            sx={{
+                borderRadius: "10px",
+                backgroundColor: p.indigo,
+                "&:hover": { backgroundColor: "#4338ca" },
+            }}
             startIcon={
                 pending ? (
-                    <CircularProgress
-                        size={20}
-                        color="inherit"
-                    />
+                    <CircularProgress size={20} color="inherit" />
                 ) : (
                     <Save />
                 )
@@ -107,37 +100,29 @@ export function ProgramEventForm({
     const [description, setDescription] = useState(
         defaultValues?.description || ""
     );
-    const [selectedTags, setSelectedTags] = useState<
-        string[]
-    >(defaultValues?.tags || []);
-    const [timeValue, setTimeValue] =
-        useState<Dayjs | null>(
-            defaultValues?.startTime
-                ? dayjs(defaultValues.startTime, "HH:mm")
-                : null
-        );
-    const [endTimeValue, setEndTimeValue] =
-        useState<Dayjs | null>(
-            defaultValues?.endTime
-                ? dayjs(defaultValues.endTime, "HH:mm")
-                : null
-        );
+    const [selectedTags, setSelectedTags] = useState<string[]>(
+        defaultValues?.tags || []
+    );
+    const [timeValue, setTimeValue] = useState<Dayjs | null>(
+        defaultValues?.startTime
+            ? dayjs(defaultValues.startTime, "HH:mm")
+            : null
+    );
+    const [endTimeValue, setEndTimeValue] = useState<Dayjs | null>(
+        defaultValues?.endTime ? dayjs(defaultValues.endTime, "HH:mm") : null
+    );
 
     // Action buttons state
-    const [actionButtons, setActionButtons] = useState<
-        ActionButton[]
-    >(defaultValues?.actionButtons || []);
+    const [actionButtons, setActionButtons] = useState<ActionButton[]>(
+        defaultValues?.actionButtons || []
+    );
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingIndex, setEditingIndex] = useState<
-        number | null
-    >(null);
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [btnLabel, setBtnLabel] = useState("");
     const [btnUrl, setBtnUrl] = useState("");
-    const [btnVariant, setBtnVariant] =
-        useState<ButtonVariant>("contained");
+    const [btnVariant, setBtnVariant] = useState<ButtonVariant>("contained");
 
-    const [linkTargets, setLinkTargets] =
-        useState<LinkTarget[] | null>(null);
+    const [linkTargets, setLinkTargets] = useState<LinkTarget[] | null>(null);
     const [, startLoadTargets] = useTransition();
 
     useEffect(() => {
@@ -166,15 +151,14 @@ export function ProgramEventForm({
 
     const submitButton = () => {
         if (editingIndex !== null) {
-            const updated = actionButtons.map(
-                (btn, i) =>
-                    i === editingIndex
-                        ? {
-                              label: btnLabel,
-                              url: btnUrl,
-                              variant: btnVariant,
-                          }
-                        : btn
+            const updated = actionButtons.map((btn, i) =>
+                i === editingIndex
+                    ? {
+                          label: btnLabel,
+                          url: btnUrl,
+                          variant: btnVariant,
+                      }
+                    : btn
             );
             setActionButtons(updated);
         } else {
@@ -191,9 +175,7 @@ export function ProgramEventForm({
     };
 
     const deleteButton = (index: number) => {
-        setActionButtons(
-            actionButtons.filter((_, i) => i !== index)
-        );
+        setActionButtons(actionButtons.filter((_, i) => i !== index));
     };
 
     const action =
@@ -203,22 +185,14 @@ export function ProgramEventForm({
                   formData: FormData
               ) => {
                   formData.set("yearId", yearId);
-                  return createProgramEvent(
-                      dayId,
-                      prevState,
-                      formData
-                  );
+                  return createProgramEvent(dayId, prevState, formData);
               }
-            : updateProgramEvent.bind(
-                  null,
-                  eventId as string
-              );
+            : updateProgramEvent.bind(null, eventId as string);
 
-    const [state, formAction] =
-        useActionState<ProgramEventActionState, FormData>(
-            action,
-            null
-        );
+    const [state, formAction] = useActionState<
+        ProgramEventActionState,
+        FormData
+    >(action, null);
 
     return (
         <>
@@ -237,15 +211,11 @@ export function ProgramEventForm({
                         id="title"
                         name="title"
                         label="Název události"
-                        defaultValue={
-                            defaultValues?.title || ""
-                        }
+                        defaultValue={defaultValues?.title || ""}
                         error={!!state?.error?.title}
-                        helperText={
-                            state?.error?.title?.[0]
-                        }
+                        helperText={state?.error?.title?.[0]}
                         inputProps={{ maxLength: 200 }}
-                        sx={{ flex: 1 }}
+                        sx={{ ...builderFieldSx, flex: 1 }}
                     />
                     <Box
                         sx={{
@@ -257,6 +227,15 @@ export function ProgramEventForm({
                         <LinkButton
                             href={`/admin/rocniky/${yearId}/program/${dayId}`}
                             variant="outlined"
+                            sx={{
+                                color: p.ink2,
+                                borderRadius: "10px",
+                                borderColor: p.line,
+                                "&:hover": {
+                                    borderColor: p.ink3,
+                                    backgroundColor: p.surface2,
+                                },
+                            }}
                         >
                             Zrušit
                         </LinkButton>
@@ -265,10 +244,7 @@ export function ProgramEventForm({
                 </Box>
 
                 {state?.error?._form && (
-                    <Alert
-                        severity="error"
-                        sx={{ mb: 2 }}
-                    >
+                    <Alert severity="error" sx={{ mb: 2 }}>
                         {state.error._form[0]}
                     </Alert>
                 )}
@@ -289,9 +265,7 @@ export function ProgramEventForm({
                         <TimePicker
                             label="Začátek"
                             value={timeValue}
-                            onChange={(v) =>
-                                setTimeValue(v)
-                            }
+                            onChange={(v) => setTimeValue(v)}
                             ampm={false}
                             format="HH:mm"
                             slotProps={{
@@ -299,22 +273,16 @@ export function ProgramEventForm({
                                     required: true,
                                     fullWidth: true,
                                     size: "small",
-                                    error: !!state?.error
-                                        ?.startTime,
-                                    helperText:
-                                        state?.error
-                                            ?.startTime?.[0],
+                                    error: !!state?.error?.startTime,
+                                    helperText: state?.error?.startTime?.[0],
+                                    sx: builderFieldSx,
                                 },
                             }}
                         />
                         <input
                             type="hidden"
                             name="startTime"
-                            value={
-                                timeValue?.format(
-                                    "HH:mm"
-                                ) ?? ""
-                            }
+                            value={timeValue?.format("HH:mm") ?? ""}
                         />
                     </Box>
 
@@ -322,38 +290,27 @@ export function ProgramEventForm({
                         <TimePicker
                             label="Konec"
                             value={endTimeValue}
-                            onChange={(v) =>
-                                setEndTimeValue(v)
-                            }
+                            onChange={(v) => setEndTimeValue(v)}
                             ampm={false}
                             format="HH:mm"
                             slotProps={{
                                 textField: {
                                     fullWidth: true,
                                     size: "small",
-                                    error: !!state?.error
-                                        ?.endTime,
-                                    helperText:
-                                        state?.error
-                                            ?.endTime?.[0],
+                                    error: !!state?.error?.endTime,
+                                    helperText: state?.error?.endTime?.[0],
+                                    sx: builderFieldSx,
                                 },
                                 field: {
                                     clearable: true,
-                                    onClear: () =>
-                                        setEndTimeValue(
-                                            null
-                                        ),
+                                    onClear: () => setEndTimeValue(null),
                                 },
                             }}
                         />
                         <input
                             type="hidden"
                             name="endTime"
-                            value={
-                                endTimeValue?.format(
-                                    "HH:mm"
-                                ) ?? ""
-                            }
+                            value={endTimeValue?.format("HH:mm") ?? ""}
                         />
                     </Box>
 
@@ -364,15 +321,12 @@ export function ProgramEventForm({
                         id="location"
                         name="location"
                         label="Místo konání"
-                        defaultValue={
-                            defaultValues?.location || ""
-                        }
+                        defaultValue={defaultValues?.location || ""}
                         error={!!state?.error?.location}
-                        helperText={
-                            state?.error?.location?.[0]
-                        }
+                        helperText={state?.error?.location?.[0]}
                         placeholder="Náměstí, Louka..."
                         inputProps={{ maxLength: 200 }}
+                        sx={builderFieldSx}
                     />
 
                     <Autocomplete
@@ -383,28 +337,27 @@ export function ProgramEventForm({
                         options={existingTags}
                         value={selectedTags}
                         onChange={(_, newValue) => {
-                            setSelectedTags(
-                                newValue as string[]
-                            );
+                            setSelectedTags(newValue as string[]);
                         }}
-                        renderTags={(
-                            value,
-                            getTagProps
-                        ) =>
+                        renderTags={(value, getTagProps) =>
                             value.map((option, index) => {
-                                const {
-                                    key,
-                                    ...tagProps
-                                } = getTagProps({
+                                const { key, ...tagProps } = getTagProps({
                                     index,
                                 });
                                 return (
                                     <Chip
                                         key={key}
-                                        variant="outlined"
                                         label={option}
                                         {...tagProps}
                                         size="small"
+                                        sx={{
+                                            borderRadius: "7px",
+                                            backgroundColor: p.indigoSoft,
+                                            color: p.indigoInk,
+                                            "& .MuiChip-deleteIcon": {
+                                                color: p.indigoInk,
+                                            },
+                                        }}
                                     />
                                 );
                             })
@@ -414,39 +367,26 @@ export function ProgramEventForm({
                                 {...params}
                                 label="Tagy"
                                 placeholder="Tagy..."
-                                error={
-                                    !!state?.error?.tags
-                                }
-                                helperText={
-                                    state?.error
-                                        ?.tags?.[0]
-                                }
+                                error={!!state?.error?.tags}
+                                helperText={state?.error?.tags?.[0]}
+                                sx={builderFieldSx}
                             />
                         )}
                     />
                     <input
                         type="hidden"
                         name="tags"
-                        value={JSON.stringify(
-                            selectedTags
-                        )}
+                        value={JSON.stringify(selectedTags)}
                     />
                 </Box>
 
                 {/* Description */}
                 {state?.error?.description && (
-                    <Alert
-                        severity="error"
-                        sx={{ mb: 1 }}
-                    >
+                    <Alert severity="error" sx={{ mb: 1 }}>
                         {state.error.description[0]}
                     </Alert>
                 )}
-                <input
-                    type="hidden"
-                    name="description"
-                    value={description}
-                />
+                <input type="hidden" name="description" value={description} />
                 <RichTextEditor
                     value={description}
                     onChange={setDescription}
@@ -467,20 +407,14 @@ export function ProgramEventForm({
                     {actionButtons.map((btn, i) => (
                         <Button
                             key={i}
-                            variant={
-                                btn.variant || "contained"
-                            }
-                            onClick={() =>
-                                openEditDialog(i)
-                            }
+                            variant={btn.variant || "contained"}
+                            onClick={() => openEditDialog(i)}
                             endIcon={
                                 <Delete
                                     sx={{
-                                        fontSize:
-                                            "14px !important",
+                                        fontSize: "14px !important",
                                         opacity: 0,
-                                        transition:
-                                            "opacity 0.15s",
+                                        transition: "opacity 0.15s",
                                     }}
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -490,8 +424,9 @@ export function ProgramEventForm({
                             }
                             sx={{
                                 textTransform: "none",
-                                "&:hover .MuiButton-endIcon svg":
-                                    { opacity: 1 },
+                                "&:hover .MuiButton-endIcon svg": {
+                                    opacity: 1,
+                                },
                             }}
                         >
                             {btn.label || "(bez textu)"}
@@ -502,6 +437,18 @@ export function ProgramEventForm({
                             size="small"
                             startIcon={<Add />}
                             onClick={openAddDialog}
+                            sx={{
+                                backgroundColor: p.surface,
+                                border: `1px dashed ${p.line}`,
+                                borderRadius: "10px",
+                                color: p.indigo,
+                                textTransform: "none",
+                                fontWeight: 600,
+                                "&:hover": {
+                                    borderColor: p.indigo,
+                                    backgroundColor: p.indigoSoft,
+                                },
+                            }}
                         >
                             Přidat tlačítko
                         </Button>
@@ -510,7 +457,12 @@ export function ProgramEventForm({
                             size="small"
                             onClick={openAddDialog}
                             sx={{
-                                color: "primary.main",
+                                color: p.ink3,
+                                borderRadius: "8px",
+                                "&:hover": {
+                                    color: p.indigo,
+                                    backgroundColor: p.indigoSoft,
+                                },
                             }}
                         >
                             <Add sx={{ fontSize: 18 }} />
@@ -530,8 +482,9 @@ export function ProgramEventForm({
                 onClose={() => setDialogOpen(false)}
                 maxWidth="xs"
                 fullWidth
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
                     {editingIndex !== null
                         ? "Upravit tlačítko"
                         : "Přidat tlačítko"}
@@ -548,39 +501,32 @@ export function ProgramEventForm({
                         autoFocus
                         label="Text tlačítka"
                         value={btnLabel}
-                        onChange={(e) =>
-                            setBtnLabel(e.target.value)
-                        }
+                        onChange={(e) => setBtnLabel(e.target.value)}
                         fullWidth
                         size="small"
+                        sx={builderFieldSx}
                     />
                     <TextField
                         label="Odkaz (URL)"
                         value={btnUrl}
-                        onChange={(e) =>
-                            setBtnUrl(e.target.value)
-                        }
+                        onChange={(e) => setBtnUrl(e.target.value)}
                         fullWidth
                         size="small"
+                        sx={builderFieldSx}
                     />
                     <Autocomplete<LinkTarget>
                         options={linkTargets ?? []}
                         groupBy={(option) => option.group}
-                        getOptionLabel={(option) =>
-                            option.label
+                        getOptionLabel={(option) => option.label}
+                        isOptionEqualToValue={(option, value) =>
+                            option.url === value.url
                         }
-                        isOptionEqualToValue={(
-                            option,
-                            value
-                        ) => option.url === value.url}
                         value={null}
                         onChange={(_, value) => {
                             if (value) {
                                 setBtnUrl(value.url);
                                 if (!btnLabel) {
-                                    setBtnLabel(
-                                        value.label
-                                    );
+                                    setBtnLabel(value.label);
                                 }
                             }
                         }}
@@ -592,6 +538,7 @@ export function ProgramEventForm({
                                 label="Vybrat stránku webu"
                                 placeholder="Vyhledat stránku"
                                 variant="outlined"
+                                sx={builderFieldSx}
                             />
                         )}
                     />
@@ -603,23 +550,42 @@ export function ProgramEventForm({
                         }}
                         size="small"
                         fullWidth
+                        sx={{
+                            backgroundColor: p.surface2,
+                            border: `1px solid ${p.line}`,
+                            borderRadius: "10px",
+                            p: "3px",
+                            gap: "3px",
+                            "& .MuiToggleButton-root": {
+                                border: "none",
+                                borderRadius: "8px !important",
+                                textTransform: "none",
+                                color: p.ink2,
+                                "&.Mui-selected": {
+                                    backgroundColor: p.indigo,
+                                    color: p.surface,
+                                    "&:hover": { backgroundColor: "#4338ca" },
+                                },
+                            },
+                        }}
                     >
-                        <ToggleButton value="contained">
-                            Vyplněné
-                        </ToggleButton>
-                        <ToggleButton value="outlined">
-                            Obrysové
-                        </ToggleButton>
-                        <ToggleButton value="text">
-                            Textové
-                        </ToggleButton>
+                        <ToggleButton value="contained">Vyplněné</ToggleButton>
+                        <ToggleButton value="outlined">Obrysové</ToggleButton>
+                        <ToggleButton value="text">Textové</ToggleButton>
                     </ToggleButtonGroup>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
                     <Button
-                        onClick={() =>
-                            setDialogOpen(false)
-                        }
+                        onClick={() => setDialogOpen(false)}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
                     >
                         Zrušit
                     </Button>
@@ -627,10 +593,14 @@ export function ProgramEventForm({
                         onClick={submitButton}
                         variant="contained"
                         disabled={!btnLabel.trim()}
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                     >
-                        {editingIndex !== null
-                            ? "Uložit"
-                            : "Přidat"}
+                        {editingIndex !== null ? "Uložit" : "Přidat"}
                     </Button>
                 </DialogActions>
             </Dialog>

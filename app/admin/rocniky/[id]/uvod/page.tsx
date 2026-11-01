@@ -4,14 +4,13 @@ import { getYearById } from "@/lib/services/years";
 import { getHomepageStepsForYear } from "@/lib/services/homepage-steps";
 import { PageHeader } from "@/components/admin/page-header";
 import { HomepageStepsList } from "@/components/admin/homepage-steps-list";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface UvodPageProps {
     params: Promise<{ id: string }>;
 }
 
-export default async function UvodPage({
-    params,
-}: UvodPageProps) {
+export default async function UvodPage({ params }: UvodPageProps) {
     const { id } = await params;
     const [year, steps] = await Promise.all([
         getYearById(id),
@@ -52,15 +51,18 @@ export default async function UvodPage({
             >
                 <Box>
                     <Typography
-                        variant="subtitle2"
-                        sx={{ mb: 1.5, color: "text.secondary" }}
+                        sx={{
+                            mb: 1.5,
+                            fontSize: 11,
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            fontWeight: 600,
+                            color: p.ink3,
+                        }}
                     >
                         Jak se zúčastnit
                     </Typography>
-                    <HomepageStepsList
-                        yearId={year.id}
-                        steps={steps}
-                    />
+                    <HomepageStepsList yearId={year.id} steps={steps} />
                 </Box>
             </Box>
         </Container>

@@ -23,6 +23,8 @@ import { BlockEditor } from "@/components/admin/block-editor";
 import { IconPicker } from "@/components/admin/icon-picker";
 import { TocPreview } from "@/components/admin/toc-preview";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 import type { ContentBlock } from "@/lib/types/content-blocks";
 
 interface SectionFormProps {
@@ -49,6 +51,12 @@ function SubmitButton({ mode }: { mode: "create" | "edit" }) {
             type="submit"
             variant="contained"
             disabled={pending}
+            disableElevation
+            sx={{
+                borderRadius: "10px",
+                backgroundColor: p.indigo,
+                "&:hover": { backgroundColor: "#4338ca" },
+            }}
             startIcon={
                 pending ? (
                     <CircularProgress size={20} color="inherit" />
@@ -104,6 +112,10 @@ export function SectionForm({
                     gap: 2,
                     mb: 2,
                     alignItems: "flex-start",
+                    backgroundColor: p.surface,
+                    border: `1px solid ${p.line}`,
+                    borderRadius: "14px",
+                    p: 2.5,
                 }}
             >
                 <IconPicker value={icon} onChange={setIcon} />
@@ -124,6 +136,7 @@ export function SectionForm({
                         defaultValue={defaultValues?.title || ""}
                         error={!!state?.error?.title}
                         helperText={state?.error?.title?.[0]}
+                        sx={builderFieldSx}
                     />
                     <TextField
                         size="small"
@@ -131,6 +144,7 @@ export function SectionForm({
                         name="subtitle"
                         label="Podtitulek"
                         defaultValue={defaultValues?.subtitle || ""}
+                        sx={builderFieldSx}
                     />
                 </Box>
                 <Box
@@ -147,24 +161,21 @@ export function SectionForm({
                     />
                     <Box
                         sx={{
-                            border: 1,
-                            borderColor: "divider",
-                            borderRadius: 1,
+                            border: `1px solid ${p.line}`,
+                            borderRadius: "10px",
                             overflow: "hidden",
                         }}
                     >
                         <Typography
                             variant="caption"
-                            color="text.secondary"
                             sx={{
                                 display: "block",
                                 px: 1.5,
                                 pt: 1,
                                 pb: 0.5,
-                                backgroundColor:
-                                    "grey.50",
-                                borderBottom: 1,
-                                borderColor: "divider",
+                                color: p.ink3,
+                                backgroundColor: p.surface2,
+                                borderBottom: `1px solid ${p.line}`,
                             }}
                         >
                             Popis pro úvodní stránku
@@ -174,9 +185,7 @@ export function SectionForm({
                             onChange={setDescription}
                             format="markdown"
                             minHeight={48}
-                            allowedTools={[
-                                "basicFormatting",
-                            ]}
+                            allowedTools={["basicFormatting"]}
                             placeholder="Krátký popis sekce…"
                         />
                     </Box>
@@ -191,7 +200,19 @@ export function SectionForm({
                     }}
                 >
                     <Box sx={{ display: "flex", gap: 1 }}>
-                        <LinkButton href={cancelHref} variant="outlined">
+                        <LinkButton
+                            href={cancelHref}
+                            variant="outlined"
+                            sx={{
+                                borderRadius: "10px",
+                                color: p.ink2,
+                                borderColor: p.line,
+                                "&:hover": {
+                                    borderColor: p.ink3,
+                                    backgroundColor: p.surface2,
+                                },
+                            }}
+                        >
                             Zrušit
                         </LinkButton>
                         <SubmitButton mode={mode} />
@@ -205,6 +226,15 @@ export function SectionForm({
                                 size="small"
                                 checked={showToc}
                                 onChange={(e) => setShowToc(e.target.checked)}
+                                sx={{
+                                    "& .MuiSwitch-switchBase.Mui-checked": {
+                                        color: p.indigo,
+                                    },
+                                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                        {
+                                            backgroundColor: p.indigo,
+                                        },
+                                }}
                             />
                         }
                         label="Zobrazit obsah"

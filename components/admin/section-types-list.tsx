@@ -242,11 +242,7 @@ function SortableSectionItem({
 
 // ── Drag overlay ──
 
-function SectionDragOverlay({
-    section,
-}: {
-    section: SectionData;
-}) {
+function SectionDragOverlay({ section }: { section: SectionData }) {
     return (
         <Box
             sx={{
@@ -262,18 +258,14 @@ function SectionDragOverlay({
                 minWidth: 180,
             }}
         >
-            <DragIndicator
-                sx={{ fontSize: 18, color: p.ink3 }}
-            />
+            <DragIndicator sx={{ fontSize: 18, color: p.ink3 }} />
             {section.icon ? (
                 <GameIcon
                     name={section.icon}
                     sx={{ color: p.ink3, fontSize: 18 }}
                 />
             ) : (
-                <ArticleOutlined
-                    sx={{ color: p.ink3, fontSize: 18 }}
-                />
+                <ArticleOutlined sx={{ color: p.ink3, fontSize: 18 }} />
             )}
             <Typography
                 sx={{
@@ -310,9 +302,7 @@ function ColumnBody({
             sx={{
                 flex: 1,
                 p: "8px",
-                backgroundColor: isOver
-                    ? p.indigoSoft
-                    : p.surface2,
+                backgroundColor: isOver ? p.indigoSoft : p.surface2,
                 transition: "background-color 140ms ease",
                 minHeight: 48,
             }}
@@ -325,16 +315,12 @@ function ColumnBody({
                     <Typography
                         sx={{
                             fontSize: 12.5,
-                            color: isOver
-                                ? p.indigo
-                                : p.ink3,
+                            color: isOver ? p.indigo : p.ink3,
                             textAlign: "center",
                             py: 3,
                         }}
                     >
-                        {isOver
-                            ? "Přetáhněte sem"
-                            : "Žádné sekce"}
+                        {isOver ? "Přetáhněte sem" : "Žádné sekce"}
                     </Typography>
                 ) : (
                     sections.map((section) => (
@@ -441,8 +427,7 @@ function TypeColumn({
                 </Typography>
                 <Box
                     sx={{
-                        fontFamily:
-                            "'JetBrains Mono', monospace",
+                        fontFamily: "'JetBrains Mono', monospace",
                         fontSize: 11,
                         color: p.ink2,
                         backgroundColor: p.surface3,
@@ -518,8 +503,7 @@ function TypeColumn({
                         transition: "all 140ms ease",
                         "&:hover": {
                             borderColor: p.indigo,
-                            backgroundColor:
-                                p.indigoSoft,
+                            backgroundColor: p.indigoSoft,
                         },
                     }}
                 >
@@ -550,9 +534,7 @@ function findSection(
     sectionId: string
 ): SectionData | null {
     for (const t of types) {
-        const s = t.sections.find(
-            (s) => s.id === sectionId
-        );
+        const s = t.sections.find((s) => s.id === sectionId);
         if (s) return s;
     }
     return null;
@@ -567,19 +549,14 @@ export function SectionTypesList({
     const dndId = useId();
     const router = useRouter();
     const toast = useToast();
-    const [localTypes, setLocalTypes] =
-        useState(sectionTypes);
+    const [localTypes, setLocalTypes] = useState(sectionTypes);
     const [createOpen, setCreateOpen] = useState(false);
-    const [editType, setEditType] =
-        useState<SectionTypeData | null>(null);
-    const [deleteType, setDeleteType] =
-        useState<SectionTypeData | null>(null);
-    const [deleteLoading, setDeleteLoading] =
-        useState(false);
+    const [editType, setEditType] = useState<SectionTypeData | null>(null);
+    const [deleteType, setDeleteType] = useState<SectionTypeData | null>(null);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [activeDragSection, setActiveDragSection] =
         useState<SectionData | null>(null);
-    const [isDraggingColumn, setIsDraggingColumn] =
-        useState(false);
+    const [isDraggingColumn, setIsDraggingColumn] = useState(false);
 
     const originTypeRef = useRef<string | null>(null);
     const [prevLength, setPrevLength] = useState(sectionTypes.length);
@@ -594,8 +571,7 @@ export function SectionTypesList({
             activationConstraint: { distance: 5 },
         }),
         useSensor(KeyboardSensor, {
-            coordinateGetter:
-                sortableKeyboardCoordinates,
+            coordinateGetter: sortableKeyboardCoordinates,
         })
     );
 
@@ -609,15 +585,9 @@ export function SectionTypesList({
             return;
         }
 
-        const section = findSection(
-            localTypes,
-            activeId
-        );
+        const section = findSection(localTypes, activeId);
         setActiveDragSection(section);
-        originTypeRef.current = findTypeForSection(
-            localTypes,
-            activeId
-        );
+        originTypeRef.current = findTypeForSection(localTypes, activeId);
     };
 
     const handleDragOver = (event: DragOverEvent) => {
@@ -631,51 +601,32 @@ export function SectionTypesList({
 
         if (isColId(activeId) || isColId(overId)) return;
 
-        const activeTypeId = findTypeForSection(
-            localTypes,
-            activeId
-        );
+        const activeTypeId = findTypeForSection(localTypes, activeId);
 
         let overTypeId: string | null = null;
         if (isDropId(overId)) {
             overTypeId = parseDropId(overId);
         } else {
-            overTypeId = findTypeForSection(
-                localTypes,
-                overId
-            );
+            overTypeId = findTypeForSection(localTypes, overId);
         }
 
-        if (
-            !activeTypeId ||
-            !overTypeId ||
-            activeTypeId === overTypeId
-        )
-            return;
+        if (!activeTypeId || !overTypeId || activeTypeId === overTypeId) return;
 
         setLocalTypes((prev) => {
-            const sourceType = prev.find(
-                (t) => t.id === activeTypeId
-            );
-            const destType = prev.find(
-                (t) => t.id === overTypeId
-            );
+            const sourceType = prev.find((t) => t.id === activeTypeId);
+            const destType = prev.find((t) => t.id === overTypeId);
             if (!sourceType || !destType) return prev;
 
-            const item = sourceType.sections.find(
-                (s) => s.id === activeId
-            );
+            const item = sourceType.sections.find((s) => s.id === activeId);
             if (!item) return prev;
 
-            const newSource =
-                sourceType.sections.filter(
-                    (s) => s.id !== activeId
-                );
+            const newSource = sourceType.sections.filter(
+                (s) => s.id !== activeId
+            );
 
-            const overIndex =
-                destType.sections.findIndex(
-                    (s) => s.id === overId
-                );
+            const overIndex = destType.sections.findIndex(
+                (s) => s.id === overId
+            );
             const newDest = [...destType.sections];
             if (overIndex >= 0) {
                 newDest.splice(overIndex, 0, item);
@@ -708,22 +659,16 @@ export function SectionTypesList({
                 setIsDraggingColumn(false);
                 if (!over) return;
 
-                const activeTypeId = parseColId(
-                    active.id as string
-                );
-                const overTypeId = parseColId(
-                    over.id as string
-                );
+                const activeTypeId = parseColId(active.id as string);
+                const overTypeId = parseColId(over.id as string);
 
                 if (activeTypeId !== overTypeId) {
-                    const oldIndex =
-                        localTypes.findIndex(
-                            (t) => t.id === activeTypeId
-                        );
-                    const newIndex =
-                        localTypes.findIndex(
-                            (t) => t.id === overTypeId
-                        );
+                    const oldIndex = localTypes.findIndex(
+                        (t) => t.id === activeTypeId
+                    );
+                    const newIndex = localTypes.findIndex(
+                        (t) => t.id === overTypeId
+                    );
                     if (oldIndex >= 0 && newIndex >= 0) {
                         const newTypes = arrayMove(
                             localTypes,
@@ -731,19 +676,12 @@ export function SectionTypesList({
                             newIndex
                         );
                         setLocalTypes(newTypes);
-                        const result =
-                            await reorderSectionTypes(
-                                yearId,
-                                newTypes.map(
-                                    (t) => t.id
-                                )
-                            );
-                        if (result.error)
-                            toast.error(result.error);
-                        else
-                            toast.success(
-                                "Pořadí typů sekcí bylo změněno"
-                            );
+                        const result = await reorderSectionTypes(
+                            yearId,
+                            newTypes.map((t) => t.id)
+                        );
+                        if (result.error) toast.error(result.error);
+                        else toast.success("Pořadí typů sekcí bylo změněno");
                     }
                 }
                 return;
@@ -756,52 +694,35 @@ export function SectionTypesList({
             const activeId = active.id as string;
             const overId = over.id as string;
 
-            const currentTypeId = findTypeForSection(
-                localTypes,
-                activeId
-            );
+            const currentTypeId = findTypeForSection(localTypes, activeId);
             if (!currentTypeId) return;
 
-            const movedAcross =
-                originTypeRef.current !== currentTypeId;
+            const movedAcross = originTypeRef.current !== currentTypeId;
 
             if (movedAcross) {
-                const destType = localTypes.find(
-                    (t) => t.id === currentTypeId
-                );
-                const result = await moveSection(
-                    activeId,
-                    currentTypeId
-                );
+                const destType = localTypes.find((t) => t.id === currentTypeId);
+                const result = await moveSection(activeId, currentTypeId);
                 if (result.error) {
                     toast.error(result.error);
                     router.refresh();
                 } else {
-                    toast.success(
-                        "Sekce byla přesunuta"
-                    );
+                    toast.success("Sekce byla přesunuta");
                     if (destType) {
                         await reorderSections(
                             currentTypeId,
-                            destType.sections.map(
-                                (s) => s.id
-                            )
+                            destType.sections.map((s) => s.id)
                         );
                     }
                 }
             } else if (activeId !== overId) {
-                const type = localTypes.find(
-                    (t) => t.id === currentTypeId
-                );
+                const type = localTypes.find((t) => t.id === currentTypeId);
                 if (type) {
-                    const oldIndex =
-                        type.sections.findIndex(
-                            (s) => s.id === activeId
-                        );
-                    const newIndex =
-                        type.sections.findIndex(
-                            (s) => s.id === overId
-                        );
+                    const oldIndex = type.sections.findIndex(
+                        (s) => s.id === activeId
+                    );
+                    const newIndex = type.sections.findIndex(
+                        (s) => s.id === overId
+                    );
                     if (
                         oldIndex >= 0 &&
                         newIndex >= 0 &&
@@ -817,25 +738,17 @@ export function SectionTypesList({
                                 t.id === currentTypeId
                                     ? {
                                           ...t,
-                                          sections:
-                                              newSections,
+                                          sections: newSections,
                                       }
                                     : t
                             )
                         );
-                        const result =
-                            await reorderSections(
-                                currentTypeId,
-                                newSections.map(
-                                    (s) => s.id
-                                )
-                            );
-                        if (result.error)
-                            toast.error(result.error);
-                        else
-                            toast.success(
-                                "Pořadí sekcí bylo změněno"
-                            );
+                        const result = await reorderSections(
+                            currentTypeId,
+                            newSections.map((s) => s.id)
+                        );
+                        if (result.error) toast.error(result.error);
+                        else toast.success("Pořadí sekcí bylo změněno");
                     }
                 }
             }
@@ -850,9 +763,7 @@ export function SectionTypesList({
     const handleDeleteType = async () => {
         if (!deleteType) return;
         setDeleteLoading(true);
-        const result = await deleteSectionType(
-            deleteType.id
-        );
+        const result = await deleteSectionType(deleteType.id);
         setDeleteLoading(false);
         setDeleteType(null);
         if (result.error) {
@@ -891,8 +802,7 @@ export function SectionTypesList({
                         transition: "all 140ms ease",
                         "&:hover": {
                             borderColor: p.indigo,
-                            backgroundColor:
-                                p.indigoSoft,
+                            backgroundColor: p.indigoSoft,
                         },
                     }}
                 >
@@ -911,12 +821,8 @@ export function SectionTypesList({
                 onDragEnd={handleDragEnd}
             >
                 <SortableContext
-                    items={localTypes.map((t) =>
-                        colId(t.id)
-                    )}
-                    strategy={
-                        horizontalListSortingStrategy
-                    }
+                    items={localTypes.map((t) => colId(t.id))}
+                    strategy={horizontalListSortingStrategy}
                 >
                     <Box
                         sx={{
@@ -930,12 +836,8 @@ export function SectionTypesList({
                                 key={type.id}
                                 type={type}
                                 yearId={yearId}
-                                onEdit={() =>
-                                    setEditType(type)
-                                }
-                                onDelete={() =>
-                                    setDeleteType(type)
-                                }
+                                onEdit={() => setEditType(type)}
+                                onDelete={() => setDeleteType(type)}
                             />
                         ))}
                     </Box>
@@ -943,9 +845,7 @@ export function SectionTypesList({
 
                 <DragOverlay dropAnimation={null}>
                     {activeDragSection && (
-                        <SectionDragOverlay
-                            section={activeDragSection}
-                        />
+                        <SectionDragOverlay section={activeDragSection} />
                     )}
                 </DragOverlay>
             </DndContext>
@@ -969,15 +869,11 @@ export function SectionTypesList({
                         slug: editType.slug,
                         icon: editType.icon,
                         pageTitle: editType.pageTitle,
-                        pageSubtitle:
-                            editType.pageSubtitle,
+                        pageSubtitle: editType.pageSubtitle,
                         metaTitle: editType.metaTitle,
-                        metaDescription:
-                            editType.metaDescription,
-                        featuredOnIndex:
-                            editType.featuredOnIndex,
-                        description:
-                            editType.description,
+                        metaDescription: editType.metaDescription,
+                        featuredOnIndex: editType.featuredOnIndex,
+                        description: editType.description,
                     }}
                     open={!!editType}
                     onClose={() => setEditType(null)}
@@ -987,8 +883,9 @@ export function SectionTypesList({
             <Dialog
                 open={!!deleteType}
                 onClose={() => setDeleteType(null)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
                     Smazat typ sekce?
                 </DialogTitle>
                 <DialogContent>
@@ -1000,36 +897,43 @@ export function SectionTypesList({
                             &quot;
                         </strong>
                         ?
-                        {(deleteType?.sections.length ??
-                            0) > 0 && (
+                        {(deleteType?.sections.length ?? 0) > 0 && (
                             <>
                                 <br />
-                                Budou smazány i všechny
-                                sekce (
-                                {
-                                    deleteType?.sections
-                                        .length
-                                }{" "}
-                                ks).
+                                Budou smazány i všechny sekce (
+                                {deleteType?.sections.length} ks).
                             </>
                         )}
                         <br />
                         Tato akce je nevratná.
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
                     <Button
-                        onClick={() =>
-                            setDeleteType(null)
-                        }
+                        onClick={() => setDeleteType(null)}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
                     >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleDeleteType}
-                        color="error"
                         variant="contained"
+                        disableElevation
                         disabled={deleteLoading}
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.neg,
+                            color: p.negInk,
+                            "&:hover": { backgroundColor: "#fecaca" },
+                        }}
                     >
                         Smazat
                     </Button>

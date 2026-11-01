@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { PageForm } from "@/components/forms/page-form";
 import { PageHeader } from "@/components/admin/page-header";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface NewPageProps {
     params: Promise<{ id: string }>;
@@ -28,13 +29,16 @@ export default async function NewPagePage({ params }: NewPageProps) {
             <PageHeader
                 breadcrumbs={[
                     { label: "Rocniky", href: "/admin/rocniky" },
-                    { label: `${year.year}`, href: `/admin/rocniky/${year.id}` },
+                    {
+                        label: `${year.year}`,
+                        href: `/admin/rocniky/${year.id}`,
+                    },
                     { label: "Nova stranka" },
                 ]}
                 title="Nova stranka"
             />
             <Box sx={{ mb: 4 }}>
-                <Typography color="text.secondary">
+                <Typography sx={{ color: p.ink2 }}>
                     Rocnik {year.year} - {year.title}
                 </Typography>
             </Box>

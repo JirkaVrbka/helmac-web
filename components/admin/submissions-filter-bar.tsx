@@ -14,6 +14,8 @@ import {
     TextField,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface FilterableField {
     name: string;
@@ -73,37 +75,25 @@ export function SubmissionsFilterBar({
     children,
 }: SubmissionsFilterBarProps) {
     const router = useRouter();
-    const [pendingField, setPendingField] =
-        useState<FilterableField | null>(null);
+    const [pendingField, setPendingField] = useState<FilterableField | null>(
+        null
+    );
 
-    const otherParams = [
-        statusParam,
-        paidParam,
-        testParam,
-    ]
+    const otherParams = [statusParam, paidParam, testParam]
         .filter(Boolean)
         .join("&");
 
     const navigate = (params: string[]) => {
         const query = params.filter(Boolean).join("&");
-        router.push(
-            query
-                ? `${basePath}?${query}`
-                : basePath,
-        );
+        router.push(query ? `${basePath}?${query}` : basePath);
     };
 
     const confirmedField = activeField
-        ? filterableFields?.find(
-              (f) => f.name === activeField,
-          ) ?? null
+        ? (filterableFields?.find((f) => f.name === activeField) ?? null)
         : null;
     const selectedField = pendingField ?? confirmedField;
 
-    const handleFieldChange = (
-        _: unknown,
-        field: FilterableField | null,
-    ) => {
+    const handleFieldChange = (_: unknown, field: FilterableField | null) => {
         if (!field) {
             setPendingField(null);
             navigate([otherParams]);
@@ -121,10 +111,7 @@ export function SubmissionsFilterBar({
         setPendingField(field);
     };
 
-    const handleValueChange = (
-        _: unknown,
-        value: string | null,
-    ) => {
+    const handleValueChange = (_: unknown, value: string | null) => {
         if (!selectedField || !value) return;
         setPendingField(null);
         navigate([
@@ -139,8 +126,7 @@ export function SubmissionsFilterBar({
         navigate([otherParams]);
     };
 
-    const hasActiveFieldFilter =
-        confirmedField && activeValue;
+    const hasActiveFieldFilter = confirmedField && activeValue;
 
     return (
         <Box sx={{ mb: 2 }}>
@@ -154,7 +140,7 @@ export function SubmissionsFilterBar({
             >
                 <FormControl
                     size="small"
-                    sx={{ minWidth: 140 }}
+                    sx={{ minWidth: 140, ...builderFieldSx }}
                 >
                     <InputLabel>Stav</InputLabel>
                     <Select
@@ -170,10 +156,7 @@ export function SubmissionsFilterBar({
                         }}
                     >
                         {STATUS_OPTIONS.map((o) => (
-                            <MenuItem
-                                key={o.value}
-                                value={o.value}
-                            >
+                            <MenuItem key={o.value} value={o.value}>
                                 {o.label}
                             </MenuItem>
                         ))}
@@ -182,15 +165,11 @@ export function SubmissionsFilterBar({
 
                 <FormControl
                     size="small"
-                    sx={{ minWidth: 140 }}
+                    sx={{ minWidth: 140, ...builderFieldSx }}
                 >
                     <InputLabel>Platba</InputLabel>
                     <Select
-                        value={
-                            paidFilter === null
-                                ? ""
-                                : String(paidFilter)
-                        }
+                        value={paidFilter === null ? "" : String(paidFilter)}
                         label="Platba"
                         onChange={(e) => {
                             const v = e.target.value;
@@ -202,10 +181,7 @@ export function SubmissionsFilterBar({
                         }}
                     >
                         {PAID_OPTIONS.map((o) => (
-                            <MenuItem
-                                key={o.value}
-                                value={o.value}
-                            >
+                            <MenuItem key={o.value} value={o.value}>
                                 {o.label}
                             </MenuItem>
                         ))}
@@ -215,7 +191,7 @@ export function SubmissionsFilterBar({
                 {!isEditor && (
                     <FormControl
                         size="small"
-                        sx={{ minWidth: 140 }}
+                        sx={{ minWidth: 140, ...builderFieldSx }}
                     >
                         <InputLabel>Registrace</InputLabel>
                         <Select
@@ -226,17 +202,12 @@ export function SubmissionsFilterBar({
                                 navigate([
                                     statusParam,
                                     paidParam,
-                                    v === "real"
-                                        ? ""
-                                        : `test=${v}`,
+                                    v === "real" ? "" : `test=${v}`,
                                 ]);
                             }}
                         >
                             {TEST_OPTIONS.map((o) => (
-                                <MenuItem
-                                    key={o.value}
-                                    value={o.value}
-                                >
+                                <MenuItem key={o.value} value={o.value}>
                                     {o.label}
                                 </MenuItem>
                             ))}
@@ -250,17 +221,9 @@ export function SubmissionsFilterBar({
                         <Autocomplete
                             size="small"
                             options={filterableFields}
-                            getOptionLabel={(f) =>
-                                f.label
-                            }
-                            renderOption={(
-                                props,
-                                option,
-                            ) => (
-                                <li
-                                    {...props}
-                                    key={option.name}
-                                >
+                            getOptionLabel={(f) => f.label}
+                            renderOption={(props, option) => (
+                                <li {...props} key={option.name}>
                                     {option.label}
                                 </li>
                             )}
@@ -272,36 +235,29 @@ export function SubmissionsFilterBar({
                                     placeholder="Filtrovat dle pole..."
                                 />
                             )}
-                            sx={{ minWidth: 200 }}
+                            sx={{ minWidth: 200, ...builderFieldSx }}
                             noOptionsText="Žádná pole"
-                            isOptionEqualToValue={(
-                                o,
-                                v,
-                            ) => o.name === v.name}
+                            isOptionEqualToValue={(o, v) => o.name === v.name}
                         />
                     )}
 
-                {filterableFields &&
-                    selectedField &&
-                    !hasActiveFieldFilter && (
-                        <Autocomplete
-                            size="small"
-                            options={
-                                selectedField.options
-                            }
-                            value={null}
-                            onChange={handleValueChange}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    placeholder="Vyberte hodnotu..."
-                                />
-                            )}
-                            sx={{ minWidth: 200 }}
-                            noOptionsText="Žádné hodnoty"
-                            openOnFocus
-                        />
-                    )}
+                {filterableFields && selectedField && !hasActiveFieldFilter && (
+                    <Autocomplete
+                        size="small"
+                        options={selectedField.options}
+                        value={null}
+                        onChange={handleValueChange}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                placeholder="Vyberte hodnotu..."
+                            />
+                        )}
+                        sx={{ minWidth: 200, ...builderFieldSx }}
+                        noOptionsText="Žádné hodnoty"
+                        openOnFocus
+                    />
+                )}
 
                 <Box sx={{ flex: 1 }} />
 
@@ -321,9 +277,17 @@ export function SubmissionsFilterBar({
                         label={`${confirmedField.label}: ${activeValue}`}
                         onDelete={handleClearField}
                         deleteIcon={<Close />}
-                        color="primary"
                         size="small"
-                        variant="outlined"
+                        sx={{
+                            backgroundColor: p.indigoSoft,
+                            color: p.indigoInk,
+                            fontWeight: 600,
+                            borderRadius: "7px",
+                            "& .MuiChip-deleteIcon": {
+                                color: p.indigoInk,
+                                "&:hover": { color: p.indigo },
+                            },
+                        }}
                     />
                 </Box>
             )}

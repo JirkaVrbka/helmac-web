@@ -37,6 +37,8 @@ import {
 import { useSnackbar } from "notistack";
 import { isMinor } from "@/lib/utils/minor-detection";
 import type { OrderRow } from "@/lib/services/v2";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface FieldInfo {
     name: string;
@@ -58,10 +60,7 @@ interface SubmissionsTableProps {
     readOnly?: boolean;
 }
 
-function renderValue(
-    field: FieldInfo,
-    values: Record<string, string>,
-): string {
+function renderValue(field: FieldInfo, values: Record<string, string>): string {
     const raw = values[field.name];
     if (!raw) return "";
     return raw;
@@ -84,19 +83,12 @@ export function SubmissionsTable({
 }: SubmissionsTableProps) {
     const router = useRouter();
     const { enqueueSnackbar } = useSnackbar();
-    const [pendingIds, setPendingIds] = useState<
-        Set<string>
-    >(new Set());
+    const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
     const handleToggleAttendance = useCallback(
         async (personId: string, isAttending: boolean) => {
-            setPendingIds((prev) =>
-                new Set(prev).add(personId),
-            );
-            const res = await togglePersonIsAttending(
-                personId,
-                isAttending,
-            );
+            setPendingIds((prev) => new Set(prev).add(personId));
+            const res = await togglePersonIsAttending(personId, isAttending);
             setPendingIds((prev) => {
                 const next = new Set(prev);
                 next.delete(personId);
@@ -107,40 +99,30 @@ export function SubmissionsTable({
                     variant: "error",
                 });
         },
-        [enqueueSnackbar],
+        [enqueueSnackbar]
     );
     const { setDisplayedCount } = useSubmissionsCount();
     const [search, setSearch] = useState("");
-    const [sortKey, setSortKey] =
-        useState<SortKey>("createdAt");
-    const [sortDir, setSortDir] =
-        useState<SortDirection>("desc");
+    const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+    const [sortDir, setSortDir] = useState<SortDirection>("desc");
 
     const handleSort = (key: SortKey) => {
         if (sortKey === key) {
-            setSortDir((prev) =>
-                prev === "asc" ? "desc" : "asc",
-            );
+            setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
         } else {
             setSortKey(key);
             setSortDir("asc");
         }
     };
 
-    const birthDateFields = allFields.filter(
-        (f) => f.type === "birth_date",
-    );
+    const birthDateFields = allFields.filter((f) => f.type === "birth_date");
     const apBirthDateFields = birthDateFields.filter(
-        (f) => f.includeForAdditionalPeople,
+        (f) => f.includeForAdditionalPeople
     );
-    const refDate = eventStartDate
-        ? new Date(eventStartDate)
-        : undefined;
+    const refDate = eventStartDate ? new Date(eventStartDate) : undefined;
 
-    const mainValues = (o: OrderRow) =>
-        o.people[0]?.values ?? {};
-    const apPeople = (o: OrderRow) =>
-        o.people.filter((p) => p.personIndex > 0);
+    const mainValues = (o: OrderRow) => o.people[0]?.values ?? {};
+    const apPeople = (o: OrderRow) => o.people.filter((p) => p.personIndex > 0);
 
     // Filtering
     const statusFiltered = statusFilter
@@ -149,9 +131,7 @@ export function SubmissionsTable({
 
     const paidFiltered =
         paidFilter !== null
-            ? statusFiltered.filter(
-                  (o) => o.isPaid === paidFilter,
-              )
+            ? statusFiltered.filter((o) => o.isPaid === paidFilter)
             : statusFiltered;
 
     // Match primary + additional people so the filtered count agrees with v2 option counts
@@ -160,60 +140,31 @@ export function SubmissionsTable({
             ? paidFiltered.filter((o) =>
                   o.people.some((p) => {
                       const val = p.values[fieldFilter];
-                      if (
-                          val === "true" ||
-                          val === "false"
-                      ) {
+                      if (val === "true" || val === "false") {
                           return (
-                              (val === "true"
-                                  ? "Ano"
-                                  : "Ne") === valueFilter
+                              (val === "true" ? "Ano" : "Ne") === valueFilter
                           );
                       }
-                      if (
-                          typeof val === "string" &&
-                          val.includes(", ")
-                      ) {
-                          return val
-                              .split(", ")
-                              .includes(valueFilter);
+                      if (typeof val === "string" && val.includes(", ")) {
+                          return val.split(", ").includes(valueFilter);
                       }
                       return (val ?? "") === valueFilter;
-                  }),
+                  })
               )
             : paidFiltered;
 
     const filtered = search.trim()
         ? fieldFiltered.filter((o) => {
               const term = search.trim().toLowerCase();
-              for (const val of Object.values(
-                  mainValues(o),
-              )) {
-                  if (
-                      val
-                          ?.toLowerCase()
-                          .includes(term)
-                  )
-                      return true;
+              for (const val of Object.values(mainValues(o))) {
+                  if (val?.toLowerCase().includes(term)) return true;
               }
               for (const p of apPeople(o)) {
-                  for (const val of Object.values(
-                      p.values,
-                  )) {
-                      if (
-                          val
-                              ?.toLowerCase()
-                              .includes(term)
-                      )
-                          return true;
+                  for (const val of Object.values(p.values)) {
+                      if (val?.toLowerCase().includes(term)) return true;
                   }
               }
-              if (
-                  o.variableSymbol
-                      ?.toLowerCase()
-                      .includes(term)
-              )
-                  return true;
+              if (o.variableSymbol?.toLowerCase().includes(term)) return true;
               return false;
           })
         : fieldFiltered;
@@ -265,7 +216,7 @@ export function SubmissionsTable({
                 fullWidth
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                sx={{ mb: 2 }}
+                sx={{ mb: 2, ...builderFieldSx }}
                 InputProps={{
                     startAdornment: (
                         <InputAdornment position="start">
@@ -282,188 +233,163 @@ export function SubmissionsTable({
                     Žádné výsledky
                 </Typography>
             ) : (
-                <TableContainer component={Paper}>
-                    <Table size="small">
+                <TableContainer
+                    component={Paper}
+                    elevation={0}
+                    sx={{
+                        border: `1px solid ${p.line}`,
+                        borderRadius: "14px",
+                    }}
+                >
+                    <Table
+                        size="small"
+                        sx={{
+                            "& .MuiTableHead-root .MuiTableCell-root": {
+                                backgroundColor: p.surface2,
+                                color: p.ink3,
+                                textTransform: "uppercase",
+                                fontSize: 10,
+                                letterSpacing: "0.12em",
+                                fontWeight: 700,
+                                borderBottom: `1px solid ${p.line}`,
+                            },
+                            "& .MuiTableHead-root .MuiTableSortLabel-root": {
+                                color: p.ink3,
+                                "&.Mui-active": { color: p.ink2 },
+                            },
+                            "& .MuiTableBody-root .MuiTableCell-root": {
+                                borderBottomColor: p.lineSoft,
+                            },
+                        }}
+                    >
                         <TableHead>
                             <TableRow>
-                                {displayFields.map(
-                                    (field) => {
-                                        const key = `field:${field.name}`;
-                                        return (
-                                            <TableCell
-                                                key={
-                                                    field.name
-                                                }
-                                                sortDirection={
-                                                    sortKey ===
-                                                    key
+                                {displayFields.map((field) => {
+                                    const key = `field:${field.name}`;
+                                    return (
+                                        <TableCell
+                                            key={field.name}
+                                            sortDirection={
+                                                sortKey === key
+                                                    ? sortDir
+                                                    : false
+                                            }
+                                        >
+                                            <TableSortLabel
+                                                active={sortKey === key}
+                                                direction={
+                                                    sortKey === key
                                                         ? sortDir
-                                                        : false
+                                                        : "asc"
                                                 }
+                                                onClick={() => handleSort(key)}
                                             >
-                                                <TableSortLabel
-                                                    active={
-                                                        sortKey ===
-                                                        key
-                                                    }
-                                                    direction={
-                                                        sortKey ===
-                                                        key
-                                                            ? sortDir
-                                                            : "asc"
-                                                    }
-                                                    onClick={() =>
-                                                        handleSort(
-                                                            key,
-                                                        )
-                                                    }
-                                                >
-                                                    {
-                                                        field.label
-                                                    }
-                                                </TableSortLabel>
-                                            </TableCell>
-                                        );
-                                    },
-                                )}
+                                                {field.label}
+                                            </TableSortLabel>
+                                        </TableCell>
+                                    );
+                                })}
                                 <TableCell>Stav</TableCell>
                                 <TableCell></TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {sorted.map((order) => {
-                                const values =
-                                    mainValues(order);
+                                const values = mainValues(order);
                                 const ap = apPeople(order);
-                                const hasAP =
-                                    ap.length > 0;
+                                const hasAP = ap.length > 0;
                                 const detailUrl = `/admin/rocniky/${yearId}/registrace/${order.legacySubmissionId ?? order.id}`;
-                                const isMainMinor =
-                                    birthDateFields.some(
-                                        (bf) => {
-                                            const val =
-                                                values[
-                                                    bf.name
-                                                ];
-                                            return (
-                                                val &&
-                                                isMinor(
-                                                    val,
-                                                    refDate,
-                                                )
-                                            );
-                                        },
-                                    );
+                                const isMainMinor = birthDateFields.some(
+                                    (bf) => {
+                                        const val = values[bf.name];
+                                        return val && isMinor(val, refDate);
+                                    }
+                                );
 
                                 return (
-                                    <Fragment
-                                        key={order.id}
-                                    >
+                                    <Fragment key={order.id}>
                                         <TableRow
                                             hover
                                             sx={{
                                                 cursor: "pointer",
                                                 ...(hasAP && {
-                                                    "& td":
-                                                        {
-                                                            borderBottom: 0,
-                                                        },
+                                                    "& td": {
+                                                        borderBottom: 0,
+                                                    },
                                                 }),
                                                 ...(isMainMinor && {
-                                                    "& td:first-of-type":
-                                                        {
-                                                            borderLeft: 3,
-                                                            borderLeftColor:
-                                                                "warning.main",
-                                                        },
+                                                    "& td:first-of-type": {
+                                                        borderLeft: 3,
+                                                        borderLeftColor:
+                                                            "warning.main",
+                                                    },
                                                 }),
                                             }}
                                             onClick={() =>
-                                                router.push(
-                                                    detailUrl,
-                                                )
+                                                router.push(detailUrl)
                                             }
                                         >
-                                            {displayFields.map(
-                                                (
-                                                    field,
-                                                    idx,
-                                                ) => (
-                                                    <TableCell
-                                                        key={
-                                                            field.name
-                                                        }
-                                                    >
-                                                        {idx ===
-                                                            0 &&
-                                                            order.isTest && (
-                                                                <Chip
-                                                                    label="TEST"
-                                                                    color="warning"
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    sx={{
-                                                                        mr: 1,
-                                                                        fontWeight: 700,
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        {field.type ===
-                                                            "birth_date" &&
-                                                        values[
-                                                            field
-                                                                .name
-                                                        ] &&
-                                                        isMinor(
-                                                            values[
-                                                                field
-                                                                    .name
-                                                            ],
-                                                            refDate,
-                                                        ) ? (
-                                                            <Tooltip title="Nezletilý">
-                                                                <Chip
-                                                                    label={
-                                                                        values[
-                                                                            field
-                                                                                .name
-                                                                        ]
-                                                                    }
-                                                                    color="warning"
-                                                                    size="small"
-                                                                />
-                                                            </Tooltip>
-                                                        ) : (
-                                                            <Typography
-                                                                variant="body2"
-                                                                noWrap
+                                            {displayFields.map((field, idx) => (
+                                                <TableCell key={field.name}>
+                                                    {idx === 0 &&
+                                                        order.isTest && (
+                                                            <Chip
+                                                                label="TEST"
+                                                                color="warning"
+                                                                size="small"
+                                                                variant="outlined"
                                                                 sx={{
-                                                                    maxWidth: 200,
-                                                                    display:
-                                                                        "inline",
+                                                                    mr: 1,
+                                                                    fontWeight: 700,
                                                                 }}
-                                                            >
-                                                                {renderValue(
-                                                                    field,
-                                                                    values,
-                                                                )}
-                                                            </Typography>
+                                                            />
                                                         )}
-                                                    </TableCell>
-                                                ),
-                                            )}
+                                                    {field.type ===
+                                                        "birth_date" &&
+                                                    values[field.name] &&
+                                                    isMinor(
+                                                        values[field.name],
+                                                        refDate
+                                                    ) ? (
+                                                        <Tooltip title="Nezletilý">
+                                                            <Chip
+                                                                label={
+                                                                    values[
+                                                                        field
+                                                                            .name
+                                                                    ]
+                                                                }
+                                                                color="warning"
+                                                                size="small"
+                                                            />
+                                                        </Tooltip>
+                                                    ) : (
+                                                        <Typography
+                                                            variant="body2"
+                                                            noWrap
+                                                            sx={{
+                                                                maxWidth: 200,
+                                                                display:
+                                                                    "inline",
+                                                            }}
+                                                        >
+                                                            {renderValue(
+                                                                field,
+                                                                values
+                                                            )}
+                                                        </Typography>
+                                                    )}
+                                                </TableCell>
+                                            ))}
                                             <TableCell>
                                                 <Box
                                                     sx={{
-                                                        display:
-                                                            "flex",
-                                                        alignItems:
-                                                            "center",
+                                                        display: "flex",
+                                                        alignItems: "center",
                                                         gap: 0.75,
                                                     }}
                                                 >
-                                                    {ap.length >
-                                                        0 && (
+                                                    {ap.length > 0 && (
                                                         <Tooltip
                                                             title={`${1 + ap.length} osob`}
                                                         >
@@ -546,41 +472,34 @@ export function SubmissionsTable({
                                                 </Box>
                                             </TableCell>
                                             <TableCell
-                                                onClick={(
-                                                    e,
-                                                ) =>
+                                                onClick={(e) =>
                                                     e.stopPropagation()
                                                 }
                                             >
                                                 <Box
                                                     sx={{
-                                                        display:
-                                                            "flex",
-                                                        alignItems:
-                                                            "center",
+                                                        display: "flex",
+                                                        alignItems: "center",
                                                         gap: 0.5,
                                                     }}
                                                 >
                                                     {!readOnly && (
                                                         <Button
                                                             variant={
-                                                                order
-                                                                    .people[0]
+                                                                order.people[0]
                                                                     ?.isAttending
                                                                     ? "contained"
                                                                     : "outlined"
                                                             }
                                                             size="small"
                                                             color={
-                                                                order
-                                                                    .people[0]
+                                                                order.people[0]
                                                                     ?.isAttending
                                                                     ? "success"
                                                                     : "inherit"
                                                             }
                                                             startIcon={
-                                                                order
-                                                                    .people[0]
+                                                                order.people[0]
                                                                     ?.isAttending ? (
                                                                     <HowToReg fontSize="small" />
                                                                 ) : (
@@ -588,10 +507,8 @@ export function SubmissionsTable({
                                                                 )
                                                             }
                                                             disabled={pendingIds.has(
-                                                                order
-                                                                    .people[0]
-                                                                    ?.id ??
-                                                                    "",
+                                                                order.people[0]
+                                                                    ?.id ?? ""
                                                             )}
                                                             onClick={() => {
                                                                 const p =
@@ -600,12 +517,11 @@ export function SubmissionsTable({
                                                                 if (!p) return;
                                                                 handleToggleAttendance(
                                                                     p.id,
-                                                                    !p.isAttending,
+                                                                    !p.isAttending
                                                                 );
                                                             }}
                                                         >
-                                                            {order
-                                                                .people[0]
+                                                            {order.people[0]
                                                                 ?.isAttending
                                                                 ? "Označit: nepřijel"
                                                                 : "Označit: přijel"}
@@ -620,7 +536,7 @@ export function SubmissionsTable({
                                                                 onClick={async () => {
                                                                     await toggleSubmissionPayment(
                                                                         order.legacySubmissionId!,
-                                                                        true,
+                                                                        true
                                                                     );
                                                                 }}
                                                             >
@@ -630,172 +546,149 @@ export function SubmissionsTable({
                                                 </Box>
                                             </TableCell>
                                         </TableRow>
-                                        {ap.map(
-                                            (
-                                                person,
-                                                apIdx,
-                                            ) => {
-                                                const isLast =
-                                                    apIdx ===
-                                                    ap.length -
-                                                        1;
-                                                const isAPMinor =
-                                                    apBirthDateFields.some(
-                                                        (
-                                                            bf,
-                                                        ) =>
-                                                            person
-                                                                .values[
-                                                                bf
-                                                                    .name
-                                                            ] &&
-                                                            isMinor(
-                                                                person
-                                                                    .values[
-                                                                    bf
-                                                                        .name
-                                                                ],
-                                                                refDate,
-                                                            ),
-                                                    );
-                                                return (
-                                                    <TableRow
-                                                        key={`${order.id}-ap-${apIdx}`}
-                                                        sx={{
-                                                            cursor: "pointer",
-                                                            backgroundColor:
-                                                                "action.hover",
-                                                            ...(!isLast && {
-                                                                "& td":
-                                                                    {
-                                                                        borderBottom: 0,
-                                                                    },
-                                                            }),
-                                                        }}
-                                                        onClick={() =>
-                                                            router.push(
-                                                                detailUrl,
-                                                            )
-                                                        }
-                                                    >
-                                                        {displayFields.map(
-                                                            (
-                                                                field,
-                                                                fIdx,
-                                                            ) => (
-                                                                <TableCell
-                                                                    key={
-                                                                        field.name
-                                                                    }
-                                                                    sx={{
-                                                                        ...(fIdx ===
-                                                                            0 && {
-                                                                            borderLeft: 3,
-                                                                            borderLeftColor:
-                                                                                isAPMinor
-                                                                                    ? "warning.main"
-                                                                                    : "grey.400",
-                                                                            pl: 3,
-                                                                        }),
-                                                                    }}
-                                                                >
-                                                                    {field.includeForAdditionalPeople ? (
-                                                                        field.type ===
-                                                                            "birth_date" &&
+                                        {ap.map((person, apIdx) => {
+                                            const isLast =
+                                                apIdx === ap.length - 1;
+                                            const isAPMinor =
+                                                apBirthDateFields.some(
+                                                    (bf) =>
+                                                        person.values[
+                                                            bf.name
+                                                        ] &&
+                                                        isMinor(
+                                                            person.values[
+                                                                bf.name
+                                                            ],
+                                                            refDate
+                                                        )
+                                                );
+                                            return (
+                                                <TableRow
+                                                    key={`${order.id}-ap-${apIdx}`}
+                                                    sx={{
+                                                        cursor: "pointer",
+                                                        backgroundColor:
+                                                            "action.hover",
+                                                        ...(!isLast && {
+                                                            "& td": {
+                                                                borderBottom: 0,
+                                                            },
+                                                        }),
+                                                    }}
+                                                    onClick={() =>
+                                                        router.push(detailUrl)
+                                                    }
+                                                >
+                                                    {displayFields.map(
+                                                        (field, fIdx) => (
+                                                            <TableCell
+                                                                key={field.name}
+                                                                sx={{
+                                                                    ...(fIdx ===
+                                                                        0 && {
+                                                                        borderLeft: 3,
+                                                                        borderLeftColor:
+                                                                            isAPMinor
+                                                                                ? "warning.main"
+                                                                                : "grey.400",
+                                                                        pl: 3,
+                                                                    }),
+                                                                }}
+                                                            >
+                                                                {field.includeForAdditionalPeople ? (
+                                                                    field.type ===
+                                                                        "birth_date" &&
+                                                                    person
+                                                                        .values[
+                                                                        field
+                                                                            .name
+                                                                    ] &&
+                                                                    isMinor(
                                                                         person
                                                                             .values[
                                                                             field
                                                                                 .name
-                                                                        ] &&
-                                                                        isMinor(
-                                                                            person
-                                                                                .values[
-                                                                                field
-                                                                                    .name
-                                                                            ],
-                                                                            refDate,
-                                                                        ) ? (
-                                                                            <Tooltip title="Nezletilý">
-                                                                                <Chip
-                                                                                    label={
-                                                                                        person
-                                                                                            .values[
-                                                                                            field
-                                                                                                .name
-                                                                                        ]
-                                                                                    }
-                                                                                    color="warning"
-                                                                                    size="small"
-                                                                                />
-                                                                            </Tooltip>
-                                                                        ) : (
-                                                                            <Typography
-                                                                                variant="body2"
-                                                                                noWrap
-                                                                                sx={{
-                                                                                    maxWidth: 200,
-                                                                                    display:
-                                                                                        "inline",
-                                                                                }}
-                                                                            >
-                                                                                {renderValue(
-                                                                                    field,
-                                                                                    person.values,
-                                                                                )}
-                                                                            </Typography>
-                                                                        )
-                                                                    ) : null}
-                                                                </TableCell>
-                                                            ),
-                                                        )}
-                                                        <TableCell />
-                                                        <TableCell
-                                                            onClick={(
-                                                                e,
-                                                            ) =>
-                                                                e.stopPropagation()
-                                                            }
-                                                        >
-                                                            {!readOnly && (
-                                                                <Button
-                                                                    variant={
-                                                                        person.isAttending
-                                                                            ? "contained"
-                                                                            : "outlined"
-                                                                    }
-                                                                    size="small"
-                                                                    color={
-                                                                        person.isAttending
-                                                                            ? "success"
-                                                                            : "inherit"
-                                                                    }
-                                                                    startIcon={
-                                                                        person.isAttending ? (
-                                                                            <HowToReg fontSize="small" />
-                                                                        ) : (
-                                                                            <PersonOutline fontSize="small" />
-                                                                        )
-                                                                    }
-                                                                    disabled={pendingIds.has(
+                                                                        ],
+                                                                        refDate
+                                                                    ) ? (
+                                                                        <Tooltip title="Nezletilý">
+                                                                            <Chip
+                                                                                label={
+                                                                                    person
+                                                                                        .values[
+                                                                                        field
+                                                                                            .name
+                                                                                    ]
+                                                                                }
+                                                                                color="warning"
+                                                                                size="small"
+                                                                            />
+                                                                        </Tooltip>
+                                                                    ) : (
+                                                                        <Typography
+                                                                            variant="body2"
+                                                                            noWrap
+                                                                            sx={{
+                                                                                maxWidth: 200,
+                                                                                display:
+                                                                                    "inline",
+                                                                            }}
+                                                                        >
+                                                                            {renderValue(
+                                                                                field,
+                                                                                person.values
+                                                                            )}
+                                                                        </Typography>
+                                                                    )
+                                                                ) : null}
+                                                            </TableCell>
+                                                        )
+                                                    )}
+                                                    <TableCell />
+                                                    <TableCell
+                                                        onClick={(e) =>
+                                                            e.stopPropagation()
+                                                        }
+                                                    >
+                                                        {!readOnly && (
+                                                            <Button
+                                                                variant={
+                                                                    person.isAttending
+                                                                        ? "contained"
+                                                                        : "outlined"
+                                                                }
+                                                                size="small"
+                                                                color={
+                                                                    person.isAttending
+                                                                        ? "success"
+                                                                        : "inherit"
+                                                                }
+                                                                startIcon={
+                                                                    person.isAttending ? (
+                                                                        <HowToReg fontSize="small" />
+                                                                    ) : (
+                                                                        <PersonOutline fontSize="small" />
+                                                                    )
+                                                                }
+                                                                disabled={pendingIds.has(
+                                                                    person.id
+                                                                )}
+                                                                onClick={() =>
+                                                                    handleToggleAttendance(
                                                                         person.id,
-                                                                    )}
-                                                                    onClick={() =>
-                                                                        handleToggleAttendance(
-                                                                            person.id,
-                                                                            !person.isAttending,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {person.isAttending
-                                                                        ? "Označit: nepřijel"
-                                                                        : "Označit: přijel"}
-                                                                </Button>
-                                                            )}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            },
-                                        )}
+                                                                        !person.isAttending
+                                                                    )
+                                                                }
+                                                            >
+                                                                {person.isAttending
+                                                                    ? "Označit: nepřijel"
+                                                                    : "Označit: přijel"}
+                                                            </Button>
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
                                     </Fragment>
                                 );
                             })}

@@ -3,10 +3,7 @@
 import { useRef, useCallback, useMemo } from "react";
 import { Box } from "@mui/material";
 import { useDroppable } from "@dnd-kit/core";
-import type {
-    ContentBlock,
-    BlockLayout,
-} from "@/lib/types/content-blocks";
+import type { ContentBlock, BlockLayout } from "@/lib/types/content-blocks";
 import {
     ROW_HEIGHT,
     GRID_GAP,
@@ -14,14 +11,12 @@ import {
     compareByLayout,
 } from "./constants";
 import { DraggableBlock } from "./draggable-block";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface GridDropZoneProps {
     zoneId: string;
     blocks: ContentBlock[];
-    onUpdateBlock: (
-        id: string,
-        block: ContentBlock
-    ) => void;
+    onUpdateBlock: (id: string, block: ContentBlock) => void;
     onDeleteBlock: (id: string) => void;
     onDuplicateBlock: (id: string) => void;
     depth?: number;
@@ -37,8 +32,7 @@ export function GridDropZone({
     depth = 0,
     yearId,
 }: GridDropZoneProps) {
-    const containerRef =
-        useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const { setNodeRef, isOver } = useDroppable({
         id: zoneId,
     });
@@ -53,17 +47,11 @@ export function GridDropZone({
         [setNodeRef]
     );
 
-    const sorted = useMemo(
-        () =>
-            [...blocks].sort(compareByLayout),
-        [blocks]
-    );
+    const sorted = useMemo(() => [...blocks].sort(compareByLayout), [blocks]);
 
     const handleLayoutChange = useCallback(
         (id: string, layout: BlockLayout) => {
-            const block = blocks.find(
-                (b) => b.id === id
-            );
+            const block = blocks.find((b) => b.id === id);
             if (!block) return;
             onUpdateBlock(id, { ...block, layout });
         },
@@ -77,17 +65,13 @@ export function GridDropZone({
             sx={{
                 position: "relative",
                 display: "grid",
-                gridTemplateColumns:
-                    `repeat(${GRID_COLUMNS}, 1fr)`,
+                gridTemplateColumns: `repeat(${GRID_COLUMNS}, 1fr)`,
                 alignItems: "stretch",
                 gap: `${GRID_GAP}px`,
                 border: isOver
-                    ? "2px dashed"
+                    ? `2px dashed ${p.indigo}`
                     : "2px dashed transparent",
-                borderColor: isOver
-                    ? "divider"
-                    : "transparent",
-                borderRadius: 1,
+                borderRadius: "10px",
                 transition: "border-color 0.15s",
                 flex: depth > 0 ? 1 : undefined,
                 p: depth > 0 ? 0.25 : 0,
@@ -98,27 +82,15 @@ export function GridDropZone({
                     key={block.id}
                     block={block}
                     zoneId={zoneId}
-                    onUpdate={(b: ContentBlock) =>
-                        onUpdateBlock(block.id, b)
-                    }
-                    onDelete={() =>
-                        onDeleteBlock(block.id)
-                    }
+                    onUpdate={(b: ContentBlock) => onUpdateBlock(block.id, b)}
+                    onDelete={() => onDeleteBlock(block.id)}
                     onDuplicate={
                         block.type === "card"
-                            ? () =>
-                                  onDuplicateBlock(
-                                      block.id
-                                  )
+                            ? () => onDuplicateBlock(block.id)
                             : undefined
                     }
-                    onLayoutChange={(
-                        layout: BlockLayout
-                    ) =>
-                        handleLayoutChange(
-                            block.id,
-                            layout
-                        )
+                    onLayoutChange={(layout: BlockLayout) =>
+                        handleLayoutChange(block.id, layout)
                     }
                     containerRef={containerRef}
                     yearId={yearId}
@@ -131,9 +103,8 @@ export function GridDropZone({
                     sx={{
                         gridColumn: "1 / -1",
                         minHeight: ROW_HEIGHT * 3,
-                        border: "2px dashed",
-                        borderColor: "divider",
-                        borderRadius: 1,
+                        border: `2px dashed ${p.line}`,
+                        borderRadius: "10px",
                         opacity: 0.3,
                     }}
                 />

@@ -8,10 +8,7 @@ import {
     CircularProgress,
     IconButton,
     Link,
-    List,
-    ListItem,
-    ListItemSecondaryAction,
-    ListItemText,
+    Tooltip,
     Typography,
 } from "@mui/material";
 import { CloudUpload, Delete, AttachFile } from "@mui/icons-material";
@@ -21,6 +18,7 @@ import {
     MAX_ATTACHMENTS_TOTAL,
     type EmailAttachment,
 } from "@/lib/validators/email-attachment";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface EmailAttachmentsListProps {
     value: EmailAttachment[];
@@ -57,10 +55,13 @@ export function EmailAttachmentsList({
 
             if (acceptedFiles.length === 0) return;
 
-            const incomingSize = acceptedFiles.reduce((sum, f) => sum + f.size, 0);
+            const incomingSize = acceptedFiles.reduce(
+                (sum, f) => sum + f.size,
+                0
+            );
             if (totalSize + incomingSize > MAX_ATTACHMENTS_TOTAL) {
                 setError(
-                    `Celková velikost příloh by přesáhla ${formatBytes(MAX_ATTACHMENTS_TOTAL)}`,
+                    `Celková velikost příloh by přesáhla ${formatBytes(MAX_ATTACHMENTS_TOTAL)}`
                 );
                 return;
             }
@@ -71,7 +72,7 @@ export function EmailAttachmentsList({
                 for (const file of acceptedFiles) {
                     if (file.size > MAX_ATTACHMENT_SIZE) {
                         throw new Error(
-                            `Soubor "${file.name}" je větší než ${formatBytes(MAX_ATTACHMENT_SIZE)}`,
+                            `Soubor "${file.name}" je větší než ${formatBytes(MAX_ATTACHMENT_SIZE)}`
                         );
                     }
                     const formData = new FormData();
@@ -97,19 +98,21 @@ export function EmailAttachmentsList({
                 }
                 onChange([...value, ...uploaded]);
             } catch (err) {
-                setError(err instanceof Error ? err.message : "Nahrávání selhalo");
+                setError(
+                    err instanceof Error ? err.message : "Nahrávání selhalo"
+                );
             } finally {
                 setUploading(false);
             }
         },
-        [onChange, totalSize, value],
+        [onChange, totalSize, value]
     );
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: ATTACHMENT_ALLOWED_TYPES.reduce(
             (acc, type) => ({ ...acc, [type]: [] }),
-            {} as Record<string, string[]>,
+            {} as Record<string, string[]>
         ),
         disabled: uploading || disabled || remaining <= 0,
     });
@@ -118,88 +121,158 @@ export function EmailAttachmentsList({
         onChange(value.filter((a) => a.url !== url));
     };
 
+    const dropDisabled = uploading || disabled || remaining <= 0;
+
     return (
         <Box>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            <Typography
+                sx={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: p.ink2,
+                    mb: 1,
+                }}
+            >
                 Přílohy
             </Typography>
 
             {error && (
-                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+                <Alert
+                    severity="error"
+                    sx={{ mb: 2 }}
+                    onClose={() => setError(null)}
+                >
                     {error}
                 </Alert>
             )}
 
             {value.length > 0 && (
-                <List dense sx={{ mb: 2, bgcolor: "background.paper", borderRadius: 1 }}>
+                <Box
+                    sx={{
+                        mb: 1.5,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1,
+                    }}
+                >
                     {value.map((a) => (
-                        <ListItem key={a.url} divider>
-                            <AttachFile fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />
-                            <ListItemText
-                                primary={
-                                    <Link
-                                        href={a.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        underline="hover"
-                                    >
-                                        {a.filename}
-                                    </Link>
-                                }
-                                secondary={formatBytes(a.size)}
+                        <Box
+                            key={a.url}
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.25,
+                                px: 1.5,
+                                py: 1,
+                                border: `1px solid ${p.line}`,
+                                borderRadius: "10px",
+                                backgroundColor: p.surface,
+                            }}
+                        >
+                            <AttachFile
+                                sx={{
+                                    fontSize: 18,
+                                    color: p.ink3,
+                                    flexShrink: 0,
+                                }}
                             />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Link
+                                    href={a.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    underline="hover"
+                                    sx={{
+                                        color: p.indigo,
+                                        fontSize: 14,
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    {a.filename}
+                                </Link>
+                                <Typography
+                                    sx={{ fontSize: 12, color: p.ink3 }}
+                                >
+                                    {formatBytes(a.size)}
+                                </Typography>
+                            </Box>
                             {!disabled && (
-                                <ListItemSecondaryAction>
+                                <Tooltip title="Odebrat přílohu">
                                     <IconButton
-                                        edge="end"
                                         size="small"
                                         onClick={() => handleRemove(a.url)}
                                         aria-label="Odebrat přílohu"
+                                        sx={{
+                                            color: p.ink3,
+                                            borderRadius: "8px",
+                                            transition: "all 140ms ease",
+                                            "&:hover": {
+                                                color: p.negInk,
+                                                backgroundColor: p.neg,
+                                            },
+                                        }}
                                     >
                                         <Delete fontSize="small" />
                                     </IconButton>
-                                </ListItemSecondaryAction>
+                                </Tooltip>
                             )}
-                        </ListItem>
+                        </Box>
                     ))}
-                </List>
+                </Box>
             )}
 
             <Box
                 {...getRootProps()}
                 sx={{
-                    border: "2px dashed",
-                    borderColor: isDragActive ? "primary.main" : "grey.300",
-                    borderRadius: 2,
+                    border: `2px dashed ${isDragActive ? p.indigo : p.line}`,
+                    borderRadius: "10px",
                     p: 2,
                     textAlign: "center",
-                    cursor: uploading || disabled || remaining <= 0 ? "default" : "pointer",
-                    bgcolor: isDragActive ? "action.hover" : "transparent",
-                    transition: "all 0.2s ease",
+                    cursor: dropDisabled ? "default" : "pointer",
+                    backgroundColor: isDragActive
+                        ? p.indigoSoft
+                        : "transparent",
+                    transition: "all 140ms ease",
                     "&:hover": {
-                        borderColor:
-                            uploading || disabled || remaining <= 0 ? "grey.300" : "primary.main",
+                        borderColor: dropDisabled ? p.line : p.indigo,
                     },
                 }}
             >
                 <input {...getInputProps()} />
                 {uploading ? (
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 1,
+                        }}
+                    >
                         <CircularProgress size={24} />
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" sx={{ color: p.ink2 }}>
                             Nahrávám…
                         </Typography>
                     </Box>
                 ) : (
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
-                        <CloudUpload sx={{ fontSize: 32, color: "grey.500" }} />
-                        <Typography variant="body2" color="text.secondary">
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 0.5,
+                        }}
+                    >
+                        <CloudUpload sx={{ fontSize: 32, color: p.ink3 }} />
+                        <Typography variant="body2" sx={{ color: p.ink2 }}>
                             {remaining <= 0
                                 ? "Dosažen limit 25 MB"
                                 : "Přetáhněte soubory nebo klikněte pro výběr"}
                         </Typography>
-                        <Typography variant="caption" color="text.disabled">
-                            PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, obrázky · max {formatBytes(MAX_ATTACHMENT_SIZE)} / soubor · {formatBytes(totalSize)} / {formatBytes(MAX_ATTACHMENTS_TOTAL)}
+                        <Typography variant="caption" sx={{ color: p.ink3 }}>
+                            PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, obrázky ·
+                            max {formatBytes(MAX_ATTACHMENT_SIZE)} / soubor ·{" "}
+                            {formatBytes(totalSize)} /{" "}
+                            {formatBytes(MAX_ATTACHMENTS_TOTAL)}
                         </Typography>
                     </Box>
                 )}

@@ -17,6 +17,7 @@ import { Delete } from "@mui/icons-material";
 import { deleteUser } from "@/lib/actions/users";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/lib/hooks/use-toast";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface UserActionsProps {
     userId: string;
@@ -24,7 +25,11 @@ interface UserActionsProps {
     isCurrentUser: boolean;
 }
 
-export function UserActions({ userId, userName, isCurrentUser }: UserActionsProps) {
+export function UserActions({
+    userId,
+    userName,
+    isCurrentUser,
+}: UserActionsProps) {
     const router = useRouter();
     const toast = useToast();
     const [loading, setLoading] = useState(false);
@@ -67,11 +72,18 @@ export function UserActions({ userId, userName, isCurrentUser }: UserActionsProp
                     <span>
                         <IconButton
                             size="small"
-                            color="error"
                             onClick={() => setDeleteDialogOpen(true)}
                             disabled={isCurrentUser}
+                            sx={{
+                                color: p.ink3,
+                                borderRadius: "8px",
+                                "&:hover": {
+                                    color: p.negInk,
+                                    backgroundColor: p.neg,
+                                },
+                            }}
                         >
-                            <Delete />
+                            <Delete sx={{ fontSize: 16 }} />
                         </IconButton>
                     </span>
                 </Tooltip>
@@ -83,12 +95,15 @@ export function UserActions({ userId, userName, isCurrentUser }: UserActionsProp
                     setDeleteDialogOpen(false);
                     setError(null);
                 }}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>Smazat uživatele?</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Smazat uživatele?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Opravdu chcete smazat uživatele <strong>{userName}</strong>?
-                        Tato akce je nevratná.
+                        Opravdu chcete smazat uživatele{" "}
+                        <strong>{userName}</strong>? Tato akce je nevratná.
                     </DialogContentText>
                     {error && (
                         <DialogContentText color="error" sx={{ mt: 2 }}>
@@ -96,19 +111,34 @@ export function UserActions({ userId, userName, isCurrentUser }: UserActionsProp
                         </DialogContentText>
                     )}
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
                     <Button
                         onClick={() => {
                             setDeleteDialogOpen(false);
                             setError(null);
+                        }}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
                         }}
                     >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleDelete}
-                        color="error"
                         variant="contained"
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.neg,
+                            color: p.negInk,
+                            "&:hover": { backgroundColor: "#fecaca" },
+                        }}
                     >
                         Smazat
                     </Button>

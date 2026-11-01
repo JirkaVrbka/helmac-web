@@ -4,6 +4,7 @@ import { memo } from "react";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { AccountTree, Delete } from "@mui/icons-material";
 import type { FormCondition } from "@/lib/types/registration-form";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface Props {
     blockId: string;
@@ -26,15 +27,26 @@ function BlockHeaderRowImpl({ blockId, condition, onDeleteBlock }: Props) {
                 flex: 1,
             }}
         >
-            <AccountTree fontSize="small" color="info" />
-            <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }}>
+            <AccountTree fontSize="small" sx={{ color: p.fieldInk }} />
+            <Typography
+                variant="body2"
+                fontWeight={600}
+                sx={{ flex: 1, color: p.ink }}
+            >
                 Podmínka: {condition?.name ?? "(nepojmenovaná)"}
             </Typography>
             <Tooltip title="Smazat blok">
                 <IconButton
                     size="small"
-                    color="error"
                     onClick={() => onDeleteBlock(blockId)}
+                    sx={{
+                        color: p.ink3,
+                        borderRadius: "8px",
+                        "&:hover": {
+                            color: p.negInk,
+                            backgroundColor: p.neg,
+                        },
+                    }}
                 >
                     <Delete fontSize="small" />
                 </IconButton>

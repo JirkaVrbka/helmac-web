@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { Search, Clear } from "@mui/icons-material";
 import { useDebouncedCallback } from "use-debounce";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
 interface Year {
     id: string;
@@ -104,6 +105,7 @@ export function ListFilters({
                 sx={{
                     flex: { xs: "1 1 100%", sm: "0 1 auto" },
                     minWidth: { xs: "100%", sm: 250 },
+                    ...builderFieldSx,
                 }}
             />
 
@@ -113,6 +115,7 @@ export function ListFilters({
                     sx={{
                         flex: { xs: "1 1 45%", sm: "0 1 auto" },
                         minWidth: { xs: "45%", sm: 150 },
+                        ...builderFieldSx,
                     }}
                 >
                     <InputLabel>Rocnik</InputLabel>
@@ -137,6 +140,7 @@ export function ListFilters({
                     sx={{
                         flex: { xs: "1 1 45%", sm: "0 1 auto" },
                         minWidth: { xs: "45%", sm: 140 },
+                        ...builderFieldSx,
                     }}
                 >
                     <InputLabel>Stav</InputLabel>

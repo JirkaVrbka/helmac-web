@@ -12,6 +12,27 @@ import { Add, Close, FilterList } from "@mui/icons-material";
 import { useState } from "react";
 import type { StatFilter } from "@/lib/types/content-blocks";
 import { useRegistrationFields } from "./hooks";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
+
+const chipSx = (selected: boolean) => ({
+    fontSize: "0.65rem",
+    height: 22,
+    borderRadius: "20px",
+    ...(selected
+        ? {
+              backgroundColor: p.indigo,
+              color: "#fff",
+              border: `1px solid ${p.indigo}`,
+              "&:hover": { backgroundColor: p.indigo },
+          }
+        : {
+              backgroundColor: p.surface,
+              color: p.ink2,
+              border: `1px solid ${p.line}`,
+              "&:hover": { backgroundColor: p.surface2 },
+          }),
+});
 
 const STATUS_OPTIONS = [
     { value: "PENDING", label: "Čeká" },
@@ -55,23 +76,16 @@ export function StatFilterEditor({
                     alignItems: "center",
                     gap: 0.5,
                     cursor: "pointer",
-                    color: hasFilter
-                        ? "primary.main"
-                        : "text.disabled",
+                    color: hasFilter ? p.indigo : p.ink3,
                     fontSize: "0.7rem",
                     "&:hover": {
-                        color: "text.secondary",
+                        color: hasFilter ? p.indigo : p.ink2,
                     },
                 }}
             >
                 <FilterList sx={{ fontSize: 14 }} />
-                <Typography
-                    variant="caption"
-                    sx={{ fontSize: "0.7rem" }}
-                >
-                    {hasFilter
-                        ? "Filtr aktivní"
-                        : "Přidat filtr"}
+                <Typography variant="caption" sx={{ fontSize: "0.7rem" }}>
+                    {hasFilter ? "Filtr aktivní" : "Přidat filtr"}
                 </Typography>
             </Box>
         );
@@ -127,9 +141,7 @@ export function StatFilterEditor({
         const ff = [...(f.fieldFilters ?? [])];
         ff[index] = { ...ff[index], [key]: val };
         if (key === "fieldName") {
-            const field = fields?.find(
-                (fd) => fd.name === val
-            );
+            const field = fields?.find((fd) => fd.name === val);
             ff[index].value = field?.options?.[0] ?? "";
         }
         onChange({ ...f, fieldFilters: ff });
@@ -141,9 +153,8 @@ export function StatFilterEditor({
                 display: "flex",
                 flexDirection: "column",
                 gap: 0.75,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 0.5,
+                border: `1px solid ${p.line}`,
+                borderRadius: "10px",
                 p: 0.75,
             }}
         >
@@ -159,6 +170,7 @@ export function StatFilterEditor({
                     sx={{
                         fontSize: "0.7rem",
                         fontWeight: 600,
+                        color: p.ink,
                     }}
                 >
                     Filtr
@@ -167,15 +179,13 @@ export function StatFilterEditor({
                     {hasFilter && (
                         <Typography
                             variant="caption"
-                            onClick={() =>
-                                onChange(undefined)
-                            }
+                            onClick={() => onChange(undefined)}
                             sx={{
                                 fontSize: "0.65rem",
                                 cursor: "pointer",
-                                color: "text.disabled",
+                                color: p.ink3,
                                 "&:hover": {
-                                    color: "error.main",
+                                    color: p.negInk,
                                 },
                             }}
                         >
@@ -185,7 +195,16 @@ export function StatFilterEditor({
                     <IconButton
                         size="small"
                         onClick={() => setExpanded(false)}
-                        sx={{ p: 0 }}
+                        sx={{
+                            p: 0.25,
+                            borderRadius: "8px",
+                            color: p.ink3,
+                            transition: "all 140ms ease",
+                            "&:hover": {
+                                color: p.indigo,
+                                backgroundColor: p.indigoSoft,
+                            },
+                        }}
                     >
                         <Close sx={{ fontSize: 14 }} />
                     </IconButton>
@@ -195,8 +214,7 @@ export function StatFilterEditor({
             <Box>
                 <Typography
                     variant="caption"
-                    color="text.secondary"
-                    sx={{ fontSize: "0.65rem" }}
+                    sx={{ fontSize: "0.65rem", color: p.ink2 }}
                 >
                     Stav registrace
                 </Typography>
@@ -208,34 +226,19 @@ export function StatFilterEditor({
                         mt: 0.25,
                     }}
                 >
-                    {STATUS_OPTIONS.map((s) => (
-                        <Chip
-                            key={s.value}
-                            label={s.label}
-                            size="small"
-                            variant={
-                                f.statuses?.includes(
-                                    s.value
-                                )
-                                    ? "filled"
-                                    : "outlined"
-                            }
-                            color={
-                                f.statuses?.includes(
-                                    s.value
-                                )
-                                    ? "primary"
-                                    : "default"
-                            }
-                            onClick={() =>
-                                toggleStatus(s.value)
-                            }
-                            sx={{
-                                fontSize: "0.65rem",
-                                height: 22,
-                            }}
-                        />
-                    ))}
+                    {STATUS_OPTIONS.map((s) => {
+                        const selected = f.statuses?.includes(s.value) ?? false;
+                        return (
+                            <Chip
+                                key={s.value}
+                                label={s.label}
+                                size="small"
+                                variant={selected ? "filled" : "outlined"}
+                                onClick={() => toggleStatus(s.value)}
+                                sx={chipSx(selected)}
+                            />
+                        );
+                    })}
                 </Box>
             </Box>
 
@@ -248,8 +251,7 @@ export function StatFilterEditor({
             >
                 <Typography
                     variant="caption"
-                    color="text.secondary"
-                    sx={{ fontSize: "0.65rem" }}
+                    sx={{ fontSize: "0.65rem", color: p.ink2 }}
                 >
                     Platba:
                 </Typography>
@@ -265,47 +267,37 @@ export function StatFilterEditor({
                             label: "Nezaplaceno",
                         },
                     ] as const
-                ).map((opt) => (
-                    <Chip
-                        key={String(opt.val)}
-                        label={opt.label}
-                        size="small"
-                        variant={
-                            f.isPaid === opt.val
-                                ? "filled"
-                                : "outlined"
-                        }
-                        color={
-                            f.isPaid === opt.val
-                                ? "primary"
-                                : "default"
-                        }
-                        onClick={() => setPaid(opt.val)}
-                        sx={{
-                            fontSize: "0.65rem",
-                            height: 22,
-                        }}
-                    />
-                ))}
+                ).map((opt) => {
+                    const selected = f.isPaid === opt.val;
+                    return (
+                        <Chip
+                            key={String(opt.val)}
+                            label={opt.label}
+                            size="small"
+                            variant={selected ? "filled" : "outlined"}
+                            onClick={() => setPaid(opt.val)}
+                            sx={chipSx(selected)}
+                        />
+                    );
+                })}
             </Box>
 
             {fields && fields.length > 0 && (
                 <Box>
                     <Typography
                         variant="caption"
-                        color="text.secondary"
                         sx={{
                             fontSize: "0.65rem",
                             mb: 0.25,
                             display: "block",
+                            color: p.ink2,
                         }}
                     >
                         Hodnota pole
                     </Typography>
                     {f.fieldFilters?.map((ff, i) => {
                         const field = fields.find(
-                            (fd) =>
-                                fd.name === ff.fieldName
+                            (fd) => fd.name === ff.fieldName
                         );
                         return (
                             <Box
@@ -330,26 +322,18 @@ export function StatFilterEditor({
                                     size="small"
                                     sx={{
                                         flex: 1,
-                                        "& .MuiInputBase-root":
-                                            {
-                                                fontSize:
-                                                    "0.75rem",
-                                            },
+                                        ...builderFieldSx,
+                                        "& .MuiInputBase-root": {
+                                            fontSize: "0.75rem",
+                                        },
                                     }}
                                 >
                                     {fields
-                                        .filter(
-                                            (fd) =>
-                                                fd.options
-                                        )
+                                        .filter((fd) => fd.options)
                                         .map((fd) => (
                                             <MenuItem
-                                                key={
-                                                    fd.name
-                                                }
-                                                value={
-                                                    fd.name
-                                                }
+                                                key={fd.name}
+                                                value={fd.name}
                                             >
                                                 {fd.label}
                                             </MenuItem>
@@ -368,35 +352,30 @@ export function StatFilterEditor({
                                     size="small"
                                     sx={{
                                         flex: 1,
-                                        "& .MuiInputBase-root":
-                                            {
-                                                fontSize:
-                                                    "0.75rem",
-                                            },
+                                        ...builderFieldSx,
+                                        "& .MuiInputBase-root": {
+                                            fontSize: "0.75rem",
+                                        },
                                     }}
                                 >
-                                    {(
-                                        field?.options ??
-                                        []
-                                    ).map((opt) => (
-                                        <MenuItem
-                                            key={opt}
-                                            value={opt}
-                                        >
+                                    {(field?.options ?? []).map((opt) => (
+                                        <MenuItem key={opt} value={opt}>
                                             {opt}
                                         </MenuItem>
                                     ))}
                                 </TextField>
                                 <IconButton
                                     size="small"
-                                    onClick={() =>
-                                        removeFieldFilter(
-                                            i
-                                        )
-                                    }
+                                    onClick={() => removeFieldFilter(i)}
                                     sx={{
-                                        p: 0,
-                                        color: "text.disabled",
+                                        p: 0.25,
+                                        borderRadius: "8px",
+                                        color: p.ink3,
+                                        transition: "all 140ms ease",
+                                        "&:hover": {
+                                            color: p.negInk,
+                                            backgroundColor: p.neg,
+                                        },
                                     }}
                                 >
                                     <Close
@@ -411,14 +390,21 @@ export function StatFilterEditor({
                     <Chip
                         label="Přidat"
                         size="small"
-                        icon={
-                            <Add sx={{ fontSize: 14 }} />
-                        }
+                        icon={<Add sx={{ fontSize: 14 }} />}
                         onClick={addFieldFilter}
                         variant="outlined"
                         sx={{
                             fontSize: "0.65rem",
                             height: 22,
+                            borderRadius: "20px",
+                            backgroundColor: p.surface,
+                            color: p.indigo,
+                            border: `1px dashed ${p.line}`,
+                            "& .MuiChip-icon": { color: p.indigo },
+                            "&:hover": {
+                                backgroundColor: p.indigoSoft,
+                                borderColor: p.indigo,
+                            },
                         }}
                     />
                 </Box>

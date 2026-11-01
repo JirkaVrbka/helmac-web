@@ -12,6 +12,17 @@ import {
 import { FIELD_TYPE_ICONS } from "./field-type-icons";
 import { findFlatFieldById } from "./form-builder-helpers";
 import type { FlatElement } from "./form-data-adapter";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+
+const OVERLAY_SHADOW = "0 8px 24px rgba(0,0,0,0.15)";
+
+// Maps the legacy MUI semantic color names used by the palette chips to
+// builder-palette accent tokens (border + icon color).
+const CHIP_ACCENT: Record<string, string> = {
+    primary: p.indigo,
+    info: p.fieldInk,
+    success: p.valueInk,
+};
 
 interface Props {
     activeId: string | null;
@@ -40,7 +51,13 @@ export function DragOverlayContent({
             : isMulti
               ? "PlaylistAddCheck"
               : "Sell";
-        return <PaletteChip color={color} icon={icon} label={def?.name ?? "Ceník"} />;
+        return (
+            <PaletteChip
+                color={color}
+                icon={icon}
+                label={def?.name ?? "Ceník"}
+            />
+        );
     }
 
     if (activeId.startsWith("palette-condition-")) {
@@ -59,15 +76,30 @@ export function DragOverlayContent({
     if (activeId.startsWith("palette-")) {
         const type = activeId.slice("palette-".length) as FieldType;
         const meta = FIELD_TYPE_META[type];
-        return <PaletteChip color="primary" icon={meta.icon} label={meta.label} />;
+        return (
+            <PaletteChip color="primary" icon={meta.icon} label={meta.label} />
+        );
     }
 
     const field = findFlatFieldById(elements, activeId);
     if (field) {
         const meta = FIELD_TYPE_META[field.type];
         return (
-            <Paper elevation={4} sx={{ p: 1.5 }}>
-                <Typography variant="body2" fontWeight={500}>
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 1.5,
+                    backgroundColor: p.surface,
+                    border: `1px solid ${p.indigo}`,
+                    borderRadius: "12px",
+                    boxShadow: OVERLAY_SHADOW,
+                }}
+            >
+                <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    sx={{ color: p.ink }}
+                >
                     {meta.label}: {"label" in field ? field.label : field.text}
                 </Typography>
             </Paper>
@@ -85,18 +117,18 @@ export function DragOverlayContent({
                     el.kind === "field" &&
                     el.data.parentBlockId === block.data.id
             )
-            .map((el) =>
-                el.kind === "field" ? el.data.field : null
-            )
+            .map((el) => (el.kind === "field" ? el.data.field : null))
             .filter((f): f is FormField => f !== null);
         return (
             <Paper
-                elevation={4}
+                elevation={0}
                 sx={{
-                    borderLeft: "4px solid",
-                    borderLeftColor: "info.main",
-                    backgroundColor: "action.hover",
-                    borderRadius: 1,
+                    border: `1px solid ${p.line}`,
+                    borderLeftWidth: "4px",
+                    borderLeftColor: p.fieldInk,
+                    backgroundColor: p.surface2,
+                    borderRadius: "12px",
+                    boxShadow: OVERLAY_SHADOW,
                     overflow: "hidden",
                     minWidth: 360,
                 }}
@@ -110,8 +142,12 @@ export function DragOverlayContent({
                         py: 1,
                     }}
                 >
-                    <AccountTree fontSize="small" color="info" />
-                    <Typography variant="body2" fontWeight={600}>
+                    <AccountTree fontSize="small" sx={{ color: p.fieldInk }} />
+                    <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        sx={{ color: p.ink }}
+                    >
                         Podmínka: {cond?.name ?? "(nepojmenovaná)"}
                     </Typography>
                 </Box>
@@ -120,7 +156,7 @@ export function DragOverlayContent({
                     return (
                         <Paper
                             key={f.id}
-                            variant="outlined"
+                            elevation={0}
                             sx={{
                                 display: "flex",
                                 alignItems: "center",
@@ -129,13 +165,23 @@ export function DragOverlayContent({
                                 mb: 0.5,
                                 px: 1.5,
                                 py: 1,
-                                backgroundColor: "background.paper",
+                                border: `1px solid ${p.line}`,
+                                borderRadius: "10px",
+                                backgroundColor: p.surface,
                             }}
                         >
-                            <Box sx={{ color: "text.secondary", display: "flex" }}>
+                            <Box
+                                sx={{
+                                    color: p.ink3,
+                                    display: "flex",
+                                }}
+                            >
                                 {FIELD_TYPE_ICONS[meta.icon]}
                             </Box>
-                            <Typography variant="body2" sx={{ flex: 1 }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ flex: 1, color: p.ink }}
+                            >
                                 {"label" in f ? f.label : f.text}
                             </Typography>
                         </Paper>
@@ -157,24 +203,29 @@ function PaletteChip({
     icon: string;
     label: string;
 }) {
+    const accent = CHIP_ACCENT[color] ?? p.indigo;
     return (
         <Paper
-            variant="outlined"
+            elevation={0}
             sx={{
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
                 px: 1.5,
                 py: 1,
-                backgroundColor: "background.paper",
-                borderColor: `${color}.main`,
+                backgroundColor: p.surface,
+                border: `1px solid ${accent}`,
+                borderRadius: "10px",
+                boxShadow: OVERLAY_SHADOW,
                 width: 200,
             }}
         >
-            <Box sx={{ color: `${color}.main`, display: "flex" }}>
+            <Box sx={{ color: accent, display: "flex" }}>
                 {FIELD_TYPE_ICONS[icon]}
             </Box>
-            <Typography variant="body2">{label}</Typography>
+            <Typography variant="body2" sx={{ color: p.ink }}>
+                {label}
+            </Typography>
         </Paper>
     );
 }

@@ -2,15 +2,60 @@
 
 import {
     Box,
-    Button,
+    ButtonBase,
     ToggleButton,
     ToggleButtonGroup,
     Typography,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
-import type { ConditionRule, FormCondition, FormElement, FormField, InputField, PricingDefinition } from "@/lib/types/registration-form";
+import type {
+    ConditionRule,
+    FormCondition,
+    FormElement,
+    FormField,
+    InputField,
+    PricingDefinition,
+} from "@/lib/types/registration-form";
 import { isInputField } from "@/lib/types/registration-form";
 import { RuleRow } from "@/components/admin/form-builder/condition-editor";
+import { builderPalette as p } from "./palette";
+
+// Segmented AND/OR control — the rule-builder accent (mirrors condition-editor).
+const andOrGroupSx = {
+    backgroundColor: p.surface2,
+    border: `1px solid ${p.line}`,
+    borderRadius: "10px",
+    p: "3px",
+    gap: "2px",
+    "& .MuiToggleButton-root": {
+        border: 0,
+        borderRadius: "7px !important",
+        fontSize: "0.65rem",
+        fontWeight: 700,
+        letterSpacing: "0.04em",
+        height: 22,
+        px: 1,
+        py: 0,
+        lineHeight: 1,
+        color: p.ink2,
+        transition: "all 120ms ease",
+        "&:hover": { backgroundColor: "transparent", color: p.indigo },
+    },
+};
+const andToggleSx = {
+    "&.Mui-selected": {
+        backgroundColor: p.indigo,
+        color: "white",
+        "&:hover": { backgroundColor: "#4338ca", color: "white" },
+    },
+};
+const orToggleSx = {
+    "&.Mui-selected": {
+        backgroundColor: p.or,
+        color: "white",
+        "&:hover": { backgroundColor: p.or, color: "white" },
+    },
+};
 
 interface SingleConditionEditorProps {
     condition: FormCondition;
@@ -26,8 +71,8 @@ export function SingleConditionEditor({
     pricingDefinitions,
     onChange,
 }: SingleConditionEditorProps) {
-    const inputFields = allFields.filter(
-        (f): f is InputField => isInputField(f),
+    const inputFields = allFields.filter((f): f is InputField =>
+        isInputField(f)
     );
 
     const updateRule = (index: number, updates: Partial<ConditionRule>) => {
@@ -41,7 +86,10 @@ export function SingleConditionEditor({
     };
 
     const deleteRule = (index: number) => {
-        onChange({ ...condition, rules: condition.rules.filter((_, i) => i !== index) });
+        onChange({
+            ...condition,
+            rules: condition.rules.filter((_, i) => i !== index),
+        });
     };
 
     const addRule = () => {
@@ -63,13 +111,23 @@ export function SingleConditionEditor({
 
     return (
         <Box>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            <Typography
+                sx={{
+                    fontSize: 11,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    fontWeight: 700,
+                    color: p.ink3,
+                    mb: 1,
+                }}
+            >
                 Podmínka
             </Typography>
 
             {condition.rules.length === 0 && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                    Přidejte alespoň jedno pravidlo. Sekce bude odeslána pouze pokud podmínka platí.
+                <Typography variant="body2" sx={{ color: p.ink2, mb: 1.5 }}>
+                    Přidejte alespoň jedno pravidlo. Sekce bude odeslána pouze
+                    pokud podmínka platí.
                 </Typography>
             )}
 
@@ -77,7 +135,13 @@ export function SingleConditionEditor({
                 {condition.rules.map((rule, ruleIdx) => (
                     <Box key={ruleIdx}>
                         {ruleIdx > 0 && (
-                            <Box sx={{ display: "flex", justifyContent: "center", my: 0.5 }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    my: 0.5,
+                                }}
+                            >
                                 <ToggleButtonGroup
                                     value={rule.connector ?? "AND"}
                                     exclusive
@@ -87,18 +151,14 @@ export function SingleConditionEditor({
                                             updateConnector(ruleIdx, val);
                                         }
                                     }}
-                                    sx={{
-                                        "& .MuiToggleButton-root": {
-                                            fontSize: "0.65rem",
-                                            height: 20,
-                                            px: 1,
-                                            py: 0,
-                                            lineHeight: 1,
-                                        },
-                                    }}
+                                    sx={andOrGroupSx}
                                 >
-                                    <ToggleButton value="AND" color="primary">AND</ToggleButton>
-                                    <ToggleButton value="OR" color="warning">OR</ToggleButton>
+                                    <ToggleButton value="AND" sx={andToggleSx}>
+                                        AND
+                                    </ToggleButton>
+                                    <ToggleButton value="OR" sx={orToggleSx}>
+                                        OR
+                                    </ToggleButton>
                                 </ToggleButtonGroup>
                             </Box>
                         )}
@@ -117,9 +177,30 @@ export function SingleConditionEditor({
             </Box>
 
             <Box sx={{ mt: 1 }}>
-                <Button size="small" startIcon={<Add />} onClick={addRule}>
+                <ButtonBase
+                    onClick={addRule}
+                    sx={{
+                        py: "7px",
+                        px: "12px",
+                        backgroundColor: p.surface,
+                        border: `1px dashed ${p.line}`,
+                        borderRadius: "10px",
+                        color: p.indigo,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        transition: "all 140ms ease",
+                        "&:hover": {
+                            borderColor: p.indigo,
+                            backgroundColor: p.indigoSoft,
+                        },
+                    }}
+                >
+                    <Add sx={{ fontSize: 16 }} />
                     Přidat pravidlo
-                </Button>
+                </ButtonBase>
             </Box>
         </Box>
     );

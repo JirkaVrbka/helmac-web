@@ -13,7 +13,6 @@ import {
     MenuItem,
     RadioGroup,
     Radio,
-    Paper,
 } from "@mui/material";
 import type {
     FormField,
@@ -23,6 +22,19 @@ import type {
 } from "@/lib/types/registration-form";
 import { isInputField, isConditionBlock } from "@/lib/types/registration-form";
 import { getCurrentPrice, formatPrice } from "@/lib/utils/pricing";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
+
+const MONO = "'JetBrains Mono', monospace";
+
+// Shared inline field-label treatment (builder design system).
+const fieldLabelSx = {
+    mb: 1,
+    display: "block",
+    fontSize: 12,
+    fontWeight: 600,
+    color: p.ink2,
+} as const;
 
 interface FormPreviewProps {
     elements: FormElement[];
@@ -39,25 +51,60 @@ export function FormPreview({
 }: FormPreviewProps) {
     if (elements.length === 0) {
         return (
-            <Typography
-                color="text.secondary"
-                sx={{ textAlign: "center", py: 4 }}
+            <Box
+                sx={{
+                    border: `1px dashed ${p.line}`,
+                    borderRadius: "14px",
+                    py: 5,
+                    px: 3,
+                    textAlign: "center",
+                    color: p.ink3,
+                }}
             >
-                Formulář je prázdný. Přidejte pole pomocí tlačítka výše.
-            </Typography>
+                <Typography sx={{ color: p.ink3 }}>
+                    Formulář je prázdný. Přidejte pole pomocí tlačítka výše.
+                </Typography>
+            </Box>
         );
     }
 
     return (
-        <Paper variant="outlined" sx={{ p: 3 }}>
-            <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                sx={{ mb: 2 }}
+        <Box
+            sx={{
+                backgroundColor: p.surface,
+                border: `1px solid ${p.line}`,
+                borderRadius: "14px",
+                overflow: "hidden",
+            }}
+        >
+            <Box
+                sx={{
+                    px: "20px",
+                    py: "14px",
+                    borderBottom: `1px solid ${p.line}`,
+                    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+                }}
             >
-                Náhled formuláře
-            </Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography
+                    sx={{
+                        fontSize: 11,
+                        letterSpacing: "0.14em",
+                        textTransform: "uppercase",
+                        color: p.ink3,
+                        fontWeight: 700,
+                    }}
+                >
+                    Náhled formuláře
+                </Typography>
+            </Box>
+            <Box
+                sx={{
+                    p: 2.5,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                }}
+            >
                 {elements.map((el) => {
                     if (isConditionBlock(el)) {
                         const condition = conditions.find(
@@ -67,19 +114,23 @@ export function FormPreview({
                             <Box
                                 key={el.id}
                                 sx={{
-                                    borderLeft: "4px solid",
-                                    borderLeftColor: "info.main",
-                                    pl: 2,
-                                    py: 1,
-                                    backgroundColor: "action.hover",
-                                    borderRadius: 1,
+                                    border: `1px solid ${p.line}`,
+                                    borderLeftWidth: "4px",
+                                    borderLeftColor: p.fieldInk,
+                                    px: 1.5,
+                                    py: 1.25,
+                                    backgroundColor: p.surface2,
+                                    borderRadius: "10px",
                                 }}
                             >
                                 <Typography
                                     variant="caption"
-                                    color="info.main"
-                                    fontWeight={600}
-                                    sx={{ mb: 1, display: "block" }}
+                                    fontWeight={700}
+                                    sx={{
+                                        mb: 1,
+                                        display: "block",
+                                        color: p.fieldInk,
+                                    }}
                                 >
                                     Podmínka:{" "}
                                     {condition?.name || "(nepojmenovaná)"}
@@ -115,7 +166,7 @@ export function FormPreview({
                     );
                 })}
             </Box>
-        </Paper>
+        </Box>
     );
 }
 
@@ -132,15 +183,18 @@ function PreviewField({
         if (field.type === "heading") {
             return (
                 <Box>
-                    <Typography variant="h5" sx={{ mt: 1 }}>
+                    <Typography
+                        variant="h5"
+                        sx={{ mt: 1, color: p.ink, fontWeight: 700 }}
+                    >
                         {field.text}
                     </Typography>
-                    <Divider />
+                    <Divider sx={{ borderColor: p.line, mt: 1 }} />
                 </Box>
             );
         }
         return (
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" sx={{ color: p.ink2 }}>
                 {field.text}
             </Typography>
         );
@@ -150,14 +204,25 @@ function PreviewField({
         case "checkbox":
             return (
                 <FormControlLabel
-                    control={<Checkbox disabled />}
+                    control={
+                        <Checkbox
+                            disabled
+                            sx={{
+                                color: p.ink3,
+                                "&.Mui-checked": { color: p.indigo },
+                            }}
+                        />
+                    }
                     label={`${field.label}${field.required ? " *" : ""}`}
+                    sx={{
+                        "& .MuiFormControlLabel-label": { color: p.ink },
+                    }}
                 />
             );
 
         case "select":
             return (
-                <FormControl fullWidth disabled>
+                <FormControl fullWidth disabled sx={builderFieldSx}>
                     <InputLabel>{`${field.label}${field.required ? " *" : ""}`}</InputLabel>
                     <Select
                         value=""
@@ -175,7 +240,7 @@ function PreviewField({
         case "radio":
             return (
                 <FormControl disabled>
-                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    <Typography variant="body2" sx={fieldLabelSx}>
                         {field.label}
                         {field.required ? " *" : ""}
                     </Typography>
@@ -184,8 +249,22 @@ function PreviewField({
                             <FormControlLabel
                                 key={opt}
                                 value={opt}
-                                control={<Radio />}
+                                control={
+                                    <Radio
+                                        sx={{
+                                            color: p.ink3,
+                                            "&.Mui-checked": {
+                                                color: p.indigo,
+                                            },
+                                        }}
+                                    />
+                                }
                                 label={opt}
+                                sx={{
+                                    "& .MuiFormControlLabel-label": {
+                                        color: p.ink,
+                                    },
+                                }}
                             />
                         ))}
                     </RadioGroup>
@@ -198,13 +277,13 @@ function PreviewField({
             );
             if (!def)
                 return (
-                    <Typography variant="body2" color="error">
+                    <Typography variant="body2" sx={{ color: p.negInk }}>
                         Cenová skupina nenalezena
                     </Typography>
                 );
             return (
                 <Box>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={fieldLabelSx}>
                         {field.label}
                         {field.required ? " *" : ""}
                     </Typography>
@@ -221,27 +300,32 @@ function PreviewField({
                                 opt.prices
                             );
                             return (
-                                <Paper
+                                <Box
                                     key={opt.id}
-                                    variant="outlined"
                                     sx={{
                                         p: 1.5,
                                         display: "flex",
                                         justifyContent: "space-between",
                                         alignItems: "center",
+                                        border: `1px solid ${p.line}`,
+                                        borderRadius: "10px",
+                                        backgroundColor: p.surface,
                                     }}
                                 >
                                     <Box>
                                         <Typography
                                             variant="body2"
-                                            fontWeight={500}
+                                            sx={{
+                                                fontWeight: 600,
+                                                color: p.ink,
+                                            }}
                                         >
                                             {opt.name}
                                         </Typography>
                                         {opt.description && (
                                             <Typography
                                                 variant="caption"
-                                                color="text.secondary"
+                                                sx={{ color: p.ink3 }}
                                             >
                                                 {opt.description}
                                             </Typography>
@@ -249,12 +333,15 @@ function PreviewField({
                                     </Box>
                                     <Typography
                                         variant="body2"
-                                        fontWeight={600}
-                                        color="primary"
+                                        sx={{
+                                            fontWeight: 600,
+                                            color: p.indigo,
+                                            fontFamily: MONO,
+                                        }}
                                     >
                                         {formatPrice(price)}
                                     </Typography>
-                                </Paper>
+                                </Box>
                             );
                         })}
                     </Box>
@@ -268,7 +355,7 @@ function PreviewField({
             );
             if (!def)
                 return (
-                    <Typography variant="body2" color="error">
+                    <Typography variant="body2" sx={{ color: p.negInk }}>
                         Cenová skupina nenalezena
                     </Typography>
                 );
@@ -281,15 +368,14 @@ function PreviewField({
                 : 0;
             return (
                 <Box>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={fieldLabelSx}>
                         {field.label}
                         {field.required ? " *" : ""}
                     </Typography>
                     {unitOpt?.description && (
                         <Typography
                             variant="caption"
-                            color="text.secondary"
-                            sx={{ mb: 1, display: "block" }}
+                            sx={{ mb: 1, display: "block", color: p.ink3 }}
                         >
                             {unitOpt.description}
                         </Typography>
@@ -300,18 +386,24 @@ function PreviewField({
                             size="small"
                             disabled
                             value={0}
-                            sx={{ width: 120 }}
+                            sx={{
+                                ...(builderFieldSx as Record<string, unknown>),
+                                width: 120,
+                            }}
                             inputProps={{ min: 0 }}
                         />
                         {def.unitName && (
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{ color: p.ink2 }}>
                                 {def.unitName}
                             </Typography>
                         )}
                         <Typography
                             variant="body2"
-                            fontWeight={600}
-                            color="info.main"
+                            sx={{
+                                fontWeight: 600,
+                                color: p.fieldInk,
+                                fontFamily: MONO,
+                            }}
                         >
                             {formatPrice(unitPrice)} / {def.unitName || "ks"}
                         </Typography>
@@ -326,13 +418,13 @@ function PreviewField({
             );
             if (!msDef)
                 return (
-                    <Typography variant="body2" color="error">
+                    <Typography variant="body2" sx={{ color: p.negInk }}>
                         Cenová skupina nenalezena
                     </Typography>
                 );
             return (
                 <Box>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={fieldLabelSx}>
                         {field.label}
                         {field.required ? " *" : ""} (vícevýběr)
                     </Typography>
@@ -349,14 +441,16 @@ function PreviewField({
                                 opt.prices
                             );
                             return (
-                                <Paper
+                                <Box
                                     key={opt.id}
-                                    variant="outlined"
                                     sx={{
                                         p: 1.5,
                                         display: "flex",
                                         justifyContent: "space-between",
                                         alignItems: "center",
+                                        border: `1px solid ${p.line}`,
+                                        borderRadius: "10px",
+                                        backgroundColor: p.surface,
                                     }}
                                 >
                                     <Box
@@ -366,18 +460,30 @@ function PreviewField({
                                             gap: 1,
                                         }}
                                     >
-                                        <Checkbox disabled size="small" />
+                                        <Checkbox
+                                            disabled
+                                            size="small"
+                                            sx={{
+                                                color: p.ink3,
+                                                "&.Mui-checked": {
+                                                    color: p.indigo,
+                                                },
+                                            }}
+                                        />
                                         <Box>
                                             <Typography
                                                 variant="body2"
-                                                fontWeight={500}
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    color: p.ink,
+                                                }}
                                             >
                                                 {opt.name}
                                             </Typography>
                                             {opt.description && (
                                                 <Typography
                                                     variant="caption"
-                                                    color="text.secondary"
+                                                    sx={{ color: p.ink3 }}
                                                 >
                                                     {opt.description}
                                                 </Typography>
@@ -386,12 +492,15 @@ function PreviewField({
                                     </Box>
                                     <Typography
                                         variant="body2"
-                                        fontWeight={600}
-                                        color="primary"
+                                        sx={{
+                                            fontWeight: 600,
+                                            color: p.indigo,
+                                            fontFamily: MONO,
+                                        }}
                                     >
                                         {formatPrice(price)}
                                     </Typography>
-                                </Paper>
+                                </Box>
                             );
                         })}
                     </Box>
@@ -408,6 +517,7 @@ function PreviewField({
                     rows={4}
                     fullWidth
                     disabled
+                    sx={builderFieldSx}
                 />
             );
 
@@ -428,6 +538,7 @@ function PreviewField({
                     }
                     fullWidth
                     disabled
+                    sx={builderFieldSx}
                     InputLabelProps={
                         field.type === "date" || field.type === "birth_date"
                             ? { shrink: true }

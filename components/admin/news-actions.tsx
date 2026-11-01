@@ -17,6 +17,7 @@ import { Delete } from "@mui/icons-material";
 import { deleteNews } from "@/lib/actions/news";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/lib/hooks/use-toast";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface NewsActionsProps {
     newsId: string;
@@ -58,10 +59,17 @@ export function NewsActions({ newsId }: NewsActionsProps) {
                 <Tooltip title="Smazat novinku">
                     <IconButton
                         size="small"
-                        color="error"
                         onClick={() => setDeleteDialogOpen(true)}
+                        sx={{
+                            color: p.ink3,
+                            borderRadius: "8px",
+                            "&:hover": {
+                                color: p.negInk,
+                                backgroundColor: p.neg,
+                            },
+                        }}
                     >
-                        <Delete />
+                        <Delete sx={{ fontSize: 16 }} />
                     </IconButton>
                 </Tooltip>
             </Box>
@@ -69,11 +77,15 @@ export function NewsActions({ newsId }: NewsActionsProps) {
             <Dialog
                 open={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
             >
-                <DialogTitle>Smazat novinku?</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Smazat novinku?
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Opravdu chcete smazat tuto novinku? Tato akce je nevratná.
+                        Opravdu chcete smazat tuto novinku? Tato akce je
+                        nevratná.
                     </DialogContentText>
                     {error && (
                         <DialogContentText color="error" sx={{ mt: 2 }}>
@@ -81,14 +93,31 @@ export function NewsActions({ newsId }: NewsActionsProps) {
                         </DialogContentText>
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
+                    <Button
+                        onClick={() => setDeleteDialogOpen(false)}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleDelete}
-                        color="error"
                         variant="contained"
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.neg,
+                            color: p.negInk,
+                            "&:hover": { backgroundColor: "#fecaca" },
+                        }}
                     >
                         Smazat
                     </Button>

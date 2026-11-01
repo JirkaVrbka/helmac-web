@@ -1,25 +1,26 @@
-import { Container, Typography, Box, Chip } from "@mui/material";
+import { Container, Typography, Box } from "@mui/material";
 import { Shield, Person, SupervisorAccount } from "@mui/icons-material";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { auth, requireSuperAdmin } from "@/lib/auth";
 import { UserForm } from "@/components/forms/user-form";
 import { PageHeader } from "@/components/admin/page-header";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
 interface EditUserPageProps {
     params: Promise<{ id: string }>;
 }
 
 const roleIcons: Record<string, React.ReactNode> = {
-    SUPER_ADMIN: <Shield />,
-    ADMIN: <SupervisorAccount />,
-    EDITOR: <Person />,
+    SUPER_ADMIN: <Shield sx={{ fontSize: 14 }} />,
+    ADMIN: <SupervisorAccount sx={{ fontSize: 14 }} />,
+    EDITOR: <Person sx={{ fontSize: 14 }} />,
 };
 
-const roleColors: Record<string, "error" | "warning" | "info"> = {
-    SUPER_ADMIN: "error",
-    ADMIN: "warning",
-    EDITOR: "info",
+const roleBadgeColors: Record<string, { bg: string; fg: string }> = {
+    SUPER_ADMIN: { bg: p.neg, fg: p.negInk },
+    ADMIN: { bg: p.warnSoft, fg: p.warnInk },
+    EDITOR: { bg: p.field, fg: p.fieldInk },
 };
 
 async function getUser(id: string) {
@@ -69,17 +70,42 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
                         mb: 1,
                     }}
                 >
-                    <Chip
-                        label={user.role.replace("_", " ")}
-                        color={roleColors[user.role]}
-                        size="small"
-                        icon={roleIcons[user.role] as React.ReactElement}
-                    />
+                    <Box
+                        component="span"
+                        sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            px: "10px",
+                            py: "3px",
+                            borderRadius: "20px",
+                            backgroundColor: roleBadgeColors[user.role].bg,
+                            color: roleBadgeColors[user.role].fg,
+                        }}
+                    >
+                        {roleIcons[user.role]}
+                        {user.role.replace("_", " ")}
+                    </Box>
                     {isCurrentUser && (
-                        <Chip label="Vas ucet" size="small" variant="outlined" />
+                        <Box
+                            component="span"
+                            sx={{
+                                fontSize: "0.72rem",
+                                fontWeight: 600,
+                                border: `1px solid ${p.line}`,
+                                borderRadius: "12px",
+                                px: "9px",
+                                py: "1px",
+                                color: p.ink2,
+                            }}
+                        >
+                            Vas ucet
+                        </Box>
                     )}
                 </Box>
-                <Typography color="text.secondary">{user.name}</Typography>
+                <Typography sx={{ color: p.ink2 }}>{user.name}</Typography>
             </Box>
 
             <UserForm

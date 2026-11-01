@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
     Box,
+    ButtonBase,
     Button,
-    Card,
-    CardContent,
-    CardActions,
     Collapse,
     Dialog,
     DialogTitle,
@@ -15,7 +13,6 @@ import {
     DialogActions,
     FormControlLabel,
     IconButton,
-    Paper,
     Switch,
     TextField,
     Tooltip,
@@ -41,6 +38,61 @@ import type {
     FormElement,
 } from "@/lib/types/registration-form";
 import { isConditionBlock } from "@/lib/types/registration-form";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
+
+// Builder-palette primitives (local to the form builder).
+
+const MONO = "'JetBrains Mono', monospace";
+
+const kickerSx = {
+    fontSize: 11,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase" as const,
+    fontWeight: 700,
+    color: p.ink3,
+};
+
+const iconBtnDangerSx = {
+    color: p.ink3,
+    borderRadius: "8px",
+    transition: "all 140ms ease",
+    "&:hover": { color: p.negInk, backgroundColor: p.neg },
+};
+
+const paneSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    borderRadius: "14px",
+    overflow: "hidden",
+};
+
+const dashedSx = {
+    py: "7px",
+    px: "12px",
+    backgroundColor: p.surface,
+    border: `1px dashed ${p.line}`,
+    borderRadius: "10px",
+    color: p.indigo,
+    fontSize: 13,
+    fontWeight: 600,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    transition: "all 140ms ease",
+    "&:hover": { borderColor: p.indigo, backgroundColor: p.indigoSoft },
+};
+
+/** Indigo-on switch. */
+const switchSx = {
+    "& .MuiSwitch-switchBase": { color: "white" },
+    "& .MuiSwitch-switchBase.Mui-checked": { color: "white" },
+    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+        backgroundColor: p.indigo,
+        opacity: 1,
+    },
+    "& .MuiSwitch-track": { backgroundColor: p.surface3, opacity: 1 },
+};
 
 interface PricingEditorProps {
     pricingDefinitions: PricingDefinition[];
@@ -302,25 +354,49 @@ export function PricingEditor({
         (t) => t && t >= today.date && t <= today.twoWeeks
     ).length;
 
+    // Price field "Kč" adornment
+    const kcAdornment = (
+        <Typography
+            variant="caption"
+            sx={{ color: p.valueInk, fontWeight: 600 }}
+        >
+            Kč
+        </Typography>
+    );
+    const priceFieldSx = { ...builderFieldSx, width: 130 };
+
     return (
         <Box>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+            <Typography
+                sx={{
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    color: p.ink,
+                    mb: 0.5,
+                }}
+            >
                 Ceník
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ color: p.ink2, mb: 2 }}>
                 Definujte cenové skupiny s termínovými slevami. Poté je
                 přetáhněte z palety do formuláře.
             </Typography>
 
             {/* Shared price tiers section */}
-            <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            <Box sx={{ ...paneSx, p: 2.5, mb: 3 }}>
+                <Typography
+                    sx={{
+                        fontSize: "0.9rem",
+                        fontWeight: 600,
+                        color: p.ink,
+                        mb: 0.5,
+                    }}
+                >
                     Cenové termíny (sdílené)
                 </Typography>
                 <Typography
                     variant="caption"
-                    color="text.secondary"
-                    sx={{ mb: 1, display: "block" }}
+                    sx={{ color: p.ink2, mb: 1.5, display: "block" }}
                 >
                     Termíny platí pro všechny cenové skupiny, které je
                     používají. Ceny platí do uvedeného data. Po posledním
@@ -337,22 +413,27 @@ export function PricingEditor({
                         }}
                     >
                         {priceTiers.map((tier, idx) => (
-                            <Paper
+                            <Box
                                 key={idx}
-                                variant="outlined"
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 1,
                                     p: 1,
-                                    borderRadius: 1,
+                                    border: `1px solid ${p.lineSoft}`,
+                                    borderRadius: "10px",
+                                    backgroundColor: p.surface2,
                                     flex: "1 1 auto",
                                     minWidth: 180,
                                 }}
                             >
                                 <Typography
                                     variant="body2"
-                                    sx={{ minWidth: 60, fontWeight: 500 }}
+                                    sx={{
+                                        minWidth: 60,
+                                        fontWeight: 600,
+                                        color: p.ink2,
+                                    }}
                                 >
                                     Termín {idx + 1}
                                 </Typography>
@@ -368,39 +449,43 @@ export function PricingEditor({
                                     slotProps={{
                                         textField: {
                                             size: "small",
-                                            sx: { flex: 1 },
+                                            sx: { flex: 1, ...builderFieldSx },
                                         },
                                     }}
                                 />
                                 <Tooltip title="Odebrat termín">
                                     <IconButton
                                         size="small"
-                                        color="error"
+                                        sx={iconBtnDangerSx}
                                         onClick={() => handleRemoveTier(idx)}
                                     >
                                         <Delete fontSize="small" />
                                     </IconButton>
                                 </Tooltip>
-                            </Paper>
+                            </Box>
                         ))}
                     </Box>
                 )}
-                <Button
-                    size="small"
-                    startIcon={<Add />}
-                    onClick={handleAddTier}
-                >
+                <ButtonBase onClick={handleAddTier} sx={dashedSx}>
+                    <Add sx={{ fontSize: 16 }} />
                     Přidat termín
-                </Button>
-            </Paper>
+                </ButtonBase>
+            </Box>
 
             {pricingDefinitions.length === 0 && (
-                <Typography
-                    color="text.secondary"
-                    sx={{ textAlign: "center", py: 3 }}
+                <Box
+                    sx={{
+                        border: `1px dashed ${p.line}`,
+                        borderRadius: "14px",
+                        textAlign: "center",
+                        color: p.ink3,
+                        py: 4,
+                        px: 3,
+                        fontSize: "0.875rem",
+                    }}
                 >
                     Zatím nejsou definovány žádné cenové skupiny.
-                </Typography>
+                </Box>
             )}
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
@@ -408,11 +493,12 @@ export function PricingEditor({
                     const isExpanded = expandedId === def.id;
                     const isQuantity = def.type === "quantity";
                     const isMultiSelect = !isQuantity && def.multiSelect;
-                    const typeColor = isQuantity
-                        ? "info"
+                    // Icon-chip background token per pricing type.
+                    const typeChipColor = isQuantity
+                        ? p.fieldInk
                         : isMultiSelect
-                          ? "primary"
-                          : "success";
+                          ? p.indigoInk
+                          : p.valueInk;
                     const TypeIcon = isQuantity
                         ? Calculate
                         : isMultiSelect
@@ -424,11 +510,7 @@ export function PricingEditor({
                           ? "Cenový vícevýběr"
                           : "Cenový výběr";
                     return (
-                        <Card
-                            key={def.id}
-                            variant="outlined"
-                            sx={{ borderRadius: 2 }}
-                        >
+                        <Box key={def.id} sx={paneSx}>
                             <Box
                                 sx={{
                                     display: "flex",
@@ -437,6 +519,10 @@ export function PricingEditor({
                                     px: 2,
                                     py: 1.5,
                                     cursor: "pointer",
+                                    borderBottom: isExpanded
+                                        ? `1px solid ${p.line}`
+                                        : "none",
+                                    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
                                 }}
                                 onClick={() =>
                                     setExpandedId(isExpanded ? null : def.id)
@@ -446,8 +532,8 @@ export function PricingEditor({
                                     sx={{
                                         width: 32,
                                         height: 32,
-                                        borderRadius: 1,
-                                        backgroundColor: `${typeColor}.main`,
+                                        borderRadius: "8px",
+                                        backgroundColor: typeChipColor,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -460,15 +546,18 @@ export function PricingEditor({
                                 </Box>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Typography
-                                        variant="body1"
-                                        fontWeight={500}
+                                        sx={{
+                                            fontSize: "0.95rem",
+                                            fontWeight: 600,
+                                            color: p.ink,
+                                        }}
                                         noWrap
                                     >
                                         {def.name || "(nepojmenovaná)"}
                                     </Typography>
                                     <Typography
                                         variant="caption"
-                                        color="text.secondary"
+                                        sx={{ color: p.ink3 }}
                                     >
                                         {typeLabel} · {def.options.length}{" "}
                                         {def.options.length === 1
@@ -480,14 +569,14 @@ export function PricingEditor({
                                     </Typography>
                                 </Box>
                                 {isExpanded ? (
-                                    <ExpandLess color="action" />
+                                    <ExpandLess sx={{ color: p.ink3 }} />
                                 ) : (
-                                    <ExpandMore color="action" />
+                                    <ExpandMore sx={{ color: p.ink3 }} />
                                 )}
                                 <Tooltip title="Smazat cenovou skupinu">
                                     <IconButton
                                         size="small"
-                                        color="error"
+                                        sx={iconBtnDangerSx}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleDeleteDefinition(def.id);
@@ -498,7 +587,7 @@ export function PricingEditor({
                                 </Tooltip>
                             </Box>
                             <Collapse in={isExpanded}>
-                                <CardContent sx={{ pt: 0 }}>
+                                <Box sx={{ p: 2.5 }}>
                                     <TextField
                                         label="Název cenové skupiny"
                                         value={def.name}
@@ -509,7 +598,7 @@ export function PricingEditor({
                                         }
                                         size="small"
                                         fullWidth
-                                        sx={{ mb: 2 }}
+                                        sx={{ ...builderFieldSx, mb: 2 }}
                                         placeholder='např. "Ubytování", "Vstupné"'
                                     />
 
@@ -524,17 +613,22 @@ export function PricingEditor({
                                                         e.target.checked
                                                     )
                                                 }
+                                                sx={switchSx}
                                             />
                                         }
                                         label="Použít cenové termíny"
-                                        sx={{ mb: 2, display: "block" }}
+                                        sx={{
+                                            mb: 2,
+                                            display: "block",
+                                            "& .MuiFormControlLabel-label": {
+                                                fontSize: "0.875rem",
+                                                color: p.ink2,
+                                            },
+                                        }}
                                     />
 
                                     {/* Options */}
-                                    <Typography
-                                        variant="subtitle2"
-                                        sx={{ mb: 1 }}
-                                    >
+                                    <Typography sx={{ ...kickerSx, mb: 1 }}>
                                         Možnosti
                                     </Typography>
                                     {def.options.map((option) => (
@@ -543,10 +637,9 @@ export function PricingEditor({
                                             sx={{
                                                 p: 1.5,
                                                 mb: 1,
-                                                border: "1px solid",
-                                                borderColor: "divider",
-                                                borderRadius: 1,
-                                                backgroundColor: "action.hover",
+                                                border: `1px solid ${p.lineSoft}`,
+                                                borderRadius: "10px",
+                                                backgroundColor: p.surface2,
                                             }}
                                         >
                                             <Box
@@ -570,13 +663,16 @@ export function PricingEditor({
                                                         )
                                                     }
                                                     size="small"
-                                                    sx={{ flex: 1 }}
+                                                    sx={{
+                                                        ...builderFieldSx,
+                                                        flex: 1,
+                                                    }}
                                                 />
                                                 <Tooltip title="Smazat možnost">
                                                     <span>
                                                         <IconButton
                                                             size="small"
-                                                            color="error"
+                                                            sx={iconBtnDangerSx}
                                                             onClick={() =>
                                                                 handleDeleteOption(
                                                                     def.id,
@@ -608,7 +704,10 @@ export function PricingEditor({
                                                 }
                                                 size="small"
                                                 fullWidth
-                                                sx={{ mb: 1 }}
+                                                sx={{
+                                                    ...builderFieldSx,
+                                                    mb: 1,
+                                                }}
                                             />
                                             <Box
                                                 sx={{
@@ -649,22 +748,12 @@ export function PricingEditor({
                                                                         )
                                                                     }
                                                                     size="small"
-                                                                    sx={{
-                                                                        width: 130,
-                                                                    }}
+                                                                    sx={
+                                                                        priceFieldSx
+                                                                    }
                                                                     InputProps={{
                                                                         endAdornment:
-                                                                            (
-                                                                                <Typography
-                                                                                    variant="caption"
-                                                                                    color="success.main"
-                                                                                    sx={{
-                                                                                        fontWeight: 600,
-                                                                                    }}
-                                                                                >
-                                                                                    Kč
-                                                                                </Typography>
-                                                                            ),
+                                                                            kcAdornment,
                                                                     }}
                                                                 />
                                                             )
@@ -690,19 +779,10 @@ export function PricingEditor({
                                                                 )
                                                             }
                                                             size="small"
-                                                            sx={{ width: 130 }}
+                                                            sx={priceFieldSx}
                                                             InputProps={{
-                                                                endAdornment: (
-                                                                    <Typography
-                                                                        variant="caption"
-                                                                        color="success.main"
-                                                                        sx={{
-                                                                            fontWeight: 600,
-                                                                        }}
-                                                                    >
-                                                                        Kč
-                                                                    </Typography>
-                                                                ),
+                                                                endAdornment:
+                                                                    kcAdornment,
                                                             }}
                                                         />
                                                     </>
@@ -726,37 +806,30 @@ export function PricingEditor({
                                                             )
                                                         }
                                                         size="small"
-                                                        sx={{ width: 130 }}
+                                                        sx={priceFieldSx}
                                                         InputProps={{
-                                                            endAdornment: (
-                                                                <Typography
-                                                                    variant="caption"
-                                                                    color="success.main"
-                                                                    sx={{
-                                                                        fontWeight: 600,
-                                                                    }}
-                                                                >
-                                                                    Kč
-                                                                </Typography>
-                                                            ),
+                                                            endAdornment:
+                                                                kcAdornment,
                                                         }}
                                                     />
                                                 )}
                                             </Box>
                                         </Box>
                                     ))}
-                                </CardContent>
-                                <CardActions sx={{ px: 2, pt: 0 }}>
-                                    <Button
-                                        size="small"
-                                        startIcon={<Add />}
-                                        onClick={() => handleAddOption(def.id)}
-                                    >
-                                        Přidat možnost
-                                    </Button>
-                                </CardActions>
+                                    <Box sx={{ mt: 0.5 }}>
+                                        <ButtonBase
+                                            onClick={() =>
+                                                handleAddOption(def.id)
+                                            }
+                                            sx={dashedSx}
+                                        >
+                                            <Add sx={{ fontSize: 16 }} />
+                                            Přidat možnost
+                                        </ButtonBase>
+                                    </Box>
+                                </Box>
                             </Collapse>
-                        </Card>
+                        </Box>
                     );
                 })}
             </Box>
@@ -764,16 +837,20 @@ export function PricingEditor({
             <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
                 <Button
                     variant="outlined"
-                    startIcon={<Sell />}
+                    startIcon={<Sell sx={{ color: p.valueInk }} />}
                     onClick={() => handleAddDefinition("options", false)}
                     sx={{
                         flex: "1 1 0",
                         minWidth: 200,
-                        color: "success.main",
-                        borderColor: "success.main",
+                        textTransform: "none",
+                        fontWeight: 600,
+                        borderRadius: "10px",
+                        backgroundColor: p.surface,
+                        color: p.ink2,
+                        borderColor: p.line,
                         "&:hover": {
-                            borderColor: "success.dark",
-                            backgroundColor: "rgba(46, 125, 50, 0.04)",
+                            borderColor: p.ink3,
+                            backgroundColor: p.surface2,
                         },
                     }}
                 >
@@ -781,16 +858,20 @@ export function PricingEditor({
                 </Button>
                 <Button
                     variant="outlined"
-                    startIcon={<PlaylistAddCheck />}
+                    startIcon={<PlaylistAddCheck sx={{ color: p.indigoInk }} />}
                     onClick={() => handleAddDefinition("options", true)}
                     sx={{
                         flex: "1 1 0",
                         minWidth: 200,
-                        color: "secondary.main",
-                        borderColor: "secondary.main",
+                        textTransform: "none",
+                        fontWeight: 600,
+                        borderRadius: "10px",
+                        backgroundColor: p.surface,
+                        color: p.ink2,
+                        borderColor: p.line,
                         "&:hover": {
-                            borderColor: "secondary.dark",
-                            backgroundColor: "rgba(156, 39, 176, 0.04)",
+                            borderColor: p.ink3,
+                            backgroundColor: p.surface2,
                         },
                     }}
                 >
@@ -798,16 +879,20 @@ export function PricingEditor({
                 </Button>
                 <Button
                     variant="outlined"
-                    startIcon={<Calculate />}
+                    startIcon={<Calculate sx={{ color: p.fieldInk }} />}
                     onClick={() => handleAddDefinition("quantity", false)}
                     sx={{
                         flex: "1 1 0",
                         minWidth: 200,
-                        color: "info.main",
-                        borderColor: "info.main",
+                        textTransform: "none",
+                        fontWeight: 600,
+                        borderRadius: "10px",
+                        backgroundColor: p.surface,
+                        color: p.ink2,
+                        borderColor: p.line,
                         "&:hover": {
-                            borderColor: "info.dark",
-                            backgroundColor: "rgba(2, 136, 209, 0.04)",
+                            borderColor: p.ink3,
+                            backgroundColor: p.surface2,
                         },
                     }}
                 >
@@ -818,104 +903,38 @@ export function PricingEditor({
             {/* Stats summary */}
             {pricingDefinitions.length > 0 && (
                 <Box sx={{ display: "flex", gap: 2, mt: 3, flexWrap: "wrap" }}>
-                    <Paper
-                        variant="outlined"
-                        sx={{
-                            p: 2,
-                            flex: "1 1 0",
-                            minWidth: 140,
-                            borderRadius: 2,
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                mb: 0.5,
-                            }}
-                        >
-                            <CategoryOutlined
-                                sx={{ fontSize: 18, color: "primary.main" }}
-                            />
-                            <Typography
-                                variant="caption"
-                                color="text.secondary"
-                            >
-                                Celkem skupin
-                            </Typography>
-                        </Box>
-                        <Typography variant="h6" fontWeight={600}>
-                            {totalGroups}
-                        </Typography>
-                    </Paper>
-                    <Paper
-                        variant="outlined"
-                        sx={{
-                            p: 2,
-                            flex: "1 1 0",
-                            minWidth: 140,
-                            borderRadius: 2,
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                mb: 0.5,
-                            }}
-                        >
-                            <CalendarTodayOutlined
-                                sx={{ fontSize: 18, color: "success.main" }}
-                            />
-                            <Typography
-                                variant="caption"
-                                color="text.secondary"
-                            >
-                                Aktivních termínů
-                            </Typography>
-                        </Box>
-                        <Typography variant="h6" fontWeight={600}>
-                            {totalActiveTiers}
-                        </Typography>
-                    </Paper>
-                    <Paper
-                        variant="outlined"
-                        sx={{
-                            p: 2,
-                            flex: "1 1 0",
-                            minWidth: 140,
-                            borderRadius: 2,
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                mb: 0.5,
-                            }}
-                        >
-                            <WarningAmberOutlined
-                                sx={{ fontSize: 18, color: "warning.main" }}
-                            />
-                            <Typography
-                                variant="caption"
-                                color="text.secondary"
-                            >
-                                Končící termíny
-                            </Typography>
-                        </Box>
-                        <Typography variant="h6" fontWeight={600}>
-                            {expiringTiers}
-                        </Typography>
-                    </Paper>
+                    <StatTile
+                        icon={<CategoryOutlined sx={{ fontSize: 20 }} />}
+                        iconBg={p.indigoSoft}
+                        iconColor={p.indigo}
+                        label="Celkem skupin"
+                        value={totalGroups}
+                    />
+                    <StatTile
+                        icon={<CalendarTodayOutlined sx={{ fontSize: 20 }} />}
+                        iconBg={p.value}
+                        iconColor={p.valueInk}
+                        label="Aktivních termínů"
+                        value={totalActiveTiers}
+                    />
+                    <StatTile
+                        icon={<WarningAmberOutlined sx={{ fontSize: 20 }} />}
+                        iconBg={p.warnSoft}
+                        iconColor={p.warnInk}
+                        label="Končící termíny"
+                        value={expiringTiers}
+                    />
                 </Box>
             )}
 
-            <Dialog open={!!blockInfo} onClose={() => setBlockInfo(null)}>
-                <DialogTitle>Nelze smazat cenovou skupinu</DialogTitle>
+            <Dialog
+                open={!!blockInfo}
+                onClose={() => setBlockInfo(null)}
+                PaperProps={{ sx: { borderRadius: "14px" } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Nelze smazat cenovou skupinu
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         Cenová skupina &bdquo;{blockInfo?.definitionName}&ldquo;
@@ -929,11 +948,78 @@ export function PricingEditor({
                     <Button
                         onClick={() => setBlockInfo(null)}
                         variant="contained"
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            textTransform: "none",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                     >
                         Rozumím
                     </Button>
                 </DialogActions>
             </Dialog>
+        </Box>
+    );
+}
+
+/** Builder-palette KPI stat tile. */
+function StatTile({
+    icon,
+    iconBg,
+    iconColor,
+    label,
+    value,
+}: {
+    icon: ReactNode;
+    iconBg: string;
+    iconColor: string;
+    label: string;
+    value: number;
+}) {
+    return (
+        <Box
+            sx={{
+                backgroundColor: p.surface,
+                border: `1px solid ${p.line}`,
+                borderRadius: "14px",
+                p: 2.25,
+                flex: "1 1 0",
+                minWidth: 140,
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.75,
+            }}
+        >
+            <Box
+                sx={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: "11px",
+                    backgroundColor: iconBg,
+                    color: iconColor,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                {icon}
+            </Box>
+            <Typography
+                sx={{
+                    fontFamily: MONO,
+                    fontSize: "1.7rem",
+                    fontWeight: 700,
+                    color: p.ink,
+                    lineHeight: 1.1,
+                }}
+            >
+                {value}
+            </Typography>
+            <Typography sx={{ fontSize: "0.8rem", color: p.ink2 }}>
+                {label}
+            </Typography>
         </Box>
     );
 }

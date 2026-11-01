@@ -191,6 +191,7 @@ Pattern-specific guidance lives in `.claude/rules/` (loads automatically when ma
 Cross-cutting guidelines:
 
 - **Hard rules:** `docs/guidelines/hard-rules.md` — non-negotiable safety / dependency / scope rules (destructive ones hook-enforced).
+- **Admin UI design:** `.claude/rules/admin-ui-design.md` — visual design system for **admin pages** (builder-palette look). **When creating or updating any admin UI (`app/admin/**`, `components/admin/**`, `components/forms/**`), follow this style.\*\* Public pages are a separate theme and out of scope.
 - **Development workflow:** `.claude/rules/development-workflow.md` — per-assignment workflow (plan → delegate via sub-agents → verify → validate → iterate ≤5 → escalate).
 - **Reusable components:** `docs/components.md` — advisory index; confirm against the source before reusing.
 - **Development records:** `docs/development/records/` — point-in-time history, one record per substantial assignment.

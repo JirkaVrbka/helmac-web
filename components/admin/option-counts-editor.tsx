@@ -5,8 +5,6 @@ import {
     Alert,
     Box,
     Button,
-    Card,
-    CardContent,
     Checkbox,
     FormControlLabel,
     Typography,
@@ -14,6 +12,68 @@ import {
 import { Edit, Save } from "@mui/icons-material";
 import type { InputField, OptionCounts } from "@/lib/types/registration-form";
 import { saveShowOptionCounts } from "@/lib/actions/show-option-counts";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+
+const MONO = "'JetBrains Mono', monospace";
+
+const paneSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    borderRadius: "14px",
+    overflow: "hidden",
+} as const;
+
+const paneHeadSx = {
+    px: 2.5,
+    py: 1.75,
+    borderBottom: `1px solid ${p.line}`,
+    background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+    display: "flex",
+    alignItems: "center",
+    gap: 1.5,
+} as const;
+
+const kickerSx = {
+    fontSize: 11,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: p.ink3,
+    fontWeight: 700,
+    flex: 1,
+} as const;
+
+const capSx = {
+    fontSize: 11,
+    color: p.ink3,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+    fontWeight: 600,
+    flex: 1,
+} as const;
+
+const ghostBtnSx = {
+    backgroundColor: p.surface,
+    border: `1px solid ${p.line}`,
+    color: p.ink2,
+    textTransform: "none",
+    borderRadius: "10px",
+    "&:hover": { borderColor: p.ink3, backgroundColor: p.surface2 },
+} as const;
+
+const indigoBtnSx = {
+    backgroundColor: p.indigo,
+    color: "#fff",
+    textTransform: "none",
+    borderRadius: "10px",
+    boxShadow: "none",
+    "&:hover": { backgroundColor: "#4338ca", boxShadow: "none" },
+    "&.Mui-disabled": { backgroundColor: p.surface3, color: p.ink3 },
+} as const;
+
+const checkboxSx = {
+    color: p.ink3,
+    "&.Mui-checked": { color: p.indigo },
+} as const;
 
 interface OptionCountsEditorProps {
     yearId: string;
@@ -23,7 +83,10 @@ interface OptionCountsEditorProps {
 }
 
 /** Get option values for a field — from field.options or from optionCounts keys */
-function getFieldOptions(field: InputField, optionCounts?: OptionCounts): string[] {
+function getFieldOptions(
+    field: InputField,
+    optionCounts?: OptionCounts
+): string[] {
     if (field.options && field.options.length > 0) {
         return field.options;
     }
@@ -35,7 +98,13 @@ function getFieldOptions(field: InputField, optionCounts?: OptionCounts): string
 }
 
 /** Render a vertical list of option counts for a field */
-function OptionCountsList({ field, optionCounts }: { field: InputField; optionCounts?: OptionCounts }) {
+function OptionCountsList({
+    field,
+    optionCounts,
+}: {
+    field: InputField;
+    optionCounts?: OptionCounts;
+}) {
     const options = getFieldOptions(field, optionCounts);
     if (options.length === 0) return null;
 
@@ -51,13 +120,22 @@ function OptionCountsList({ field, optionCounts }: { field: InputField; optionCo
                             justifyContent: "space-between",
                             alignItems: "center",
                             px: 1,
-                            py: 0.25,
+                            py: 0.5,
                         }}
                     >
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography
+                            sx={{ fontSize: "0.875rem", color: p.ink3 }}
+                        >
                             {option}
                         </Typography>
-                        <Typography variant="body2" fontWeight="medium">
+                        <Typography
+                            sx={{
+                                fontSize: "0.875rem",
+                                fontFamily: MONO,
+                                fontWeight: 500,
+                                color: p.ink,
+                            }}
+                        >
                             {count}&times;
                         </Typography>
                     </Box>
@@ -82,11 +160,18 @@ export function OptionCountsEditor({
 
     // Only fields with options (select, radio, pricing_select, pricing_multi_select)
     const eligibleFields = allInputFields.filter(
-        (f) => f.type === "select" || f.type === "radio" || f.type === "pricing_select" || f.type === "pricing_multi_select"
+        (f) =>
+            f.type === "select" ||
+            f.type === "radio" ||
+            f.type === "pricing_select" ||
+            f.type === "pricing_multi_select"
     );
 
     const getFieldLabel = (fieldId: string) => {
-        return eligibleFields.find((f) => f.id === fieldId)?.label ?? "(neznámé pole)";
+        return (
+            eligibleFields.find((f) => f.id === fieldId)?.label ??
+            "(neznámé pole)"
+        );
     };
 
     const getFieldById = (fieldId: string) => {
@@ -128,122 +213,200 @@ export function OptionCountsEditor({
     // --- Read-only view ---
     if (!editing) {
         return (
-            <Box>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-                    <Typography variant="h6">
+            <Box sx={paneSx}>
+                <Box sx={paneHeadSx}>
+                    <Typography sx={kickerSx}>
                         Zobrazení počtů registrací
                     </Typography>
                     <Button
-                        variant="outlined"
-                        startIcon={<Edit />}
+                        startIcon={<Edit sx={{ fontSize: 16 }} />}
                         onClick={() => setEditing(true)}
                         size="small"
+                        sx={ghostBtnSx}
                     >
                         Upravit
                     </Button>
                 </Box>
 
-                {success && (
-                    <Alert severity="success" sx={{ mb: 2 }}>
-                        Nastavení bylo uloženo
-                    </Alert>
-                )}
+                <Box sx={{ p: 2.5 }}>
+                    {success && (
+                        <Alert
+                            icon={false}
+                            sx={{
+                                mb: 2,
+                                borderRadius: "12px",
+                                backgroundColor: p.value,
+                                color: p.valueInk,
+                                "& .MuiAlert-message": { color: p.valueInk },
+                            }}
+                        >
+                            Nastavení bylo uloženo
+                        </Alert>
+                    )}
 
-                {saved.length === 0 ? (
-                    <Typography color="text.secondary" sx={{ py: 1 }}>
-                        Počty registrací se u žádného pole nezobrazují.
-                    </Typography>
-                ) : (
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        {saved.map((fieldId) => {
-                            const field = getFieldById(fieldId);
-                            return (
-                                <Card key={fieldId} variant="outlined">
-                                    <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-                                        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                                            {getFieldLabel(fieldId)}
-                                        </Typography>
-                                        {field ? (
-                                            <OptionCountsList field={field} optionCounts={optionCounts} />
-                                        ) : (
-                                            <Typography variant="body2" color="text.secondary">
-                                                Pole nebylo nalezeno
+                    {saved.length === 0 ? (
+                        <Typography sx={{ color: p.ink3, py: 1 }}>
+                            Počty registrací se u žádného pole nezobrazují.
+                        </Typography>
+                    ) : (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 2,
+                            }}
+                        >
+                            {saved.map((fieldId) => {
+                                const field = getFieldById(fieldId);
+                                return (
+                                    <Box
+                                        key={fieldId}
+                                        sx={{
+                                            backgroundColor: p.surface,
+                                            border: `1px solid ${p.line}`,
+                                            borderRadius: "12px",
+                                            overflow: "hidden",
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                px: 2,
+                                                py: 1.25,
+                                                borderBottom: `1px solid ${p.line}`,
+                                                background: `linear-gradient(180deg, ${p.surface}, ${p.surface2})`,
+                                            }}
+                                        >
+                                            <Typography sx={capSx}>
+                                                {getFieldLabel(fieldId)}
                                             </Typography>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
-                    </Box>
-                )}
+                                        </Box>
+                                        <Box sx={{ p: 2 }}>
+                                            {field ? (
+                                                <OptionCountsList
+                                                    field={field}
+                                                    optionCounts={optionCounts}
+                                                />
+                                            ) : (
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "0.875rem",
+                                                        color: p.ink3,
+                                                    }}
+                                                >
+                                                    Pole nebylo nalezeno
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </Box>
+                                );
+                            })}
+                        </Box>
+                    )}
+                </Box>
             </Box>
         );
     }
 
     // --- Edit mode ---
     return (
-        <Box>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-                <Typography variant="h6">
+        <Box sx={paneSx}>
+            <Box sx={paneHeadSx}>
+                <Typography sx={kickerSx}>
                     Zobrazení počtů registrací
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button
-                        variant="outlined"
-                        onClick={handleCancel}
-                        size="small"
-                    >
+                    <Button onClick={handleCancel} size="small" sx={ghostBtnSx}>
                         Zrušit
                     </Button>
                     <Button
                         variant="contained"
-                        startIcon={<Save />}
+                        startIcon={<Save sx={{ fontSize: 16 }} />}
                         onClick={handleSave}
                         disabled={saving}
                         size="small"
+                        sx={indigoBtnSx}
                     >
                         {saving ? "Ukládám..." : "Uložit"}
                     </Button>
                 </Box>
             </Box>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Vyberte pole, u kterých se na veřejné stránce zobrazí aktuální počet registrací u každé možnosti.
-                Počty jsou pouze informativní a neblokují výběr.
-            </Typography>
+            <Box sx={{ p: 2.5 }}>
+                <Typography sx={{ mb: 2, fontSize: "0.9rem", color: p.ink2 }}>
+                    Vyberte pole, u kterých se na veřejné stránce zobrazí
+                    aktuální počet registrací u každé možnosti. Počty jsou pouze
+                    informativní a neblokují výběr.
+                </Typography>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            )}
+                {error && (
+                    <Alert
+                        severity="error"
+                        sx={{ mb: 2, borderRadius: "12px" }}
+                        onClose={() => setError(null)}
+                    >
+                        {error}
+                    </Alert>
+                )}
 
-            {eligibleFields.length === 0 ? (
-                <Alert severity="info">
-                    Formulář neobsahuje žádná pole s možnostmi (výběr, přepínač, cenový výběr).
-                </Alert>
-            ) : (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                    {eligibleFields.map((field) => (
-                        <Box key={field.id}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={selected.includes(field.id)}
-                                        onChange={() => handleToggle(field.id)}
-                                    />
-                                }
-                                label={field.label}
-                            />
-                            {selected.includes(field.id) && (
-                                <Box sx={{ ml: 4, mb: 1 }}>
-                                    <OptionCountsList field={field} optionCounts={optionCounts} />
-                                </Box>
-                            )}
-                        </Box>
-                    ))}
-                </Box>
-            )}
+                {eligibleFields.length === 0 ? (
+                    <Alert
+                        icon={false}
+                        sx={{
+                            borderRadius: "12px",
+                            backgroundColor: p.field,
+                            color: p.fieldInk,
+                            "& .MuiAlert-message": { color: p.fieldInk },
+                        }}
+                    >
+                        Formulář neobsahuje žádná pole s možnostmi (výběr,
+                        přepínač, cenový výběr).
+                    </Alert>
+                ) : (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                        }}
+                    >
+                        {eligibleFields.map((field) => (
+                            <Box key={field.id}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={selected.includes(
+                                                field.id
+                                            )}
+                                            onChange={() =>
+                                                handleToggle(field.id)
+                                            }
+                                            sx={checkboxSx}
+                                        />
+                                    }
+                                    label={
+                                        <Typography
+                                            sx={{
+                                                fontSize: "0.875rem",
+                                                color: p.ink,
+                                            }}
+                                        >
+                                            {field.label}
+                                        </Typography>
+                                    }
+                                />
+                                {selected.includes(field.id) && (
+                                    <Box sx={{ ml: 4, mb: 1 }}>
+                                        <OptionCountsList
+                                            field={field}
+                                            optionCounts={optionCounts}
+                                        />
+                                    </Box>
+                                )}
+                            </Box>
+                        ))}
+                    </Box>
+                )}
+            </Box>
         </Box>
     );
 }

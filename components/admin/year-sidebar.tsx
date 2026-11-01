@@ -34,15 +34,53 @@ import {
 } from "@mui/icons-material";
 import { ListItemLinkButton } from "@/components/ui/link-button";
 import type { SidebarYearData } from "@/lib/contexts/sidebar-context";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
 
-const selectedSx = {
-    "&.Mui-selected": {
-        backgroundColor: "primary.main",
-        color: "primary.contrastText",
-        "&:hover": { backgroundColor: "primary.dark" },
-        "& .MuiListItemIcon-root": { color: "inherit" },
+const drawerItemSx = {
+    position: "relative",
+    mx: 1,
+    my: "1px",
+    py: "9px",
+    pl: "12px",
+    pr: "12px",
+    borderRadius: "10px",
+    color: p.ink2,
+    transition: "all 140ms ease",
+    "& .MuiListItemIcon-root": {
+        minWidth: 36,
+        color: p.ink3,
+        transition: "color 140ms ease",
     },
-};
+    "& .MuiListItemText-primary": {
+        fontSize: "0.9rem",
+    },
+    "&:hover": {
+        backgroundColor: p.surface2,
+        color: p.ink,
+        "& .MuiListItemIcon-root": { color: p.ink2 },
+    },
+    "&.Mui-selected": {
+        backgroundColor: p.indigoSoft,
+        color: p.indigoInk,
+        "& .MuiListItemText-primary": { fontWeight: 600 },
+        "& .MuiListItemIcon-root": { color: p.indigo },
+        "&:hover": {
+            backgroundColor: p.indigoSoft,
+            color: p.indigoInk,
+            "& .MuiListItemIcon-root": { color: p.indigo },
+        },
+        "&::before": {
+            content: '""',
+            position: "absolute",
+            left: 0,
+            top: 7,
+            bottom: 7,
+            width: 3,
+            borderRadius: "0 3px 3px 0",
+            backgroundColor: p.indigo,
+        },
+    },
+} as const;
 
 interface YearSidebarProps {
     yearData: SidebarYearData;
@@ -193,7 +231,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                     <ListItemLinkButton
                         href="/admin/rocniky"
                         onClick={onClose}
-                        sx={{ py: 1.5 }}
+                        sx={{ ...drawerItemSx, py: 1.5 }}
                     >
                         <ListItemIcon sx={{ minWidth: 36 }}>
                             <ArrowBack fontSize="small" />
@@ -205,7 +243,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                     </ListItemLinkButton>
                 </ListItem>
             </List>
-            <Divider />
+            <Divider sx={{ borderColor: p.line }} />
 
             {/* Main navigation */}
             <List>
@@ -220,7 +258,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                                 href={item.href}
                                 selected={isActive}
                                 onClick={onClose}
-                                sx={selectedSx}
+                                sx={drawerItemSx}
                             >
                                 <ListItemIcon>
                                     <Icon />
@@ -231,7 +269,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                     );
                 })}
             </List>
-            <Divider sx={{ mx: 2 }} />
+            <Divider sx={{ mx: 2, borderColor: p.lineSoft }} />
 
             {/* Content section */}
             <List>
@@ -247,7 +285,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                                 selected={isActive}
                                 onClick={onClose}
                                 sx={{
-                                    ...selectedSx,
+                                    ...drawerItemSx,
                                     ...(item.indented ? { pl: 4 } : {}),
                                 }}
                             >
@@ -260,7 +298,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                     );
                 })}
             </List>
-            <Divider sx={{ mx: 2 }} />
+            <Divider sx={{ mx: 2, borderColor: p.lineSoft }} />
 
             {/* Registration section */}
             <List>
@@ -276,7 +314,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                                 selected={isActive}
                                 onClick={onClose}
                                 sx={{
-                                    ...selectedSx,
+                                    ...drawerItemSx,
                                     ...(item.indented ? { pl: 4 } : {}),
                                 }}
                             >
@@ -289,7 +327,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                     );
                 })}
             </List>
-            <Divider sx={{ mx: 2 }} />
+            <Divider sx={{ mx: 2, borderColor: p.lineSoft }} />
 
             {/* Email section */}
             <List>
@@ -305,7 +343,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                                 selected={isActive}
                                 onClick={onClose}
                                 sx={{
-                                    ...selectedSx,
+                                    ...drawerItemSx,
                                     ...(item.indented ? { pl: 4 } : {}),
                                 }}
                             >
@@ -318,7 +356,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                     );
                 })}
             </List>
-            <Divider sx={{ mx: 2 }} />
+            <Divider sx={{ mx: 2, borderColor: p.lineSoft }} />
 
             {/* Settings */}
             <List>
@@ -327,7 +365,7 @@ export function YearSidebar({ yearData, onClose, userRole }: YearSidebarProps) {
                         href={`${base}/nastaveni`}
                         selected={isPrefixMatch(`${base}/nastaveni`)}
                         onClick={onClose}
-                        sx={selectedSx}
+                        sx={drawerItemSx}
                     >
                         <ListItemIcon>
                             <Settings />

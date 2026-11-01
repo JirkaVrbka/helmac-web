@@ -18,8 +18,15 @@ import {
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { createConditionalEmail } from "@/lib/actions/conditional-emails";
+import { builderPalette as p } from "@/components/admin/email-builder/palette";
+import { builderFieldSx } from "@/components/admin/builder-field-sx";
 
-type ConditionOperator = "equals" | "is_set" | "is_not_set" | "quantity_gt_zero" | "quantity_any_gt_zero";
+type ConditionOperator =
+    | "equals"
+    | "is_set"
+    | "is_not_set"
+    | "quantity_gt_zero"
+    | "quantity_any_gt_zero";
 
 interface FieldOption {
     id: string;
@@ -49,7 +56,8 @@ export function CreateConditionalEmailDialog({
 
     const selectedField = availableFields.find((f) => f.id === selectedFieldId);
     const isQuantityField = selectedField?.type === "pricing_quantity";
-    const valueRequired = operator === "equals" || operator === "quantity_gt_zero";
+    const valueRequired =
+        operator === "equals" || operator === "quantity_gt_zero";
 
     const handleOpen = () => {
         setOpen(true);
@@ -67,7 +75,11 @@ export function CreateConditionalEmailDialog({
     };
 
     const handleSubmit = () => {
-        if (!name.trim() || !selectedFieldId || (valueRequired && !selectedValue)) {
+        if (
+            !name.trim() ||
+            !selectedFieldId ||
+            (valueRequired && !selectedValue)
+        ) {
             setError("Vyplňte všechna pole");
             return;
         }
@@ -86,13 +98,19 @@ export function CreateConditionalEmailDialog({
             });
 
             if (result && "error" in result && result.error) {
-                setError(typeof result.error === "string" ? result.error : "Nepodařilo se vytvořit email");
+                setError(
+                    typeof result.error === "string"
+                        ? result.error
+                        : "Nepodařilo se vytvořit email"
+                );
                 return;
             }
 
             if (result && "id" in result && result.id) {
                 setOpen(false);
-                router.push(`/admin/rocniky/${yearId}/emaily/podmineny/${result.id}`);
+                router.push(
+                    `/admin/rocniky/${yearId}/emaily/podmineny/${result.id}`
+                );
                 router.refresh();
             }
         });
@@ -107,18 +125,46 @@ export function CreateConditionalEmailDialog({
     return (
         <>
             <Button
-                variant="outlined"
                 startIcon={<Add />}
                 onClick={handleOpen}
-                sx={{ mt: 3 }}
+                sx={{
+                    mt: 3,
+                    backgroundColor: p.surface,
+                    border: `1px dashed ${p.line}`,
+                    borderRadius: "10px",
+                    color: p.indigo,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    px: "14px",
+                    py: "8px",
+                    "&:hover": {
+                        borderColor: p.indigo,
+                        backgroundColor: p.indigoSoft,
+                    },
+                }}
             >
                 Vytvořit podmíněný email
             </Button>
 
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>Nový podmíněný email</DialogTitle>
+            <Dialog
+                open={open}
+                onClose={handleClose}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: "14px" } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Nový podmíněný email
+                </DialogTitle>
                 <DialogContent>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                            mt: 1,
+                        }}
+                    >
                         <TextField
                             label="Název emailu"
                             value={name}
@@ -126,9 +172,14 @@ export function CreateConditionalEmailDialog({
                             fullWidth
                             placeholder="např. Email pro vegetariány"
                             disabled={isPending}
+                            sx={builderFieldSx}
                         />
 
-                        <FormControl fullWidth disabled={isPending}>
+                        <FormControl
+                            fullWidth
+                            disabled={isPending}
+                            sx={builderFieldSx}
+                        >
                             <InputLabel>Pole podmínky</InputLabel>
                             <Select
                                 value={selectedFieldId}
@@ -136,10 +187,14 @@ export function CreateConditionalEmailDialog({
                                     const newFieldId = e.target.value;
                                     setSelectedFieldId(newFieldId);
                                     setSelectedValue("");
-                                    const newField = availableFields.find((f) => f.id === newFieldId);
+                                    const newField = availableFields.find(
+                                        (f) => f.id === newFieldId
+                                    );
                                     if (newField?.type === "pricing_quantity") {
                                         setOperator("quantity_gt_zero");
-                                    } else if (operator === "quantity_gt_zero") {
+                                    } else if (
+                                        operator === "quantity_gt_zero"
+                                    ) {
                                         setOperator("equals");
                                     }
                                 }}
@@ -154,71 +209,129 @@ export function CreateConditionalEmailDialog({
                         </FormControl>
 
                         {selectedField && (
-                            <FormControl fullWidth disabled={isPending}>
+                            <FormControl
+                                fullWidth
+                                disabled={isPending}
+                                sx={builderFieldSx}
+                            >
                                 <InputLabel>Operátor</InputLabel>
                                 <Select
                                     value={operator}
                                     onChange={(e) => {
-                                        setOperator(e.target.value as ConditionOperator);
+                                        setOperator(
+                                            e.target.value as ConditionOperator
+                                        );
                                         setSelectedValue("");
                                     }}
                                     label="Operátor"
                                 >
                                     {isQuantityField
                                         ? [
-                                              <MenuItem key="quantity_gt_zero" value="quantity_gt_zero">
+                                              <MenuItem
+                                                  key="quantity_gt_zero"
+                                                  value="quantity_gt_zero"
+                                              >
                                                   Konkrétní volba: počet &gt; 0
                                               </MenuItem>,
-                                              <MenuItem key="quantity_any_gt_zero" value="quantity_any_gt_zero">
+                                              <MenuItem
+                                                  key="quantity_any_gt_zero"
+                                                  value="quantity_any_gt_zero"
+                                              >
                                                   Jakákoli volba: počet &gt; 0
                                               </MenuItem>,
                                           ]
                                         : [
-                                              <MenuItem key="equals" value="equals">Konkrétní hodnota</MenuItem>,
-                                              <MenuItem key="is_set" value="is_set">Cokoli vybráno</MenuItem>,
-                                              <MenuItem key="is_not_set" value="is_not_set">Nic nevybráno</MenuItem>,
+                                              <MenuItem
+                                                  key="equals"
+                                                  value="equals"
+                                              >
+                                                  Konkrétní hodnota
+                                              </MenuItem>,
+                                              <MenuItem
+                                                  key="is_set"
+                                                  value="is_set"
+                                              >
+                                                  Cokoli vybráno
+                                              </MenuItem>,
+                                              <MenuItem
+                                                  key="is_not_set"
+                                                  value="is_not_set"
+                                              >
+                                                  Nic nevybráno
+                                              </MenuItem>,
                                           ]}
                                 </Select>
                             </FormControl>
                         )}
 
                         {selectedField && valueRequired && (
-                            <FormControl fullWidth disabled={isPending}>
-                                <InputLabel>{isQuantityField ? "Volba" : "Hodnota"}</InputLabel>
+                            <FormControl
+                                fullWidth
+                                disabled={isPending}
+                                sx={builderFieldSx}
+                            >
+                                <InputLabel>
+                                    {isQuantityField ? "Volba" : "Hodnota"}
+                                </InputLabel>
                                 <Select
                                     value={selectedValue}
-                                    onChange={(e) => setSelectedValue(e.target.value)}
-                                    label={isQuantityField ? "Volba" : "Hodnota"}
+                                    onChange={(e) =>
+                                        setSelectedValue(e.target.value)
+                                    }
+                                    label={
+                                        isQuantityField ? "Volba" : "Hodnota"
+                                    }
                                 >
-                                    {selectedField.type === "checkbox" ? (
-                                        [
-                                            <MenuItem key="true" value="true">Zaškrtnuto</MenuItem>,
-                                            <MenuItem key="false" value="false">Nezaškrtnuto</MenuItem>,
-                                        ]
-                                    ) : (
-                                        selectedField.options.map((opt) => (
-                                            <MenuItem key={opt} value={opt}>
-                                                {opt}
-                                            </MenuItem>
-                                        ))
-                                    )}
+                                    {selectedField.type === "checkbox"
+                                        ? [
+                                              <MenuItem key="true" value="true">
+                                                  Zaškrtnuto
+                                              </MenuItem>,
+                                              <MenuItem
+                                                  key="false"
+                                                  value="false"
+                                              >
+                                                  Nezaškrtnuto
+                                              </MenuItem>,
+                                          ]
+                                        : selectedField.options.map((opt) => (
+                                              <MenuItem key={opt} value={opt}>
+                                                  {opt}
+                                              </MenuItem>
+                                          ))}
                                 </Select>
                             </FormControl>
                         )}
 
-                        {error && (
-                            <Alert severity="error">{error}</Alert>
-                        )}
+                        {error && <Alert severity="error">{error}</Alert>}
                     </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose} disabled={isPending}>
+                <DialogActions sx={{ px: 2, pb: 2 }}>
+                    <Button
+                        onClick={handleClose}
+                        disabled={isPending}
+                        sx={{
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            border: `1px solid ${p.line}`,
+                            "&:hover": {
+                                borderColor: p.ink3,
+                                backgroundColor: p.surface2,
+                            },
+                        }}
+                    >
                         Zrušit
                     </Button>
                     <Button
                         onClick={handleSubmit}
                         variant="contained"
                         disabled={isSubmitDisabled}
+                        disableElevation
+                        sx={{
+                            borderRadius: "10px",
+                            backgroundColor: p.indigo,
+                            "&:hover": { backgroundColor: "#4338ca" },
+                        }}
                     >
                         Vytvořit
                     </Button>
