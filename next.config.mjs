@@ -10,6 +10,10 @@ const storageHost = storageUrl
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Build output dir; overridable so an isolated server (e.g. the Playwright
+    // test server) can use its own `.next` and not collide with a running dev
+    // server's lock. Defaults to ".next".
+    distDir: process.env.NEXT_DIST_DIR || ".next",
     turbopack: {
         root: __dirname,
     },
