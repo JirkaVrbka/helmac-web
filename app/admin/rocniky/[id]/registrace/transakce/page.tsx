@@ -43,8 +43,10 @@ async function getAllTransactions(yearId: string) {
             variableSymbol: true,
             counterpartAccount: true,
             counterpartName: true,
+            userMessage: true,
             matchStatus: true,
             orderId: true,
+            submissionId: true,
             order: {
                 select: { legacySubmissionId: true },
             },
@@ -55,12 +57,11 @@ async function getAllTransactions(yearId: string) {
 export default async function TransakcePage({ params }: TransakcePageProps) {
     await requireAdmin();
     const { id } = await params;
-    const [year, transactions, unpaidOrders] =
-        await Promise.all([
-            getYearBasic(id),
-            getAllTransactions(id),
-            getUnpaidOrdersForYear(id),
-        ]);
+    const [year, transactions, unpaidOrders] = await Promise.all([
+        getYearBasic(id),
+        getAllTransactions(id),
+        getUnpaidOrdersForYear(id),
+    ]);
 
     if (!year) {
         notFound();
@@ -74,10 +75,11 @@ export default async function TransakcePage({ params }: TransakcePageProps) {
         variableSymbol: tx.variableSymbol,
         counterpartAccount: tx.counterpartAccount,
         counterpartName: tx.counterpartName,
+        userMessage: tx.userMessage,
         matchStatus: tx.matchStatus,
         orderId: tx.orderId,
-        legacySubmissionId:
-            tx.order?.legacySubmissionId ?? null,
+        submissionId: tx.submissionId,
+        legacySubmissionId: tx.order?.legacySubmissionId ?? null,
     }));
 
     return (
@@ -85,8 +87,14 @@ export default async function TransakcePage({ params }: TransakcePageProps) {
             <PageHeader
                 breadcrumbs={[
                     { label: "Ročníky", href: "/admin/rocniky" },
-                    { label: `${year.year}`, href: `/admin/rocniky/${year.id}` },
-                    { label: "Registrace", href: `/admin/rocniky/${year.id}/registrace` },
+                    {
+                        label: `${year.year}`,
+                        href: `/admin/rocniky/${year.id}`,
+                    },
+                    {
+                        label: "Registrace",
+                        href: `/admin/rocniky/${year.id}/registrace`,
+                    },
                     { label: "Transakce" },
                 ]}
                 title="Bankovní transakce"
