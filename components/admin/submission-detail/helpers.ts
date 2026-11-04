@@ -6,36 +6,23 @@ import type {
     SerializedOrder,
 } from "./types";
 
-export function buildPersonState(
-    person: OrderDetailPerson,
-): PersonState {
+export function buildPersonState(person: OrderDetailPerson): PersonState {
     const values: Record<string, string> = {};
-    const quantities: Record<
-        string,
-        Record<string, number>
-    > = {};
+    const quantities: Record<string, Record<string, number>> = {};
     const multiSelects: Record<string, string[]> = {};
 
     for (const li of person.lineItems) {
         const name = li.fieldName;
-        if (
-            li.fieldType === "pricing_quantity" &&
-            li.pricingOptionId
-        ) {
+        if (li.fieldType === "pricing_quantity" && li.pricingOptionId) {
             if (!quantities[name]) quantities[name] = {};
-            quantities[name][li.pricingOptionId] =
-                li.quantity;
+            quantities[name][li.pricingOptionId] = li.quantity;
         } else if (
             li.fieldType === "pricing_multi_select" &&
             li.pricingOptionId
         ) {
-            if (!multiSelects[name])
-                multiSelects[name] = [];
+            if (!multiSelects[name]) multiSelects[name] = [];
             multiSelects[name].push(li.pricingOptionId);
-        } else if (
-            li.fieldType === "pricing_select" &&
-            li.pricingOptionId
-        ) {
+        } else if (li.fieldType === "pricing_select" && li.pricingOptionId) {
             values[name] = li.pricingOptionId;
         } else {
             values[name] = li.value ?? "";
@@ -50,18 +37,15 @@ export function buildPersonState(
     };
 }
 
-export function buildFields(
-    order: SerializedOrder,
-): FieldMeta[] {
+export function buildFields(order: SerializedOrder): FieldMeta[] {
     const byName = new Map(
         order.allFields.map((f) => [
             f.name,
             {
                 ...f,
-                includeForAP:
-                    f.includeForAdditionalPeople,
+                includeForAP: f.includeForAdditionalPeople,
             },
-        ]),
+        ])
     );
     for (const person of order.people) {
         for (const li of person.lineItems) {
@@ -74,22 +58,20 @@ export function buildFields(
                 isActive: li.fieldIsActive,
                 sortOrder: li.fieldSortOrder,
                 options: li.fieldOptions,
-                pricingDefinitionId:
-                    li.fieldPricingDefinitionId,
+                pricingDefinitionId: li.fieldPricingDefinitionId,
                 includeForAP: li.fieldIncludeForAP,
-                includeForAdditionalPeople:
-                    li.fieldIncludeForAP,
+                includeForAdditionalPeople: li.fieldIncludeForAP,
             });
         }
     }
     return Array.from(byName.values()).sort(
-        (a, b) => a.sortOrder - b.sortOrder,
+        (a, b) => a.sortOrder - b.sortOrder
     );
 }
 
 export function extractSections(
     layout: unknown,
-    fieldNames: Set<string>,
+    fieldNames: Set<string>
 ): FormSection[] {
     const sections: FormSection[] = [];
     let current: FormSection = {
@@ -140,28 +122,26 @@ export function extractSections(
 
 export function personStateToLegacyData(
     state: PersonState,
-    fields: FieldMeta[],
+    fields: FieldMeta[]
 ): Record<string, unknown> {
     const data: Record<string, unknown> = {};
     for (const field of fields) {
         switch (field.type) {
             case "checkbox":
-                data[field.name] =
-                    state.values[field.name] === "true";
+                data[field.name] = state.values[field.name] === "true";
                 break;
             case "pricing_quantity":
                 data[field.name] = JSON.stringify(
-                    state.quantities[field.name] ?? {},
+                    state.quantities[field.name] ?? {}
                 );
                 break;
             case "pricing_multi_select":
                 data[field.name] = JSON.stringify(
-                    state.multiSelects[field.name] ?? [],
+                    state.multiSelects[field.name] ?? []
                 );
                 break;
             default:
-                data[field.name] =
-                    state.values[field.name] ?? "";
+                data[field.name] = state.values[field.name] ?? "";
                 break;
         }
     }
@@ -183,19 +163,107 @@ export function formatDateTime(iso: string) {
 // order in getFormStructure / getOrderByLegacyId.
 export function getCurrentTierId(
     priceTiers: SerializedOrder["priceTiers"],
-    asOf?: Date,
+    asOf?: Date
 ): string | null {
     if (priceTiers.length === 0) return null;
     const ref = asOf ?? new Date();
     for (const tier of priceTiers) {
-        if (
-            tier.deadline &&
-            ref <= new Date(tier.deadline)
-        ) {
+        if (tier.deadline && ref <= new Date(tier.deadline)) {
             return tier.id;
         }
     }
     return priceTiers[priceTiers.length - 1].id;
+}
+
+export interface PriceLine {
+    label: string;
+    optionName: string;
+    // Set only for quantity-type fields (drives the "×N" suffix); null otherwise.
+    quantity: number | null;
+    // Line total (unit price × quantity).
+    price: number;
+}
+
+// Builds a flat list of priced lines (one per selected priced item, across all
+// people) using LIVE current-tier prices and the same visibility filtering as
+// the live total. This is the single source of truth for the live total:
+// computeTotal below is just the sum of these lines, so a breakdown rendered
+// from the same call can never drift from the displayed total.
+export function buildPriceLines(
+    personStates: PersonState[],
+    fields: FieldMeta[],
+    pricingDefById: Map<string, V2PricingDef>,
+    currentTierId: string | null,
+    perPersonVisibleFields?: Set<string>[],
+    layoutFieldNames?: Set<string>
+): PriceLine[] {
+    const lines: PriceLine[] = [];
+    for (let pi = 0; pi < personStates.length; pi++) {
+        const state = personStates[pi];
+        const visibleFields = perPersonVisibleFields?.[pi];
+        for (const field of fields) {
+            if (!field.pricingDefinitionId) continue;
+            const inLayout =
+                !layoutFieldNames || layoutFieldNames.has(field.name);
+            if (inLayout && visibleFields && !visibleFields.has(field.name))
+                continue;
+            const def = pricingDefById.get(field.pricingDefinitionId);
+            if (!def) continue;
+
+            const optionPrice = (optId: string) => {
+                const opt = def.options.find((o) => o.id === optId);
+                if (!opt || opt.prices.length === 0) return 0;
+                if (currentTierId) {
+                    const tierPrice = opt.prices.find(
+                        (p) => p.tierId === currentTierId
+                    );
+                    if (tierPrice) return tierPrice.price;
+                }
+                return opt.prices[0]?.price ?? 0;
+            };
+            const optionName = (optId: string) =>
+                def.options.find((o) => o.id === optId)?.name ?? "";
+
+            switch (field.type) {
+                case "pricing_select": {
+                    const val = state.values[field.name] ?? "";
+                    if (val)
+                        lines.push({
+                            label: field.label,
+                            optionName: optionName(val),
+                            quantity: null,
+                            price: optionPrice(val),
+                        });
+                    break;
+                }
+                case "pricing_multi_select": {
+                    const selected = state.multiSelects[field.name] ?? [];
+                    for (const optId of selected) {
+                        lines.push({
+                            label: field.label,
+                            optionName: optionName(optId),
+                            quantity: null,
+                            price: optionPrice(optId),
+                        });
+                    }
+                    break;
+                }
+                case "pricing_quantity": {
+                    const qtys = state.quantities[field.name] ?? {};
+                    for (const [optId, qty] of Object.entries(qtys)) {
+                        lines.push({
+                            label: field.label,
+                            optionName: optionName(optId),
+                            quantity: qty,
+                            price: optionPrice(optId) * qty,
+                        });
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    return lines;
 }
 
 export function computeTotal(
@@ -204,73 +272,40 @@ export function computeTotal(
     pricingDefById: Map<string, V2PricingDef>,
     currentTierId: string | null,
     perPersonVisibleFields?: Set<string>[],
-    layoutFieldNames?: Set<string>,
+    layoutFieldNames?: Set<string>
 ): number {
-    let total = 0;
-    for (let pi = 0; pi < personStates.length; pi++) {
-        const state = personStates[pi];
-        const visibleFields = perPersonVisibleFields?.[pi];
-        for (const field of fields) {
-            if (!field.pricingDefinitionId) continue;
-            const inLayout =
-                !layoutFieldNames ||
-                layoutFieldNames.has(field.name);
-            if (
-                inLayout &&
-                visibleFields &&
-                !visibleFields.has(field.name)
-            )
-                continue;
-            const def = pricingDefById.get(
-                field.pricingDefinitionId,
-            );
-            if (!def) continue;
+    return buildPriceLines(
+        personStates,
+        fields,
+        pricingDefById,
+        currentTierId,
+        perPersonVisibleFields,
+        layoutFieldNames
+    ).reduce((sum, line) => sum + line.price, 0);
+}
 
-            const optionPrice = (optId: string) => {
-                const opt = def.options.find(
-                    (o) => o.id === optId,
-                );
-                if (!opt || opt.prices.length === 0)
-                    return 0;
-                if (currentTierId) {
-                    const tierPrice = opt.prices.find(
-                        (p) => p.tierId === currentTierId,
-                    );
-                    if (tierPrice) return tierPrice.price;
-                }
-                return opt.prices[0]?.price ?? 0;
-            };
-
-            switch (field.type) {
-                case "pricing_select": {
-                    const val =
-                        state.values[field.name] ?? "";
-                    if (val) total += optionPrice(val);
-                    break;
-                }
-                case "pricing_multi_select": {
-                    const selected =
-                        state.multiSelects[field.name] ??
-                        [];
-                    for (const optId of selected) {
-                        total += optionPrice(optId);
-                    }
-                    break;
-                }
-                case "pricing_quantity": {
-                    const qtys =
-                        state.quantities[field.name] ??
-                        {};
-                    for (const [optId, qty] of Object.entries(
-                        qtys,
-                    )) {
-                        total +=
-                            optionPrice(optId) * qty;
-                    }
-                    break;
-                }
-            }
+// Builds the flat priced-line list from the STORED line items (locked-in prices
+// at submission). Used for paid orders: the sum of unitPriceAtSubmission ×
+// quantity across all priced line items equals order.totalPrice.
+export function buildPaidPriceLines(people: OrderDetailPerson[]): PriceLine[] {
+    const pricedTypes = new Set([
+        "pricing_select",
+        "pricing_multi_select",
+        "pricing_quantity",
+    ]);
+    const lines: PriceLine[] = [];
+    for (const person of people) {
+        for (const li of person.lineItems) {
+            if (!pricedTypes.has(li.fieldType)) continue;
+            if (!li.pricingOptionId) continue;
+            lines.push({
+                label: li.fieldLabel,
+                optionName: li.pricingOptionName ?? "",
+                quantity:
+                    li.fieldType === "pricing_quantity" ? li.quantity : null,
+                price: li.unitPriceAtSubmission * li.quantity,
+            });
         }
     }
-    return total;
+    return lines;
 }
