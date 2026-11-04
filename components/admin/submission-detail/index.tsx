@@ -1090,24 +1090,37 @@ export function SubmissionDetail({
                                     variant="body2"
                                     sx={{ color: p.ink2 }}
                                 >
-                                    Cena při registraci
+                                    {currentPaid
+                                        ? "Zaplaceno"
+                                        : "Aktuální cena"}
                                 </Typography>
                                 <Typography
                                     variant="body2"
                                     sx={{ ...monoSx, color: p.ink }}
                                 >
-                                    {(order.totalPrice ?? 0).toLocaleString(
-                                        "cs-CZ"
-                                    )}{" "}
+                                    {(
+                                        (currentPaid
+                                            ? order.totalPrice
+                                            : computedPrice) ?? 0
+                                    ).toLocaleString("cs-CZ")}{" "}
                                     Kč
                                 </Typography>
                             </Box>
-                            <Typography
-                                variant="caption"
-                                sx={{ color: p.ink3 }}
-                            >
-                                {formatDateTime(order.createdAt)}
-                            </Typography>
+                            {(() => {
+                                const caption = currentPaid
+                                    ? order.paidAt
+                                        ? formatDateTime(order.paidAt)
+                                        : null
+                                    : "dle aktuálního tarifu";
+                                return caption ? (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{ color: p.ink3 }}
+                                    >
+                                        {caption}
+                                    </Typography>
+                                ) : null;
+                            })()}
                         </Box>
                         <Box sx={{ mb: 2 }}>
                             <Typography sx={{ ...kickerSx, mb: 1.5 }}>
