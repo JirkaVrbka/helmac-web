@@ -18,6 +18,7 @@ import {
     Divider,
     CircularProgress,
     Switch,
+    Collapse,
     Grid,
     Paper,
     Dialog,
@@ -33,6 +34,7 @@ import {
     AccountBalance,
     HowToReg,
     PersonOutline,
+    ExpandMore,
 } from "@mui/icons-material";
 import type { RegistrationStatus } from "@prisma/client";
 import type { PricingSummaryData } from "@/lib/types/registration-form";
@@ -69,7 +71,10 @@ import {
     formatDateTime,
     getCurrentTierId,
     computeTotal,
+    buildPriceLines,
+    buildPaidPriceLines,
 } from "./helpers";
+import { formatPrice } from "@/lib/utils/pricing";
 import { FieldRenderer } from "./field-renderer";
 
 export type { SubmissionDetailProps };
@@ -220,6 +225,7 @@ export function SubmissionDetail({
     const [currentStatus, setCurrentStatus] = useState(order.status);
     const [currentPaid, setCurrentPaid] = useState(order.isPaid);
     const [actionLoading, setActionLoading] = useState(false);
+    const [showZeroItems, setShowZeroItems] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [removePersonIdx, setRemovePersonIdx] = useState<number | null>(null);
     const [emailSending, setEmailSending] = useState(false);
@@ -416,6 +422,34 @@ export function SubmissionDetail({
         layoutFieldNames,
         computedPrice,
     ]);
+
+    // Flat per-item price breakdown shown under the total in the Platba card.
+    // Paid → locked-in stored line prices (sum === order.totalPrice).
+    // Unpaid → live current-tier lines from the SAME call computeTotal sums,
+    // so the line sum === computedPrice already shown in the card.
+    const priceLines = useMemo(
+        () =>
+            currentPaid
+                ? buildPaidPriceLines(order.people)
+                : buildPriceLines(
+                      personStates,
+                      fields,
+                      pricingDefById,
+                      currentTierId,
+                      allVisibleFields,
+                      layoutFieldNames
+                  ),
+        [
+            currentPaid,
+            order.people,
+            personStates,
+            fields,
+            pricingDefById,
+            currentTierId,
+            allVisibleFields,
+            layoutFieldNames,
+        ]
+    );
 
     const archivedFields = fields.filter(
         (f) => !f.isActive || !layoutFieldNames.has(f.name)
@@ -1056,24 +1090,179 @@ export function SubmissionDetail({
                                     variant="body2"
                                     sx={{ color: p.ink2 }}
                                 >
-                                    Cena při registraci
+                                    {currentPaid
+                                        ? "Zaplaceno"
+                                        : "Aktuální cena"}
                                 </Typography>
                                 <Typography
                                     variant="body2"
                                     sx={{ ...monoSx, color: p.ink }}
                                 >
-                                    {(order.totalPrice ?? 0).toLocaleString(
-                                        "cs-CZ"
-                                    )}{" "}
+                                    {(
+                                        (currentPaid
+                                            ? order.totalPrice
+                                            : computedPrice) ?? 0
+                                    ).toLocaleString("cs-CZ")}{" "}
                                     Kč
                                 </Typography>
                             </Box>
-                            <Typography
-                                variant="caption"
-                                sx={{ color: p.ink3 }}
-                            >
-                                {formatDateTime(order.createdAt)}
+                            {(() => {
+                                const caption = currentPaid
+                                    ? order.paidAt
+                                        ? formatDateTime(order.paidAt)
+                                        : null
+                                    : "dle aktuálního tarifu";
+                                return caption ? (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{ color: p.ink3 }}
+                                    >
+                                        {caption}
+                                    </Typography>
+                                ) : null;
+                            })()}
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <Typography sx={{ ...kickerSx, mb: 1.5 }}>
+                                Rozpis ceny
                             </Typography>
+                            {priceLines.length === 0 ? (
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        color: p.ink3,
+                                        fontStyle: "italic",
+                                    }}
+                                >
+                                    Žádné placené položky
+                                </Typography>
+                            ) : (
+                                (() => {
+                                    const renderLine = (
+                                        line: (typeof priceLines)[number],
+                                        key: string
+                                    ) => (
+                                        <Box
+                                            key={key}
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "baseline",
+                                                gap: 1,
+                                                mb: 0.75,
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: p.ink2 }}
+                                            >
+                                                {line.label}: {line.optionName}
+                                                {line.quantity != null
+                                                    ? ` ×${line.quantity}`
+                                                    : ""}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                noWrap
+                                                sx={{
+                                                    ...monoSx,
+                                                    color: p.ink,
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                {formatPrice(line.price)}
+                                            </Typography>
+                                        </Box>
+                                    );
+                                    // Priced items first, then free (0 Kč) items,
+                                    // separated by a small gap.
+                                    const overZero = priceLines.filter(
+                                        (line) => line.price > 0
+                                    );
+                                    const zero = priceLines.filter(
+                                        (line) => line.price === 0
+                                    );
+                                    return (
+                                        <>
+                                            {overZero.map((line, i) =>
+                                                renderLine(line, `over-${i}`)
+                                            )}
+                                            {zero.length > 0 && (
+                                                <Box
+                                                    sx={{
+                                                        mt:
+                                                            overZero.length > 0
+                                                                ? 1.5
+                                                                : 0,
+                                                    }}
+                                                >
+                                                    <Box
+                                                        component="button"
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setShowZeroItems(
+                                                                (v) => !v
+                                                            )
+                                                        }
+                                                        aria-expanded={
+                                                            showZeroItems
+                                                        }
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems:
+                                                                "center",
+                                                            gap: 0.5,
+                                                            width: "100%",
+                                                            background: "none",
+                                                            border: "none",
+                                                            p: 0,
+                                                            cursor: "pointer",
+                                                            color: p.ink3,
+                                                            font: "inherit",
+                                                            textAlign: "left",
+                                                        }}
+                                                    >
+                                                        <ExpandMore
+                                                            sx={{
+                                                                fontSize: 18,
+                                                                transition:
+                                                                    "transform 140ms ease",
+                                                                transform:
+                                                                    showZeroItems
+                                                                        ? "rotate(0deg)"
+                                                                        : "rotate(-90deg)",
+                                                            }}
+                                                        />
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                color: p.ink3,
+                                                            }}
+                                                        >
+                                                            Položky zdarma (
+                                                            {zero.length})
+                                                        </Typography>
+                                                    </Box>
+                                                    <Collapse
+                                                        in={showZeroItems}
+                                                        unmountOnExit
+                                                    >
+                                                        <Box sx={{ mt: 0.75 }}>
+                                                            {zero.map(
+                                                                (line, i) =>
+                                                                    renderLine(
+                                                                        line,
+                                                                        `zero-${i}`
+                                                                    )
+                                                            )}
+                                                        </Box>
+                                                    </Collapse>
+                                                </Box>
+                                            )}
+                                        </>
+                                    );
+                                })()
+                            )}
                         </Box>
                         <SubmissionPricingSummary
                             pricingSummary={
