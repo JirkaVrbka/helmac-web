@@ -2,18 +2,24 @@
 
 import {
     Box,
+    Button,
     FormControl,
+    FormControlLabel,
+    InputAdornment,
     InputLabel,
     MenuItem,
     Select,
+    Switch,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
+    TextField,
     Typography,
 } from "@mui/material";
+import { Clear, Search } from "@mui/icons-material";
 import { useState } from "react";
 import Link from "next/link";
 import type { BankTransactionMatchStatus } from "@prisma/client";
@@ -31,8 +37,10 @@ interface TransactionRow {
     variableSymbol: string | null;
     counterpartAccount: string | null;
     counterpartName: string | null;
+    userMessage: string | null;
     matchStatus: BankTransactionMatchStatus;
     orderId: string | null;
+    submissionId: string | null;
     legacySubmissionId: string | null;
 }
 
@@ -65,6 +73,26 @@ const PAIRABLE_STATUSES = new Set<BankTransactionMatchStatus>([
     "UNKNOWN_VS",
     "NO_VARIABLE_SYMBOL",
 ]);
+
+// Builder-palette switch: track p.surface3 off / p.indigo on, white knob.
+const builderSwitchSx = {
+    "& .MuiSwitch-switchBase.Mui-checked": { color: "#fff" },
+    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+        backgroundColor: p.indigo,
+        opacity: 1,
+    },
+    "& .MuiSwitch-track": { backgroundColor: p.surface3, opacity: 1 },
+    "& .MuiSwitch-thumb": { color: "#fff" },
+};
+
+const switchLabelSx = {
+    m: 0,
+    "& .MuiFormControlLabel-label": {
+        fontSize: 13,
+        fontWeight: 600,
+        color: p.ink2,
+    },
+};
 
 function StatusBadge({
     label,
@@ -112,11 +140,86 @@ export function BankTransactionsTable({
     showFilter = false,
 }: BankTransactionsTableProps) {
     const [filter, setFilter] = useState<string>("ALL");
+    const [nameQuery, setNameQuery] = useState("");
+    const [amountFrom, setAmountFrom] = useState("");
+    const [amountTo, setAmountTo] = useState("");
+    const [withoutVs, setWithoutVs] = useState(false);
+    const [notPaired, setNotPaired] = useState(false);
 
-    const filtered =
-        filter === "ALL"
-            ? transactions
-            : transactions.filter((tx) => tx.matchStatus === filter);
+    const nameNeedle = nameQuery.trim().toLowerCase();
+    const fromBound = amountFrom.trim() === "" ? null : Number(amountFrom);
+    const toBound = amountTo.trim() === "" ? null : Number(amountTo);
+
+    // All filters combine with AND; in-memory over already-loaded rows.
+    const filtered = transactions.filter((tx) => {
+        // R7: status dropdown
+        if (filter !== "ALL" && tx.matchStatus !== filter) {
+            return false;
+        }
+
+        // R1: fulltext search over name / account / message / VS
+        // (case-insensitive substring)
+        if (nameNeedle !== "") {
+            const haystacks = [
+                tx.counterpartName,
+                tx.counterpartAccount,
+                tx.userMessage,
+                tx.variableSymbol,
+            ];
+            const matches = haystacks.some(
+                (value) =>
+                    value != null && value.toLowerCase().includes(nameNeedle)
+            );
+            if (!matches) {
+                return false;
+            }
+        }
+
+        // R2/R3: signed, inclusive amount bounds
+        if (fromBound !== null && !Number.isNaN(fromBound)) {
+            if (tx.amount < fromBound) {
+                return false;
+            }
+        }
+        if (toBound !== null && !Number.isNaN(toBound)) {
+            if (tx.amount > toBound) {
+                return false;
+            }
+        }
+
+        // R5: "without VS" keeps only rows with no variable symbol
+        if (withoutVs) {
+            if (tx.variableSymbol != null && tx.variableSymbol.trim() !== "") {
+                return false;
+            }
+        }
+
+        // R6: not paired = neither order nor submission
+        if (notPaired) {
+            if (tx.orderId !== null || tx.submissionId !== null) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    const anyFilterActive =
+        filter !== "ALL" ||
+        nameQuery.trim() !== "" ||
+        amountFrom.trim() !== "" ||
+        amountTo.trim() !== "" ||
+        withoutVs ||
+        notPaired;
+
+    const clearFilters = () => {
+        setFilter("ALL");
+        setNameQuery("");
+        setAmountFrom("");
+        setAmountTo("");
+        setWithoutVs(false);
+        setNotPaired(false);
+    };
 
     if (transactions.length === 0) {
         return (
@@ -129,26 +232,171 @@ export function BankTransactionsTable({
     return (
         <Box>
             {showFilter && (
-                <FormControl
-                    size="small"
-                    sx={{ mb: 2, minWidth: 200, ...builderFieldSx }}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: 1.5,
+                        mb: 2,
+                    }}
                 >
-                    <InputLabel>Filtr stavu</InputLabel>
-                    <Select
-                        value={filter}
-                        label="Filtr stavu"
-                        onChange={(e) => setFilter(e.target.value)}
+                    <TextField
+                        size="small"
+                        label="Hledat (jméno, účet, VS, zpráva)"
+                        value={nameQuery}
+                        onChange={(e) => setNameQuery(e.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Search color="action" />
+                                </InputAdornment>
+                            ),
+                            endAdornment: nameQuery ? (
+                                <InputAdornment position="end">
+                                    <Clear
+                                        sx={{
+                                            cursor: "pointer",
+                                            fontSize: 20,
+                                        }}
+                                        onClick={() => setNameQuery("")}
+                                    />
+                                </InputAdornment>
+                            ) : null,
+                        }}
+                        inputProps={{ "data-testid": "tx-filter-name" }}
+                        sx={{
+                            flex: { xs: "1 1 100%", sm: "1 1 260px" },
+                            minWidth: { xs: "100%", sm: 240 },
+                            ...builderFieldSx,
+                        }}
+                    />
+
+                    <TextField
+                        size="small"
+                        type="number"
+                        label="Částka od"
+                        value={amountFrom}
+                        onChange={(e) => setAmountFrom(e.target.value)}
+                        inputProps={{ "data-testid": "tx-filter-amount-from" }}
+                        sx={{
+                            flex: { xs: "1 1 45%", sm: "0 1 120px" },
+                            minWidth: { xs: "45%", sm: 110 },
+                            ...builderFieldSx,
+                        }}
+                    />
+
+                    <TextField
+                        size="small"
+                        type="number"
+                        label="Částka do"
+                        value={amountTo}
+                        onChange={(e) => setAmountTo(e.target.value)}
+                        inputProps={{ "data-testid": "tx-filter-amount-to" }}
+                        sx={{
+                            flex: { xs: "1 1 45%", sm: "0 1 120px" },
+                            minWidth: { xs: "45%", sm: 110 },
+                            ...builderFieldSx,
+                        }}
+                    />
+
+                    <Box data-testid="tx-filter-without-vs">
+                        <FormControlLabel
+                            sx={switchLabelSx}
+                            label="Bez VS"
+                            control={
+                                <Switch
+                                    checked={withoutVs}
+                                    onChange={(e) =>
+                                        setWithoutVs(e.target.checked)
+                                    }
+                                    sx={builderSwitchSx}
+                                />
+                            }
+                        />
+                    </Box>
+
+                    <Box data-testid="tx-filter-not-paired">
+                        <FormControlLabel
+                            sx={switchLabelSx}
+                            label="Nespárované"
+                            control={
+                                <Switch
+                                    checked={notPaired}
+                                    onChange={(e) =>
+                                        setNotPaired(e.target.checked)
+                                    }
+                                    sx={builderSwitchSx}
+                                />
+                            }
+                        />
+                    </Box>
+
+                    <FormControl
+                        size="small"
+                        sx={{ minWidth: 180, ...builderFieldSx }}
                     >
-                        <MenuItem value="ALL">Vše</MenuItem>
-                        {Object.entries(statusConfig).map(
-                            ([key, { label }]) => (
-                                <MenuItem key={key} value={key}>
-                                    {label}
-                                </MenuItem>
-                            )
-                        )}
-                    </Select>
-                </FormControl>
+                        <InputLabel>Filtr stavu</InputLabel>
+                        <Select
+                            value={filter}
+                            label="Filtr stavu"
+                            onChange={(e) => setFilter(e.target.value)}
+                            inputProps={{ "data-testid": "tx-filter-status" }}
+                        >
+                            <MenuItem value="ALL">Vše</MenuItem>
+                            {Object.entries(statusConfig).map(
+                                ([key, { label }]) => (
+                                    <MenuItem key={key} value={key}>
+                                        {label}
+                                    </MenuItem>
+                                )
+                            )}
+                        </Select>
+                    </FormControl>
+
+                    <Box
+                        data-testid="tx-filter-count"
+                        component="span"
+                        sx={{
+                            fontFamily: "'JetBrains Mono', monospace",
+                            fontSize: 12,
+                            color: p.ink2,
+                            backgroundColor: p.surface3,
+                            px: "9px",
+                            py: "4px",
+                            borderRadius: "6px",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {filtered.length} z {transactions.length}
+                    </Box>
+
+                    <Button
+                        data-testid="tx-filter-clear"
+                        onClick={clearFilters}
+                        disabled={!anyFilterActive}
+                        startIcon={<Clear />}
+                        sx={{
+                            backgroundColor: p.surface,
+                            border: `1px solid ${p.line}`,
+                            color: p.ink2,
+                            borderRadius: "10px",
+                            px: 1.5,
+                            "&:hover": {
+                                backgroundColor: p.surface2,
+                                borderColor: p.ink3,
+                            },
+                            "&.Mui-disabled": {
+                                color: p.ink3,
+                                borderColor: p.line,
+                                backgroundColor: p.surface,
+                                cursor: "default",
+                            },
+                        }}
+                    >
+                        Zrušit filtry
+                    </Button>
+                </Box>
             )}
 
             <TableContainer
@@ -192,7 +440,7 @@ export function BankTransactionsTable({
                         {filtered.map((tx) => {
                             const config = statusConfig[tx.matchStatus];
                             return (
-                                <TableRow key={tx.id}>
+                                <TableRow key={tx.id} data-testid="tx-row">
                                     <TableCell sx={{ color: p.ink }}>
                                         {formatDate(tx.date)}
                                     </TableCell>

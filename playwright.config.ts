@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { getTestDatabaseUrl } from "./tests/helpers/test-db-url";
 
 /**
  * Resolve a working Chromium executable portably.
@@ -43,6 +44,8 @@ function resolveChromiumPath(): string | undefined {
     return candidates[0]?.path;
 }
 
+const TEST_DATABASE_URL = getTestDatabaseUrl();
+
 export default defineConfig({
     testDir: "./tests",
     testMatch: "**/*.spec.ts",
@@ -53,7 +56,7 @@ export default defineConfig({
     fullyParallel: false,
     reporter: "list",
     use: {
-        baseURL: "http://localhost:3000",
+        baseURL: "http://localhost:3100",
         headless: true,
         trace: "retain-on-failure",
     },
@@ -69,9 +72,18 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: "npm run dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: true,
+        // Dedicated server for E2E on port 3100, pointed at the ISOLATED test
+        // DB so the app-under-test never reads/writes the dev database.
+        command: "npx next dev -p 3100",
+        url: "http://localhost:3100",
+        reuseExistingServer: false,
         timeout: 120000,
+        env: {
+            ...process.env,
+            DATABASE_URL: TEST_DATABASE_URL,
+            // Isolated build dir so this server does not collide with a running
+            // dev server's `.next/dev/lock`.
+            NEXT_DIST_DIR: ".next-test",
+        },
     },
 });
